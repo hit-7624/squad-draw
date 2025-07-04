@@ -17,6 +17,7 @@
     "@types/ws": "^8.18.1"
   },
   "dependencies": {
+    "@repo/config": "workspace:*",
     "@types/jsonwebtoken": "^9.0.10",
     "dotenv": "^17.0.1",
     "express": "^5.1.0",
