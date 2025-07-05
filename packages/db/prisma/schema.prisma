@@ -10,9 +10,90 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  name      String?
-  password  String?
+  name      String
+  password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  ownedRooms      Room[]       @relation("RoomOwner")
+  roomMemberships RoomMember[]
+  shapes          Shape[]
+  chats           Chat[]
+
+  @@map("users")
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String   @default("Untitled Room")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  owner       User         @relation("RoomOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String
+  members     RoomMember[]
+  shapes      Shape[]
+  chats       Chat[]
+
+  @@map("rooms")
+}
+
+model RoomMember {
+  id       String           @id @default(cuid())
+  role     RoomMemberRole   @default(MEMBER)
+  joinedAt DateTime         @default(now())
+  
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  room     Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId   String
+  
+  @@unique([userId, roomId])
+  @@map("room_members")
+}
+
+model Shape {
+  id        String    @id @default(cuid())
+  type      ShapeType
+  data      Json
+  version   Int       @default(1)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  room      Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId    String
+  creator   User   @relation(fields: [creatorId], references: [id])
+  creatorId String
+
+  @@map("shapes")
+}
+
+model Chat {
+  id        String   @id @default(cuid())
+  message   String
+  createdAt DateTime @default(now())
+  
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  room      Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId    String
+
+  @@map("chats")
+}
+
+enum RoomMemberRole {
+  ADMIN
+  MEMBER
+}
+
+enum ShapeType {
+  RECTANGLE
+  CIRCLE
+  DIAMOND
+  LINE
+  ARROW
+  FREE_DRAW
+  TEXT
+  IMAGE
 }
 
