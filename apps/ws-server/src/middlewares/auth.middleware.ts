@@ -17,7 +17,7 @@ export const authMiddleware = (socket: Socket, next: (err?: Error) => void) => {
             return next(new Error('Authentication error: No auth token found'));
         }
 
-        const decoded = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET) as {  id: string; name: string; email: string;  };
         
         socket.data.user = decoded;
         socket.data.currentRoom = null;

@@ -1,13 +1,14 @@
 import { Server, Socket } from 'socket.io';
 import { createServer } from 'http';
-import { API_SERVER_PORT, WS_SERVER_PORT } from '@repo/config';
+import { API_SERVER_PORT, ORIGIN_URL, WS_SERVER_PORT } from '@repo/config';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { joinRoomHandler, leaveRoomHandler } from './handlers/connection.handlers';
+import { newMessageHandler, newShapeHandler } from './handlers/content.handlers';
 
 const httpServer = createServer();
 const io = new Server(httpServer, {
     cors: { 
-        origin: `http://localhost:${API_SERVER_PORT}`,
+        origin: ORIGIN_URL,
         methods: ['GET', 'POST'],
         credentials: true,
     },
@@ -49,11 +50,39 @@ io.on('connection', (socket: Socket) => {
     });
 
     socket.on('disconnect', () => {
+
         console.log('Client disconnected:', socket.id);
     });
+
+
+    socket.on('new-shape', async (data) => {
+        try {
+            await newShapeHandler(socket, data);
+        } catch (error) {
+            console.error('Error in new-shape event:', error);
+            socket.emit('custom-error', {
+                code: 500,
+                type: 'INTERNAL_ERROR', 
+                message: 'Failed to create new shape'
+            });
+        }
+    });
+
+    socket.on('new-message', async (data) => {
+        try {
+            await newMessageHandler(socket, data);
+        } catch (error) {
+            console.error('Error in new-message event:', error);
+            socket.emit('custom-error', {
+                code: 500,
+                type: 'INTERNAL_ERROR', 
+                message: 'Failed to create new message'
+            });
+        }
+    });
+
 });
 
-// Handle server-level errors
 io.engine.on('connection_error', (error) => {
     console.error('Connection error:', error);
 });
