@@ -1,135 +1,65 @@
-# Turborepo starter
+# Squad Draw Monorepo
 
-This Turborepo starter is maintained by the Turborepo core team.
+## Project Overview
 
-## Using this example
+This monorepo contains a full-stack application with the following structure:
 
-Run the following command:
+- **apps/web**: Next.js frontend app
+- **apps/api-server**: Express REST API server
+- **apps/ws-server**: WebSocket server (Socket.IO)
+- **packages/**: Shared code (UI, config, db, schemas, TypeScript config, ESLint config)
 
-```sh
-npx create-turbo@latest
-```
+---
 
-## What's inside?
+## Current Progress
 
-This Turborepo includes the following packages/apps:
+### apps/api-server (REST API)
+- **Framework**: Express
+- **Endpoints**:
+  - `POST /signup`: Registers a new user (expects `email`, `password`, `name` in body; creates user in DB)
+  - `POST /login`: Authenticates a user (expects `email`, `password`; returns JWT if credentials are valid)
+- **Auth**: JWT-based (token issued on login)
+- **DB**: Uses Prisma ORM via `@repo/db`
+- **Status**: Basic user authentication and registration implemented
 
-### Apps and Packages
+### apps/ws-server (WebSocket Server)
+- **Framework**: Socket.IO (with HTTP server)
+- **Auth**: Custom middleware (`authMiddleware`) for authenticating socket connections
+- **Events**:
+  - `join-room`: User joins a room (checks membership, emits success/error, notifies others)
+  - `leave-room`: User leaves a room (checks membership, emits success/error, notifies others)
+- **Room Logic**: Only authenticated users who are members of a room can join/leave
+- **DB**: Uses Prisma ORM via `@repo/db` for room and membership checks
+- **Status**: Room join/leave logic fully implemented with robust error handling
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+### apps/web (Frontend)
+- **Framework**: Next.js 15, React 19
+- **UI**: Uses local UI package (`@repo/ui`)
+- **Features**: Basic landing page, shared Button component, custom font loading, responsive styles
+- **Status**: Boilerplate Next.js app, ready for further feature development
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### packages/schemas
+- **Validation**: Zod for schema validation
+- **Schemas**: `UserSignupSchema`, `UserLoginSchema`, `CreateRoomSchema`
+- **Types**: Exports TypeScript types inferred from Zod schemas
 
-### Utilities
+### packages/db
+- **ORM**: Prisma
+- **Schema**: User, Room, RoomMember models
+- **Migrations**: Multiple migration files for evolving DB structure
 
-This Turborepo has some additional tools already setup for you:
+### packages/ui
+- **Components**: Button, Card, Code (React components)
+- **Shared**: Used by both web and (potentially) other apps
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+### packages/config, typescript-config, eslint-config
+- **Config**: Shared configuration for API, WS, and web apps
+- **TypeScript**: Centralized tsconfig for all packages/apps
+- **ESLint**: Centralized linting rules
 
-### Build
+---
 
-To build all apps and packages, run the following command:
+## Setup & Development
 
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+- Local repository set up and pushed to GitHub: https://github.com/hit-7624/squad-draw.git
+- All branches and progress are tracked in this monorepo.
