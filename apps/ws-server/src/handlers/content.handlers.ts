@@ -43,4 +43,8 @@ export const newMessageHandler = async (socket: Socket, newMessage: Message) => 
         return;
     }
     socket.to(roomId).emit('new-message-added', createdMessage);
+
+   
+    const room   = socket.data.currentRoom;
+    
 }

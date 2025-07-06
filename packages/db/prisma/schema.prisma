@@ -19,7 +19,7 @@ model User {
   roomMemberships RoomMember[]
   shapes          Shape[]
   messages        Message[]
-
+  
   @@map("users")
 }
 
@@ -34,6 +34,8 @@ model Room {
   members     RoomMember[]
   shapes      Shape[]
   messages    Message[]
+  
+
 
   @@map("rooms")
 }
