@@ -11,12 +11,20 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.1.1",
+    "@repo/schemas": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",
+    "@types/jsonwebtoken": "^9.0.10",
+    "axios": "^1.10.0",
+    "jose": "^6.0.11",
+    "jsonwebtoken": "^9.0.2",
     "next": "^15.3.0",
     "postcss": "^8.5.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tailwindcss": "^4.1.11"
+    "react-hook-form": "^7.60.0",
+    "tailwindcss": "^4.1.11",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

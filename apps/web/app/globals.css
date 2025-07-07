@@ -1,2 +1,16 @@
 @import "tailwindcss";
 
+
+@theme  {
+  --font-caudex: var(--font-caudex);
+  --font-handlee: var(--font-handlee);
+  --font-didact-gothic: var(--font-didact-gothic);
+  
+
+  --color-primary: #222222;
+  --color-secondary: #CCCCCC;
+  --color-tertiary: #666666;
+  --color-quaternary: #333333;
+  --color-darkbg:#111111;
+  --color-lightbg:#FFFFFF;
+}

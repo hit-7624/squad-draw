@@ -34,6 +34,7 @@ model Room {
   members     RoomMember[]
   shapes      Shape[]
   messages    Message[]
+  isShared    Boolean    @default(false)
   
 
 
