@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Button } from "../../components/ui/button"
-import { UserSignupSchema, type UserSignup } from "@repo/schemas/types"
+import { UserSignupSchema, type UserSignup } from "@repo/schemas"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -40,7 +40,8 @@ export default function SignUpPage() {
         body: JSON.stringify({
           name: data.name.trim(),
           email: data.email,
-          password: data.password
+          password: data.password,
+          confirmPassword: data.confirmPassword
         }),
       })
 

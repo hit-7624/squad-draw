@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@repo/db';
 import '../types/api';
 import bcrypt from 'bcrypt';
+import { UserLoginSchema, UserSignupSchema } from '@repo/schemas';
+import { ZodError } from 'zod';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -15,7 +17,8 @@ const COOKIE_EXPIRY = Number(process.env.COOKIE_EXPIRY) || 86400000;
 
 export const signup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { email, password, name } = req.body;
+  
+    const { email, password, name } = UserSignupSchema.parse(req.body);
     
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({ data: { email, password: hashedPassword, name } });
@@ -25,18 +28,21 @@ export const signup = async (req: Request, res: Response, next: NextFunction): P
       res.status(409).json({ message: "Email already exists" });
       return;
     }
+    if(error instanceof ZodError) {
+      res.status(400).json({ message: error.errors[0]?.message || 'Invalid request'  });
+      return;
+    }
     next(error);
   }
 };
 
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = UserLoginSchema.parse(req.body);
 
     const user = await prisma.user.findUnique({ where: { email } });
     
     if (!user) {
-      await bcrypt.compare(password, '$2b$12$dummy.hash.to.prevent.timing.attacks.dummy.hash.value');
       res.status(401).json({ message: "Invalid credentials" });
       return;
     }
@@ -62,7 +68,12 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 
     res.status(200).json({ token });
   } catch (error) {
+    if(error instanceof ZodError) {
+      res.status(400).json({ message: error.errors[0]?.message || 'Invalid request'  });
+      return;
+    }
     next(error);
+
   }
 };
 
@@ -88,6 +99,7 @@ export const me = async (req: Request, res: Response, next: NextFunction): Promi
     }
     res.status(200).json({ id: user.id, name: user.name, email: user.email });
   } catch (error) {
+    
     next(error);
   }
 };
