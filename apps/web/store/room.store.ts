@@ -7,7 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_SERVER_URL || "http://localhost:3001
 
 interface RoomState {
   joinedRooms: Room[];
-  selectedRoomId: string | null;
+  overviewRoomId: string | null;
   messages: Message[];
   members: Member[];
   loading: boolean;
@@ -27,13 +27,18 @@ interface RoomActions {
   shareRoom: (roomId: string) => Promise<void>;
   unshareRoom: (roomId: string) => Promise<void>;
   copyShareLink: (roomId: string) => void;
+  copyRoomId: (roomId: string) => void;
   sendMessage: (message: string) => Promise<void>;
-  setSelectedRoom: (roomId: string | null) => void;
+  openOverview: (roomId: string | null) => void;
   toggleRoomExpansion: (roomId: string) => void;
   setShareDialogOpen: (roomId: string | null) => void;
+  promoteToAdmin: (roomId: string, userId: string) => Promise<void>;
+  demoteFromAdmin: (roomId: string, userId: string) => Promise<void>;
+  kickMember: (roomId: string, userId: string) => Promise<void>;
   canManageRoom: (room: Room, user: User | null) => boolean;
   isOwner: (room: Room, user: User | null) => boolean;
-  getSelectedRoom: () => Room | undefined;
+  canManageMembers: (room: Room, user: User | null) => boolean;
+  getOverviewRoom: () => Room | undefined;
   clearError: () => void;
   setError: (error: string | null) => void;
 }
@@ -44,7 +49,7 @@ export const useRoomStore = create<RoomStore>()(
   devtools(
     (set, get) => ({
       joinedRooms: [],
-      selectedRoomId: null,
+      overviewRoomId: null,
       messages: [],
       members: [],
       loading: false,
@@ -132,8 +137,6 @@ export const useRoomStore = create<RoomStore>()(
       },
 
       deleteRoom: async (roomId: string) => {
-        if (!confirm("Are you sure you want to permanently delete this room? This action cannot be undone.")) return;
-        
         try {
           set({ actionLoading: `delete-${roomId}`, error: null });
           const response = await axios.delete(`${API_URL}/api/rooms/${roomId}`, {
@@ -142,9 +145,9 @@ export const useRoomStore = create<RoomStore>()(
 
           if (response.status === 200) {
             await get().fetchJoinedRooms();
-            const { selectedRoomId } = get();
-            if (selectedRoomId === roomId) {
-              set({ selectedRoomId: null });
+            const { overviewRoomId } = get();
+            if (overviewRoomId === roomId) {
+              set({ overviewRoomId: null });
             }
             set({ actionLoading: null });
           }
@@ -155,14 +158,7 @@ export const useRoomStore = create<RoomStore>()(
         }
       },
 
-      leaveRoom: async (roomId: string, roomName: string, isOwner: boolean) => {
-        let confirmMessage = `Are you sure you want to leave "${roomName}"?`;
-        if (isOwner) {
-          confirmMessage += "\n\nAs the owner, your ownership will be transferred to another admin or member.";
-        }
-        
-        if (!confirm(confirmMessage)) return;
-        
+      leaveRoom: async (roomId: string, roomName: string, isOwner: boolean) => {        
         try {
           set({ actionLoading: `leave-${roomId}`, error: null });
           const response = await axios.delete(`${API_URL}/api/rooms/${roomId}/leave`, {
@@ -171,9 +167,9 @@ export const useRoomStore = create<RoomStore>()(
 
           if (response.status === 200) {
             await get().fetchJoinedRooms();
-            const { selectedRoomId } = get();
-            if (selectedRoomId === roomId) {
-              set({ selectedRoomId: null });
+            const { overviewRoomId } = get();
+            if (overviewRoomId === roomId) {
+              set({ overviewRoomId: null });
             }
             set({ actionLoading: null });
           }
@@ -202,9 +198,7 @@ export const useRoomStore = create<RoomStore>()(
         }
       },
 
-      unshareRoom: async (roomId: string) => {
-        if (!confirm("Do you want to stop sharing this room? New members will no longer be able to join.")) return;
-        
+      unshareRoom: async (roomId: string) => {        
         try {
           set({ actionLoading: `unshare-${roomId}`, error: null });
           const response = await axios.patch(`${API_URL}/api/rooms/${roomId}/unshare`, {}, {
@@ -237,19 +231,34 @@ export const useRoomStore = create<RoomStore>()(
         });
       },
 
+      copyRoomId: (roomId: string) => {
+        const roomIdText = roomId.toString();
+        navigator.clipboard.writeText(roomIdText).then(() => {
+          // Success handled by notification store
+        }).catch(() => {
+          const textArea = document.createElement('textarea');
+          textArea.value = roomIdText;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          // Success handled by notification store
+        });
+      },
+
       sendMessage: async (message: string) => {
-        const { selectedRoomId } = get();
-        if (!message.trim() || !selectedRoomId) return;
+        const { overviewRoomId } = get();
+        if (!message.trim() || !overviewRoomId) return;
         
         try {
           set({ actionLoading: "sendMessage", error: null });
-          const response = await axios.post(`${API_URL}/api/rooms/${selectedRoomId}/messages`, 
+          const response = await axios.post(`${API_URL}/api/rooms/${overviewRoomId}/messages`, 
             { message: message.trim() },
             { withCredentials: true }
           );
 
           if (response.status === 201) {
-            await get().fetchRoomData(selectedRoomId);
+            await get().fetchRoomData(overviewRoomId);
             set({ actionLoading: null });
           }
         } catch (err: any) {
@@ -259,8 +268,8 @@ export const useRoomStore = create<RoomStore>()(
         }
       },
 
-      setSelectedRoom: (roomId: string | null) => {
-        set({ selectedRoomId: roomId });
+      openOverview: (roomId: string | null) => {
+        set({ overviewRoomId: roomId });
         if (roomId) {
           get().fetchRoomData(roomId);
         }
@@ -275,6 +284,60 @@ export const useRoomStore = create<RoomStore>()(
         set({ shareDialogOpen: roomId });
       },
 
+      promoteToAdmin: async (roomId: string, userId: string) => {
+        try {
+          set({ actionLoading: `promote-${userId}`, error: null });
+          const response = await axios.patch(`${API_URL}/api/rooms/${roomId}/members/${userId}/promote`, {}, {
+            withCredentials: true,
+          });
+
+          if (response.status === 200) {
+            await get().fetchRoomData(roomId);
+            set({ actionLoading: null });
+          }
+        } catch (err: any) {
+          const errorMessage = err.response?.data?.message || "Failed to promote member";
+          set({ error: errorMessage, actionLoading: null });
+          throw err;
+        }
+      },
+
+      demoteFromAdmin: async (roomId: string, userId: string) => {
+        try {
+          set({ actionLoading: `demote-${userId}`, error: null });
+          const response = await axios.patch(`${API_URL}/api/rooms/${roomId}/members/${userId}/demote`, {}, {
+            withCredentials: true,
+          });
+
+          if (response.status === 200) {
+            await get().fetchRoomData(roomId);
+            set({ actionLoading: null });
+          }
+        } catch (err: any) {
+          const errorMessage = err.response?.data?.message || "Failed to demote admin";
+          set({ error: errorMessage, actionLoading: null });
+          throw err;
+        }
+      },
+
+      kickMember: async (roomId: string, userId: string) => {
+        try {
+          set({ actionLoading: `kick-${userId}`, error: null });
+          const response = await axios.delete(`${API_URL}/api/rooms/${roomId}/members/${userId}`, {
+            withCredentials: true,
+          });
+
+          if (response.status === 200) {
+            await get().fetchRoomData(roomId);
+            set({ actionLoading: null });
+          }
+        } catch (err: any) {
+          const errorMessage = err.response?.data?.message || "Failed to kick member";
+          set({ error: errorMessage, actionLoading: null });
+          throw err;
+        }
+      },
+
       canManageRoom: (room: Room, user: User | null) => {
         return user?.id === room.ownerId || room.userRole === 'ADMIN';
       },
@@ -283,9 +346,13 @@ export const useRoomStore = create<RoomStore>()(
         return user?.id === room.ownerId;
       },
 
-      getSelectedRoom: () => {
-        const { joinedRooms, selectedRoomId } = get();
-        return joinedRooms.find(room => room.id === selectedRoomId);
+      canManageMembers: (room: Room, user: User | null) => {
+        return user?.id === room.ownerId || room.userRole === 'ADMIN';
+      },
+
+      getOverviewRoom: () => {
+        const { joinedRooms, overviewRoomId } = get();
+        return joinedRooms.find(room => room.id === overviewRoomId);
       },
 
       clearError: () => {

@@ -2,7 +2,7 @@ import { useRoomStore } from '../store/room.store';
 
 export const useRoom = () => {
   const joinedRooms = useRoomStore((state) => state.joinedRooms);
-  const selectedRoomId = useRoomStore((state) => state.selectedRoomId);
+  const overviewRoomId = useRoomStore((state) => state.overviewRoomId);
   const messages = useRoomStore((state) => state.messages);
   const members = useRoomStore((state) => state.members);
   const loading = useRoomStore((state) => state.loading);
@@ -20,20 +20,25 @@ export const useRoom = () => {
   const shareRoom = useRoomStore((state) => state.shareRoom);
   const unshareRoom = useRoomStore((state) => state.unshareRoom);
   const copyShareLink = useRoomStore((state) => state.copyShareLink);
+  const copyRoomId = useRoomStore((state) => state.copyRoomId);
   const sendMessage = useRoomStore((state) => state.sendMessage);
-  const setSelectedRoom = useRoomStore((state) => state.setSelectedRoom);
+  const openOverview = useRoomStore((state) => state.openOverview);
   const toggleRoomExpansion = useRoomStore((state) => state.toggleRoomExpansion);
   const setShareDialogOpen = useRoomStore((state) => state.setShareDialogOpen);
+  const promoteToAdmin = useRoomStore((state) => state.promoteToAdmin);
+  const demoteFromAdmin = useRoomStore((state) => state.demoteFromAdmin);
+  const kickMember = useRoomStore((state) => state.kickMember);
   const canManageRoom = useRoomStore((state) => state.canManageRoom);
   const isOwner = useRoomStore((state) => state.isOwner);
-  const getSelectedRoom = useRoomStore((state) => state.getSelectedRoom);
+  const canManageMembers = useRoomStore((state) => state.canManageMembers);
+  const getOverviewRoom = useRoomStore((state) => state.getOverviewRoom);
   const clearError = useRoomStore((state) => state.clearError);
   const setError = useRoomStore((state) => state.setError);
 
   return {
     // State
     joinedRooms,
-    selectedRoomId,
+    overviewRoomId,
     messages,
     members,
     loading,
@@ -52,13 +57,18 @@ export const useRoom = () => {
     shareRoom,
     unshareRoom,
     copyShareLink,
+    copyRoomId,
     sendMessage,
-    setSelectedRoom,
+    openOverview,
     toggleRoomExpansion,
     setShareDialogOpen,
+    promoteToAdmin,
+    demoteFromAdmin,
+    kickMember,
     canManageRoom,
     isOwner,
-    getSelectedRoom,
+    canManageMembers,
+    getOverviewRoom,
     clearError,
     setError,
   };

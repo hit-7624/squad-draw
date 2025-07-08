@@ -13,7 +13,7 @@ export default function Dashboard() {
     const { user, loading: userLoading, error: userError, fetchUser } = useUser();
     const { 
         joinedRooms, 
-        selectedRoomId, 
+        overviewRoomId, 
         messages, 
         members, 
         actionLoading, 
@@ -28,12 +28,17 @@ export default function Dashboard() {
         shareRoom,
         unshareRoom,
         copyShareLink,
+        copyRoomId,
         sendMessage,
-        setSelectedRoom,
+        openOverview,
         toggleRoomExpansion,
+        promoteToAdmin,
+        demoteFromAdmin,
+        kickMember,
         canManageRoom,
         isOwner,
-        getSelectedRoom
+        canManageMembers,
+        getOverviewRoom
     } = useRoom();
     const { error, success, showError, showSuccess } = useNotification();
     const { 
@@ -133,6 +138,11 @@ export default function Dashboard() {
         showSuccess("Share link copied to clipboard!");
     };
 
+    const handleCopyRoomId = (roomId: string) => {
+        copyRoomId(roomId);
+        showSuccess("Room ID copied to clipboard!");
+    };
+
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
@@ -146,7 +156,7 @@ export default function Dashboard() {
         }
     };
 
-    const selectedRoom = getSelectedRoom();
+    const overviewRoom = getOverviewRoom();
 
     if (loading || userLoading) {
         return (
@@ -170,7 +180,7 @@ export default function Dashboard() {
                 {/* User Info */}
                 {user && <UserInfoCard user={user} />}
 
-                <div className={`grid gap-8 ${selectedRoom ? 'lg:grid-cols-2' : 'lg:grid-cols-1'}`}>
+                <div className={`grid gap-8 ${overviewRoom ? 'lg:grid-cols-2' : 'lg:grid-cols-1'}`}>
                     {/* Left Column - Room Management */}
                     <div className="space-y-6">
                         {/* Room Creation */}
@@ -193,32 +203,39 @@ export default function Dashboard() {
                         <RoomsList
                             rooms={joinedRooms}
                             user={user}
-                            selectedRoomId={selectedRoomId}
+                            overviewRoomId={overviewRoomId}
                             expandedRoom={expandedRoom}
                             actionLoading={actionLoading}
                             shareDialogOpen={shareDialogOpen}
-                            onSelectRoom={setSelectedRoom}
+                            onOpenOverview={openOverview}
                             onToggleExpansion={toggleRoomExpansion}
                             onShareRoom={handleShareRoom}
                             onUnshareRoom={handleUnshareRoom}
                             onDeleteRoom={handleDeleteRoom}
                             onLeaveRoom={handleLeaveRoom}
                             onCopyShareLink={handleCopyShareLink}
+                            onCopyRoomId={handleCopyRoomId}
                             canManageRoom={(room) => canManageRoom(room, user)}
                             isOwner={(room) => isOwner(room, user)}
                         />
                     </div>
 
                     {/* Right Column - Room Overview */}
-                    {selectedRoom && (
+                    {overviewRoom && (
                         <RoomOverview
-                            selectedRoom={selectedRoom}
+                            overviewRoom={overviewRoom}
                             messages={messages}
                             members={members}
+                            currentUser={user}
                             newMessage={newMessage}
                             setNewMessage={setNewMessage}
                             onSendMessage={handleSendMessage}
                             actionLoading={actionLoading}
+                            canManageMembers={canManageMembers(overviewRoom, user)}
+                            isOwner={isOwner(overviewRoom, user)}
+                            onPromoteToAdmin={promoteToAdmin}
+                            onDemoteFromAdmin={demoteFromAdmin}
+                            onKickMember={kickMember}
                         />
                     )}
                 </div>

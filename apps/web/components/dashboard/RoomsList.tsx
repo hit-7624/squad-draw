@@ -5,17 +5,18 @@ import { Room, User } from "./dashboard.types";
 interface RoomsListProps {
   rooms: Room[];
   user: User | null;
-  selectedRoomId: string | null;
+  overviewRoomId: string | null;
   expandedRoom: string | null;
   actionLoading: string | null;
   shareDialogOpen: string | null;
-  onSelectRoom: (roomId: string) => void;
+  onOpenOverview: (roomId: string | null) => void;
   onToggleExpansion: (roomId: string) => void;
   onShareRoom: (roomId: string) => void;
   onUnshareRoom: (roomId: string) => void;
   onDeleteRoom: (roomId: string) => void;
   onLeaveRoom: (roomId: string, roomName: string, isOwner: boolean) => void;
   onCopyShareLink: (roomId: string) => void;
+  onCopyRoomId: (roomId: string) => void;
   canManageRoom: (room: Room) => boolean;
   isOwner: (room: Room) => boolean;
 }
@@ -23,17 +24,18 @@ interface RoomsListProps {
 export const RoomsList = ({
   rooms,
   user,
-  selectedRoomId,
+  overviewRoomId,
   expandedRoom,
   actionLoading,
   shareDialogOpen,
-  onSelectRoom,
+  onOpenOverview,
   onToggleExpansion,
   onShareRoom,
   onUnshareRoom,
   onDeleteRoom,
   onLeaveRoom,
   onCopyShareLink,
+  onCopyRoomId,
   canManageRoom,
   isOwner
 }: RoomsListProps) => {
@@ -56,16 +58,17 @@ export const RoomsList = ({
                 room={room}
                 user={user}
                 isExpanded={expandedRoom === room.id}
-                isSelected={selectedRoomId === room.id}
+                isSelected={overviewRoomId === room.id}
                 actionLoading={actionLoading}
                 shareDialogOpen={shareDialogOpen}
                 onToggleExpansion={onToggleExpansion}
-                onSelectRoom={onSelectRoom}
+                onOpenOverview={onOpenOverview}
                 onShareRoom={onShareRoom}
                 onUnshareRoom={onUnshareRoom}
                 onDeleteRoom={onDeleteRoom}
                 onLeaveRoom={onLeaveRoom}
                 onCopyShareLink={onCopyShareLink}
+                onCopyRoomId={onCopyRoomId}
                 canManageRoom={canManageRoom}
                 isOwner={isOwner}
               />

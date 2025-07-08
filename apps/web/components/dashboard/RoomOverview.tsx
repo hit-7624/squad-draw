@@ -1,35 +1,48 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Room, Message, Member } from "./dashboard.types";
+import { MemberCard } from "./MemberCard";
+import { Room, Message, Member, User } from "./dashboard.types";
 
 interface RoomOverviewProps {
-  selectedRoom: Room;
+  overviewRoom: Room;
   messages: Message[];
   members: Member[];
+  currentUser: User | null;
   newMessage: string;
   setNewMessage: (message: string) => void;
   onSendMessage: (e: React.FormEvent) => Promise<void>;
   actionLoading: string | null;
+  canManageMembers: boolean;
+  isOwner: boolean;
+  onPromoteToAdmin: (roomId: string, userId: string) => Promise<void>;
+  onDemoteFromAdmin: (roomId: string, userId: string) => Promise<void>;
+  onKickMember: (roomId: string, userId: string) => Promise<void>;
 }
 
 export const RoomOverview = ({
-  selectedRoom,
+  overviewRoom,
   messages,
   members,
+  currentUser,
   newMessage,
   setNewMessage,
   onSendMessage,
-  actionLoading
+  actionLoading,
+  canManageMembers,
+  isOwner,
+  onPromoteToAdmin,
+  onDemoteFromAdmin,
+  onKickMember
 }: RoomOverviewProps) => {
   return (
     <div className="space-y-6">
       {/* Room Header */}
-      <Card className="bg-bg-1 border-border-1">
+      <Card className="bg-bg-1 border-border-1 cursor-pointer hover:bg-bg-1/80 transition-colors" >
         <CardHeader>
-          <CardTitle className="text-font-1 font-handlee text-xl">Room: {selectedRoom.name}</CardTitle>
+          <CardTitle className="text-font-1 font-handlee text-xl">Room: {overviewRoom.name}</CardTitle>
           <CardDescription className="text-font-2 text-base">
-            Room Overview • Created: {new Date(selectedRoom.createdAt).toLocaleDateString()}
+            Room Overview • Created: {new Date(overviewRoom.createdAt).toLocaleDateString()}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -92,19 +105,18 @@ export const RoomOverview = ({
         <CardContent>
           <div className="space-y-2">
             {members.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-3 bg-bg-2 rounded-lg border border-border-1">
-                <div>
-                  <p className="text-font-1 font-medium text-sm">{member.name}</p>
-                  <p className="text-font-3 text-xs">{member.email}</p>
-                </div>
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  member.role === 'ADMIN' 
-                    ? 'bg-custom text-white' 
-                    : 'bg-font-2 text-bg-2'
-                }`}>
-                  {member.role}
-                </span>
-              </div>
+              <MemberCard
+                key={member.id}
+                member={member}
+                currentUser={currentUser}
+                room={overviewRoom}
+                actionLoading={actionLoading}
+                canManageMembers={canManageMembers}
+                isOwner={isOwner}
+                onPromoteToAdmin={onPromoteToAdmin}
+                onDemoteFromAdmin={onDemoteFromAdmin}
+                onKickMember={onKickMember}
+              />
             ))}
           </div>
         </CardContent>

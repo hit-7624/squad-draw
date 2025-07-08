@@ -388,7 +388,7 @@ export const demoteMember = async (req: Request, res: Response, next: NextFuncti
     }
 
     if (targetMember.role === "MEMBER") {
-      res.status(400).json({ message: "User is not an admin" });
+      res.status(400).json({ message: "You are not an admin" });
       return;
     }
 
