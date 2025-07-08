@@ -12,5 +12,21 @@
   --color-tertiary: #666666;
   --color-quaternary: #333333;
   --color-darkbg:#111111;
+  
+  
+  
+  /* colors-2 */
   --color-lightbg:#FFFFFF;
+  --color-custom: #C96342;
+  --color-custom-hover: #B55538;
+  --color-bg-1 : #262624;
+  --color-bg-2 : #1F1E1D;
+  --color-border-1 : #42413D;
+  --color-dark-1: #1F1E1D;
+  --color-dark2 : #141413 ;
+  --color-font-1 : #FAF9F4;
+  --color-font-2 : #9C9A92;
+  --color-font-3:#C2C0B6;
+  --color-delete: #C03D3F;
+  --color-delete-hover: #A62D30;
 }

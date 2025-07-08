@@ -1,32 +1,34 @@
 "use client"
 
 import React, { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
-import { Label } from "../../components/ui/label"
-import { Button } from "../../components/ui/button"
-import { UserSignupSchema, type UserSignup } from "@repo/schemas"
+import { UserSignupSchema } from "@repo/schemas"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { 
+  AuthLayout, 
+  AuthCard, 
+  FormField, 
+  AuthButton, 
+  StatusMessage, 
+  SignUpFormData 
+} from "../../components/auth"
+import { useRouter } from "next/navigation"
 
 const API_URL = process.env.NEXT_PUBLIC_API_SERVER_URL || "http://localhost:3001";
-
-type FormData = UserSignup;
 
 export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [generalError, setGeneralError] = useState<string>("")
-
+  const router = useRouter()
   const {
     register,
     handleSubmit,
     formState: { errors }
-  } = useForm<FormData>({
+  } = useForm<SignUpFormData>({
     resolver: zodResolver(UserSignupSchema)
   })
 
-  const onSubmit = async (data: FormData) => {
-    
+  const onSubmit = async (data: SignUpFormData) => {
     setIsLoading(true)
     setGeneralError("")
 
@@ -46,7 +48,7 @@ export default function SignUpPage() {
       })
 
       if (response.ok) {
-        window.location.href = "/signin?message=Account created successfully. Please sign in."
+        router.push("/signin?message=Account created successfully. Please sign in.")
       } else {
         const responseData = await response.json()
         setGeneralError(responseData.message || "Registration failed")
@@ -59,101 +61,63 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[var(--color-darkbg)] relative text-primary">
-      
-      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 font-didact-gothic">
-        <div className="w-full max-w-md">
-        <Card className="bg-secondary   border border-gray-800 text-primary ">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center font-handlee text-primary">Create Account</CardTitle>
-            <CardDescription className="text-center">
-              Enter your information to create a new account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Enter your full name"
-                  {...register("name")}
-                  className={`bg-tertiary text-secondary ${errors.name ? "border-red-500" : ""}`}
-                />
-                {errors.name && (
-                  <p className="text-sm text-quaternary">{errors.name.message}</p>
-                )}
-              </div>
+    <AuthLayout>
+      <AuthCard
+        title="Create Account"
+        description="Enter your information to create a new account"
+        footerText="Already have an account?"
+        footerLinkText="Sign in"
+        footerLinkHref="/signin"
+      >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            id="name"
+            label="Full Name"
+            type="text"
+            placeholder="Enter your full name"
+            register={register("name")}
+            error={errors.name?.message}
+          />
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  {...register("email")}
-                  className={`bg-tertiary text-secondary ${errors.email ? "border-red-500" : ""}`}
-                />
-                {errors.email && (
-                  <p className="text-sm text-quaternary">{errors.email.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Create a password"
-                  {...register("password")}
-                  className={`bg-tertiary text-secondary ${errors.password ? "border-red-500 " : ""}`}
-                />
-                {errors.password && (
-                  <p className="text-sm text-quaternary">{errors.password.message}</p>
-                )}
-                <p className="text-xs text-tertiary">
-                  Must be 8+ characters with uppercase, lowercase, and number
-                </p>
-              </div>
+          <FormField
+            id="email"
+            label="Email"
+            type="email"
+            placeholder="Enter your email"
+            register={register("email")}
+            error={errors.email?.message}
+          />
+          
+          <FormField
+            id="password"
+            label="Password"
+            type="password"
+            placeholder="Create a password"
+            register={register("password")}
+            error={errors.password?.message}
+            helpText="Must be 8+ characters with uppercase, lowercase, and number"
+          />
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your password"
-                  {...register("confirmPassword")}
-                  className={`bg-tertiary text-secondary ${errors.confirmPassword ? "border-red-500" : ""}`}
-                />
-                {errors.confirmPassword && (
-                  <p className="text-sm text-quaternary">{errors.confirmPassword.message}</p>
-                )}
-              </div>
+          <FormField
+            id="confirmPassword"
+            label="Confirm Password"
+            type="password"
+            placeholder="Confirm your password"
+            register={register("confirmPassword")}
+            error={errors.confirmPassword?.message}
+          />
 
-              {generalError && (
-                <div className="p-3 text-sm text-quaternary bg-red-50 border border-red-200 rounded-md ">
-                  {generalError}
-                </div>
-              )}
+          {generalError && (
+            <StatusMessage message={generalError} type="error" />
+          )}
 
-              <Button type="submit" className="w-full font-bold bg-primary text-secondary" disabled={isLoading}>
-                {isLoading ? "Creating Account..." : "Create Account"}
-              </Button>
-            </form>
-            
-            <div className="mt-6 text-center">
-                <p className="text-sm text-tertiary">
-                Already have an account?{" "}
-                <a href="/signin" className="font-medium text-primary hover:text-tertiary underline">
-                  Sign in
-                </a>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        </div>
-      </div>
-    </div>
+          <AuthButton
+            isLoading={isLoading}
+            loadingText="Creating Account..."
+            buttonText="Create Account"
+          />
+        </form>
+      </AuthCard>
+    </AuthLayout>
   )
 } 

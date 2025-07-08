@@ -40,7 +40,14 @@ export const getJoinedRooms = async (req: Request, res: Response, next: NextFunc
       where: { userId: req.user.id },
       include: { room: true }
     });
-    res.status(200).json({ rooms: rooms.map(rm => rm.room) });
+    res.status(200).json({ 
+      rooms: rooms.map(rm => ({
+        ...rm.room,
+        userRole: rm.role,
+        createdAt: rm.room.createdAt.toISOString(),
+        updatedAt: rm.room.updatedAt.toISOString(),
+      }))
+    });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch joined rooms" });
   }
@@ -48,6 +55,7 @@ export const getJoinedRooms = async (req: Request, res: Response, next: NextFunc
 
 export const createRoom = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
+    
     const { name } = (req.body);
 
     const validatedName = RoomNameSchema.parse(name);
@@ -77,7 +85,7 @@ export const createRoom = async (req: Request, res: Response, next: NextFunction
 export const joinRoom = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { roomId } = req.params;
-
+    console.log(roomId);
     const validatedRoomId = RoomIdSchema.parse(roomId);
     if (!roomId) {
       res.status(400).json({ message: "Room ID is required" });
@@ -97,6 +105,7 @@ export const joinRoom = async (req: Request, res: Response, next: NextFunction):
     });
 
     if (existingMember) {
+      console.log("You are already a member of this room");
       res.status(400).json({ message: "You are already a member of this room" });
       return;
     }
@@ -455,6 +464,55 @@ export const getMessages = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
+export const getMembers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { roomId } = req.params;
+    const validatedRoomId = RoomIdSchema.parse(roomId);
+    if (!roomId) {
+      res.status(400).json({ message: "Room ID is required" });
+      return;
+    }
+
+    const member = await validateMembership(req.user.id, validatedRoomId);
+    if (!member) {
+      res.status(403).json({ message: "Access denied: You are not a member of this room" });
+      return;
+    }
+
+    const members = await prisma.roomMember.findMany({
+      where: { roomId: validatedRoomId },
+      include: { 
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: [
+        { role: 'asc' },
+        { user: { name: 'asc' } }
+      ]
+    });
+
+    const formattedMembers = members.map(member => ({
+      id: member.user.id,
+      name: member.user.name,
+      email: member.user.email,
+      role: member.role
+    }));
+
+    res.status(200).json({ members: formattedMembers });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      res.status(400).json({ message: error.errors[0]?.message || 'Invalid request' });
+      return;
+    }
+    next(error);
+  }
+};
+
 export const getShapes = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { roomId } = req.params;
@@ -567,6 +625,7 @@ export const shareRoom = async (req: Request, res: Response, next: NextFunction)
 
     const isAdmin = await validateAdminPermission(req.user.id, validatedRoomId);
     if(!isAdmin) {
+
       res.status(403).json({ message: "You are not authorized to share this room" });
       return;
     }
