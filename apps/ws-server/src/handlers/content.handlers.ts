@@ -25,26 +25,116 @@ export const newShapeHandler = async (socket: Socket, newShape: Shape) => {
     socket.to(roomId).emit('new-shape-added', createdShape);
 }
 
-export const newMessageHandler = async (socket: Socket, newMessage: Message) => {
-    const { message, roomId, userId } = newMessage;
-    const createdMessage = await prisma.message.create({
-        data: {
-            message: message,
-            roomId: roomId,
-            userId: userId,
-        },
-    });
-    if(socket.data.currentRoom !== roomId) {
+export const newMessageHandler = async (socket: Socket, data: { message: string; roomId: string }) => {
+    // Validate user authentication
+    if (!socket.data.user) {
         socket.emit('custom-error', {
-            code: 400,
-            type: 'NOT_IN_ROOM',
-            message: 'You are not in this room! dont try to send messages to other rooms , dont do these crazy things',
+            code: 401,
+            type: 'UNAUTHORIZED',
+            message: 'User not authenticated'
         });
         return;
     }
-    socket.to(roomId).emit('new-message-added', createdMessage);
 
-   
-    const room   = socket.data.currentRoom;
-    
-}
+    // Validate input data
+    if (!data || typeof data !== 'object') {
+        socket.emit('custom-error', {
+            code: 400,
+            type: 'INVALID_DATA',
+            message: 'Invalid message data format'
+        });
+        return;
+    }
+
+    // Validate message content
+    if (!data.message || typeof data.message !== 'string' || !data.message.trim()) {
+        socket.emit('custom-error', {
+            code: 400,
+            type: 'INVALID_MESSAGE',
+            message: 'Message content is required and must be a non-empty string'
+        });
+        return;
+    }
+
+    // Validate message length (max 1000 characters)
+    if (data.message.trim().length > 1000) {
+        socket.emit('custom-error', {
+            code: 400,
+            type: 'MESSAGE_TOO_LONG',
+            message: 'Message cannot exceed 1000 characters'
+        });
+        return;
+    }
+
+    // Validate roomId
+    if (!data.roomId || typeof data.roomId !== 'string' || !data.roomId.trim()) {
+        socket.emit('custom-error', {
+            code: 400,
+            type: 'INVALID_ROOM_ID',
+            message: 'Room ID is required and must be a valid string'
+        });
+        return;
+    }
+
+    // Check if user is in the room
+    if (socket.data.currentRoom !== data.roomId) {
+        socket.emit('custom-error', {
+            code: 400,
+            type: 'NOT_IN_ROOM',
+            message: 'You are not in this room'
+        });
+        return;
+    }
+
+    try {
+        // Verify room exists and user is a member
+        const roomMembership = await prisma.roomMember.findFirst({
+            where: {
+                roomId: data.roomId,
+                userId: socket.data.user.id,
+            },
+            include: {
+                room: true
+            }
+        });
+
+        if (!roomMembership) {
+            socket.emit('custom-error', {
+                code: 403,
+                type: 'FORBIDDEN',
+                message: 'You are not a member of this room'
+            });
+            return;
+        }
+        console.log(socket.data.user);
+        // Create message with authenticated user ID
+        const createdMessage = await prisma.message.create({
+            data: {
+                message: data.message.trim(),
+                roomId: data.roomId,
+                userId: socket.data.user.id,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        // Broadcast to ALL room members (including sender)
+        socket.to(data.roomId).emit('new-message-added', createdMessage);
+        socket.emit('new-message-added', createdMessage);
+
+    } catch (error) {
+        console.error('Error creating message:', error);
+        socket.emit('custom-error', {
+            code: 500,
+            type: 'INTERNAL_ERROR',
+            message: 'Failed to save message'
+        });
+    }
+};

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Modal } from "../ui/modal";
+import { OnlineIndicator } from "../ui/OnlineIndicator";
 import { Member, Room, User } from "./dashboard.types";
 
 interface MemberCardProps {
@@ -8,6 +9,7 @@ interface MemberCardProps {
   currentUser: User | null;
   room: Room;
   actionLoading: string | null;
+  isOnline: boolean;
   canManageMembers: boolean;
   isOwner: boolean;
   onPromoteToAdmin: (roomId: string, userId: string) => Promise<void>;
@@ -20,6 +22,7 @@ export const MemberCard = ({
   currentUser,
   room,
   actionLoading,
+  isOnline,
   canManageMembers,
   isOwner,
   onPromoteToAdmin,
@@ -108,9 +111,12 @@ export const MemberCard = ({
       <div className="flex items-center justify-between p-4 bg-bg-1 rounded-lg border border-border-1 hover:bg-bg-1/80 transition-colors">
         {/* Left side - User info and tags */}
         <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <p className="text-font-1 font-medium text-sm">{member.name}</p>
+                      <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2">
+                  <OnlineIndicator isOnline={isOnline} size="sm" />
+                  <p className="text-font-1 font-medium text-sm">{member.name}</p>
+                </div>
               
               {/* Role tags side by side after username */}
               <div className="flex gap-1.5">

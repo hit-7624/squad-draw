@@ -10,6 +10,8 @@ export const useRoom = () => {
   const shareDialogOpen = useRoomStore((state) => state.shareDialogOpen);
   const expandedRoom = useRoomStore((state) => state.expandedRoom);
   const error = useRoomStore((state) => state.error);
+  const isConnected = useRoomStore((state) => state.isConnected);
+  const onlineMembers = useRoomStore((state) => state.onlineMembers);
 
   const fetchJoinedRooms = useRoomStore((state) => state.fetchJoinedRooms);
   const fetchRoomData = useRoomStore((state) => state.fetchRoomData);
@@ -23,6 +25,9 @@ export const useRoom = () => {
   const copyRoomId = useRoomStore((state) => state.copyRoomId);
   const sendMessage = useRoomStore((state) => state.sendMessage);
   const openOverview = useRoomStore((state) => state.openOverview);
+  const closeOverview = useRoomStore((state) => state.closeOverview);
+  const initializeSocket = useRoomStore((state) => state.initializeSocket);
+  const disconnectSocket = useRoomStore((state) => state.disconnectSocket);
   const toggleRoomExpansion = useRoomStore((state) => state.toggleRoomExpansion);
   const setShareDialogOpen = useRoomStore((state) => state.setShareDialogOpen);
   const promoteToAdmin = useRoomStore((state) => state.promoteToAdmin);
@@ -32,11 +37,9 @@ export const useRoom = () => {
   const isOwner = useRoomStore((state) => state.isOwner);
   const canManageMembers = useRoomStore((state) => state.canManageMembers);
   const getOverviewRoom = useRoomStore((state) => state.getOverviewRoom);
-  const clearError = useRoomStore((state) => state.clearError);
-  const setError = useRoomStore((state) => state.setError);
+  const setUser = useRoomStore((state) => state.setUser);
 
   return {
-    // State
     joinedRooms,
     overviewRoomId,
     messages,
@@ -46,8 +49,8 @@ export const useRoom = () => {
     shareDialogOpen,
     expandedRoom,
     error,
-    
-    // Actions
+    isConnected,
+    onlineMembers,
     fetchJoinedRooms,
     fetchRoomData,
     createRoom,
@@ -60,6 +63,9 @@ export const useRoom = () => {
     copyRoomId,
     sendMessage,
     openOverview,
+    closeOverview,
+    initializeSocket,
+    disconnectSocket,
     toggleRoomExpansion,
     setShareDialogOpen,
     promoteToAdmin,
@@ -69,7 +75,6 @@ export const useRoom = () => {
     isOwner,
     canManageMembers,
     getOverviewRoom,
-    clearError,
-    setError,
+    setUser,
   };
 }; 

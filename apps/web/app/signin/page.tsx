@@ -19,8 +19,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_SERVER_URL || "http://localhost:3001
 export default function SignInPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [successMessage, setSuccessMessage] = useState<string>("")
-  const [generalError, setGeneralError] = useState<string>("")
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
 
   const {
     register,
@@ -32,15 +31,15 @@ export default function SignInPage() {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
-    const message = urlParams.get('message')
-    if (message) {
-      setSuccessMessage(message)
+    const successMessage = urlParams.get('message')
+    if (successMessage) {
+      setMessage({ text: successMessage, type: 'success' })
     }
   }, [])
 
   const onSubmit = async (data: SignInFormData) => {
     setIsLoading(true)
-    setGeneralError("")
+    setMessage(null)
 
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -56,10 +55,10 @@ export default function SignInPage() {
         router.push("/dashboard")
       } else {
         const responseData = await response.json()
-        setGeneralError(responseData.message || "Login failed")
+        setMessage({ text: responseData.message || "Login failed", type: 'error' })
       }
     } catch (error) {
-      setGeneralError("Network error. Please try again.")
+      setMessage({ text: "Network error. Please try again.", type: 'error' })
     } finally {
       setIsLoading(false)
     }
@@ -93,12 +92,11 @@ export default function SignInPage() {
             error={errors.password?.message}
           />
 
-          {successMessage && (
-            <StatusMessage message={successMessage} type="success" />
-          )}
-
-          {generalError && (
-            <StatusMessage message={generalError} type="error" />
+          {message && (
+            <StatusMessage 
+              message={message.text} 
+              type={message.type} 
+            />
           )}
 
           <AuthButton

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Modal } from "../ui/modal";
+import { OnlineIndicator } from "../ui/OnlineIndicator";
 import { Room, User } from "./dashboard.types";
 
 interface RoomCardProps {
@@ -11,6 +12,7 @@ interface RoomCardProps {
   isSelected: boolean;
   actionLoading: string | null;
   shareDialogOpen: string | null;
+  onlineMembers: string[];
   onToggleExpansion: (roomId: string) => void;
   onOpenOverview: (roomId: string | null) => void;
   onShareRoom: (roomId: string) => void;
@@ -30,6 +32,7 @@ export const RoomCard = ({
   isSelected,
   actionLoading,
   shareDialogOpen,
+  onlineMembers,
   onToggleExpansion,
   onOpenOverview,
   onShareRoom,
@@ -144,7 +147,13 @@ export const RoomCard = ({
         if ((e.target as HTMLElement).closest('button')) {
           return;
         }
-        onToggleExpansion(room.id);
+        // Auto-expand and open chat when clicking on room
+        if (!isExpanded) {
+          onToggleExpansion(room.id);
+        }
+        if (!isSelected) {
+          onOpenOverview(room.id);
+        }
       }}
     >
       {/* Header - Always Visible */}
@@ -161,18 +170,28 @@ export const RoomCard = ({
             </svg>
           </div>
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <h4 className="text-lg font-semibold text-font-1 truncate">
-              {room.name}
-            </h4>
-            {isOwner(room) && (
-              <span className="text-xs px-2 py-0.5 bg-custom text-white rounded-full font-medium">Owner</span>
-            )}
-            {!isOwner(room) && room.userRole === 'ADMIN' && (
-              <span className="text-xs px-2 py-0.5 bg-custom/70 text-white rounded-full font-medium">Admin</span>
-            )}
-            {room.userRole === 'MEMBER' && (
-              <span className="text-xs px-2 py-0.5 bg-custom/40 text-font-1 rounded-full font-medium">Member</span>
-            )}
+            <div className="flex items-center gap-2">
+              <h4 className="text-lg font-semibold text-font-1 truncate">
+                {room.name}
+              </h4>
+              {isSelected && onlineMembers.length > 0 && (
+                <div className="flex items-center gap-1 text-xs text-green-600">
+                  <OnlineIndicator isOnline={true} size="sm" />
+                  <span>{onlineMembers.length} online</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {isOwner(room) && (
+                <span className="text-xs px-2 py-0.5 bg-custom text-white rounded-full font-medium">Owner</span>
+              )}
+              {!isOwner(room) && room.userRole === 'ADMIN' && (
+                <span className="text-xs px-2 py-0.5 bg-custom/70 text-white rounded-full font-medium">Admin</span>
+              )}
+              {room.userRole === 'MEMBER' && (
+                <span className="text-xs px-2 py-0.5 bg-custom/40 text-font-1 rounded-full font-medium">Member</span>
+              )}
+            </div>
           </div>
         </div>
         <Button 
@@ -217,23 +236,13 @@ export const RoomCard = ({
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 justify-between" onClick={(e) => e.stopPropagation()}>
               <div className="flex flex-wrap gap-2">
-                <Button
-                  onClick={() => {
-                    if (isSelected) {
-                      onOpenOverview(null);
-                    } else {
-                      onOpenOverview(room.id);
-                    }
-                  }}
-                  size="sm"
-                  className={`${
-                    isSelected 
-                      ? 'bg-tertiary hover:bg-quaternary text-font-1' 
-                      : 'bg-custom hover:bg-custom-hover text-white'
-                  } text-sm px-3 py-1.5 h-auto font-medium transition-colors shadow-sm`}
-                >
-                  Overview
-                </Button>
+                {/* Chat Status - Shows current state */}
+                {isSelected && (
+                  <div className="flex items-center gap-1 text-xs text-custom px-2 py-1 bg-custom/10 rounded-full border border-custom/30">
+                    <span>💬</span>
+                    <span>Chat Active</span>
+                  </div>
+                )}
 
                 {/* Share/Unshare - Admin/Owner only */}
                 {canManageRoom(room) && (

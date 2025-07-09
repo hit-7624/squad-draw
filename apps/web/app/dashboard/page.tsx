@@ -5,8 +5,7 @@ import { StatusMessages } from "../../components/dashboard/StatusMessages";
 import { UserInfoCard } from "../../components/dashboard/UserInfoCard";
 import { CreateRoomForm } from "../../components/dashboard/CreateRoomForm";
 import { JoinRoomForm } from "../../components/dashboard/JoinRoomForm";
-import { RoomsList } from "../../components/dashboard/RoomsList";
-import { RoomOverview } from "../../components/dashboard/RoomOverview";
+import { RoomsList, RoomOverview, RoomOverviewEmpty } from "../../components/dashboard";
 import { useUser, useRoom, useNotification, useForm } from "../../hooks";
 
 export default function Dashboard() {
@@ -20,6 +19,8 @@ export default function Dashboard() {
         shareDialogOpen, 
         expandedRoom, 
         error: roomError,
+        isConnected,
+        onlineMembers,
         fetchJoinedRooms,
         createRoom,
         joinRoom,
@@ -31,6 +32,8 @@ export default function Dashboard() {
         copyRoomId,
         sendMessage,
         openOverview,
+        closeOverview,
+        disconnectSocket,
         toggleRoomExpansion,
         promoteToAdmin,
         demoteFromAdmin,
@@ -38,7 +41,8 @@ export default function Dashboard() {
         canManageRoom,
         isOwner,
         canManageMembers,
-        getOverviewRoom
+        getOverviewRoom,
+        setUser
     } = useRoom();
     const { error, success, showError, showSuccess } = useNotification();
     const { 
@@ -57,7 +61,17 @@ export default function Dashboard() {
 
     useEffect(() => {
         fetchUserAndRooms();
+        
+        return () => {
+            disconnectSocket();
+        };
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            setUser(user);
+        }
+    }, [user, setUser]);
 
     const fetchUserAndRooms = async () => {
         try {
@@ -150,10 +164,13 @@ export default function Dashboard() {
         try {
             await sendMessage(newMessage);
             resetNewMessage();
-            showSuccess("Message sent!");
         } catch (err: any) {
             showError(roomError || "Failed to send message");
         }
+    };
+
+    const handleCloseOverview = () => {
+        closeOverview();
     };
 
     const overviewRoom = getOverviewRoom();
@@ -177,10 +194,27 @@ export default function Dashboard() {
                 {/* Status Messages */}
                 <StatusMessages error={error} success={success} />
                 
+                {/* Connection Status */}
+                {overviewRoom && (
+                    <div className="mb-4 text-center">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                            isConnected 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                        }`}>
+                            <span className={`w-2 h-2 mr-2 rounded-full ${
+                                isConnected ? 'bg-green-400' : 'bg-red-400'
+                            }`}></span>
+                            {isConnected ? 'Connected to chat' : 'Disconnected from chat'}
+                        </span>
+                    </div>
+                )}
+                
                 {/* User Info */}
                 {user && <UserInfoCard user={user} />}
 
-                <div className={`grid gap-8 ${overviewRoom ? 'lg:grid-cols-2' : 'lg:grid-cols-1'}`}>
+                {/* Always show two columns - Room Management (Left) and Overview (Right) */}
+                <div className="grid gap-8 lg:grid-cols-2">
                     {/* Left Column - Room Management */}
                     <div className="space-y-6">
                         {/* Room Creation */}
@@ -207,6 +241,7 @@ export default function Dashboard() {
                             expandedRoom={expandedRoom}
                             actionLoading={actionLoading}
                             shareDialogOpen={shareDialogOpen}
+                            onlineMembers={onlineMembers}
                             onOpenOverview={openOverview}
                             onToggleExpansion={toggleRoomExpansion}
                             onShareRoom={handleShareRoom}
@@ -220,24 +255,38 @@ export default function Dashboard() {
                         />
                     </div>
 
-                    {/* Right Column - Room Overview */}
-                    {overviewRoom && (
-                        <RoomOverview
-                            overviewRoom={overviewRoom}
-                            messages={messages}
-                            members={members}
-                            currentUser={user}
-                            newMessage={newMessage}
-                            setNewMessage={setNewMessage}
-                            onSendMessage={handleSendMessage}
-                            actionLoading={actionLoading}
-                            canManageMembers={canManageMembers(overviewRoom, user)}
-                            isOwner={isOwner(overviewRoom, user)}
-                            onPromoteToAdmin={promoteToAdmin}
-                            onDemoteFromAdmin={demoteFromAdmin}
-                            onKickMember={kickMember}
-                        />
-                    )}
+                    {/* Right Column - Room Overview (Always Present) */}
+                    <div className="space-y-6">
+                        {overviewRoom ? (
+                            <RoomOverview
+                                overviewRoom={overviewRoom}
+                                messages={messages}
+                                members={members}
+                                currentUser={user}
+                                newMessage={newMessage}
+                                setNewMessage={setNewMessage}
+                                onSendMessage={handleSendMessage}
+                                onCloseOverview={handleCloseOverview}
+                                actionLoading={actionLoading}
+                                isConnected={isConnected}
+                                onlineMembers={onlineMembers}
+                                canManageMembers={canManageMembers(overviewRoom, user)}
+                                isOwner={isOwner(overviewRoom, user)}
+                                onPromoteToAdmin={promoteToAdmin}
+                                onDemoteFromAdmin={demoteFromAdmin}
+                                onKickMember={kickMember}
+                            />
+                        ) : (
+                            <RoomOverviewEmpty 
+                                hasRooms={joinedRooms.length > 0}
+                                onCreateRoom={() => {
+                                    // Focus on the create room input
+                                    const createInput = document.querySelector('input[placeholder="Enter room name"]') as HTMLInputElement;
+                                    createInput?.focus();
+                                }}
+                            />
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
