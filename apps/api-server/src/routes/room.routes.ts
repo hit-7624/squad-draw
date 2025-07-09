@@ -1,5 +1,5 @@
 import { Router, type Router as ExpressRouter } from 'express';
-import { getJoinedRooms, createRoom, joinRoom, leaveRoom, kickMember, promoteMember, deleteRoom, getMessages, getShapes, demoteMember, createShape, createMessage } from '../controllers/room.controller';
+import { getJoinedRooms, createRoom, joinRoom, leaveRoom, kickMember, promoteMember, deleteRoom, getMessages, getShapes, getMembers, demoteMember, createShape, createMessage, shareRoom, unshareRoom } from '../controllers/room.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { adminCheck } from '../middlewares/admin.middleware';
 import '../types/api';
@@ -17,7 +17,11 @@ router.patch('/:roomId/members/:userId/promote', adminCheck, promoteMember);
 router.patch('/:roomId/members/:userId/demote', adminCheck, demoteMember);
 router.delete('/:roomId', deleteRoom);
 
+router.patch('/:roomId/share', shareRoom);
+router.patch('/:roomId/unshare', unshareRoom);
+
 router.get('/:roomId/messages', getMessages);
+router.get('/:roomId/members', getMembers);
 router.get('/:roomId/shapes', getShapes);
 router.post('/:roomId/shapes', createShape);
 router.post('/:roomId/messages', createMessage);

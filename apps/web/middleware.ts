@@ -15,28 +15,22 @@ interface JWTPayload {
 
 export async function middleware(request: NextRequest) {
   try {
-    // Get token from cookie
     const authToken = request.cookies.get('auth-token');
     
-    // No token? Redirect to signin
     if (!authToken) {
       return NextResponse.redirect(new URL('/signin', request.url));
     }
     
-    // Verify JWT directly - NO API CALLS!
     const secret = new TextEncoder().encode(JWT_SECRET);
     const { payload } = await jwtVerify(authToken.value, secret) as { payload: JWTPayload };
     
-    // Check payload has required fields
     if (!payload.id || !payload.email) {
       throw new Error('Invalid token payload');
     }
     
-    // ✅ Token is valid - let them through!
     return NextResponse.next();
     
   } catch (error) {
-    // ❌ JWT verification failed - redirect to signin
     console.log('JWT verification failed:', error);
     return NextResponse.redirect(new URL('/signin', request.url));
   }

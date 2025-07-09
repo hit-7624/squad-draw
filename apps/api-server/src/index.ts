@@ -5,6 +5,11 @@ import { errorHandler } from './middlewares/error.middleware';
 import authRoutes from './routes/auth.routes';
 import roomRoutes from './routes/room.routes';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Configure dotenv to load .env file from the root of api-server directory
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 

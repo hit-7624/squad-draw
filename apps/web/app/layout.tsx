@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Caudex, Didact_Gothic, Handlee, Inter } from "next/font/google";
+import { Caudex, Didact_Gothic, Handlee } from "next/font/google";
+
 import "./globals.css";
 
 
