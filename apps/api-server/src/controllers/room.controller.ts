@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '@repo/db';
 import '../types/api';
-import { RoomIdSchema, RoomNameSchema, UserIdSchema, MessageSchema, ShapeSchema } from '@repo/schemas';
+import { RoomIdSchema, RoomNameSchema, UserIdSchema, MessageSchema, SimpleShapeSchema } from '@repo/schemas';
 import { ZodError } from 'zod';
 
 const validateMembership = async (userId: string, roomId: string) => {
@@ -514,6 +514,7 @@ export const getMembers = async (req: Request, res: Response, next: NextFunction
 };
 
 export const getShapes = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  console.log("getShapes");
   try {
     const { roomId } = req.params;
     const validatedRoomId = RoomIdSchema.parse(roomId);
@@ -530,11 +531,17 @@ export const getShapes = async (req: Request, res: Response, next: NextFunction)
 
     const shapes = await prisma.shape.findMany({
       where: { roomId: validatedRoomId },
-      orderBy: {
-        createdAt: 'asc',
+      orderBy: { createdAt: 'asc' },
+      include: { 
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
       },
-      include: { creator: true },
-      take: 100,
+      take: 1000, // Increased limit for drawing apps
     });
     res.status(200).json({ shapes });
   } catch (error) {
@@ -552,7 +559,7 @@ export const createShape = async (req: Request, res: Response, next: NextFunctio
   try {
     const { roomId } = req.params;
     const validatedRoomId = RoomIdSchema.parse(roomId);
-    const validatedShape = ShapeSchema.parse(req.body);
+    const validatedShape = SimpleShapeSchema.parse(req.body);
     
     if (!roomId) {
       res.status(400).json({ message: "Room ID is required" });
@@ -568,12 +575,106 @@ export const createShape = async (req: Request, res: Response, next: NextFunctio
     const shape = await prisma.shape.create({
       data: {
         type: validatedShape.type,
-        data: validatedShape.data,
+        dataFromRoughJs: validatedShape.dataFromRoughJs,
         roomId: validatedRoomId,
         creatorId: req.user.id,
       },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
     });
     res.status(201).json({ shape });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      res.status(400).json({ message: error.errors[0]?.message || 'Invalid request' });
+      return;
+    }
+    next(error);
+  }
+};
+
+
+
+export const deleteShape = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { roomId, shapeId } = req.params;
+    const validatedRoomId = RoomIdSchema.parse(roomId);
+    
+    if (!roomId || !shapeId) {
+      res.status(400).json({ message: "Room ID and Shape ID are required" });
+      return;
+    }
+
+    const member = await validateMembership(req.user.id, validatedRoomId);
+    if (!member) {
+      res.status(403).json({ message: "Access denied: You are not a member of this room" });
+      return;
+    }
+
+    // Check if shape exists and user has permission to delete it
+    const existingShape = await prisma.shape.findFirst({
+      where: { 
+        id: shapeId, 
+        roomId: validatedRoomId 
+      }
+    });
+
+    if (!existingShape) {
+      res.status(404).json({ message: "Shape not found" });
+      return;
+    }
+
+    // Only creator or admin can delete shapes
+    if (existingShape.creatorId !== req.user.id && member.role !== 'ADMIN') {
+      res.status(403).json({ message: "You can only delete your own shapes" });
+      return;
+    }
+
+    await prisma.shape.delete({
+      where: { id: shapeId }
+    });
+
+    res.status(200).json({ message: "Shape deleted successfully" });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      res.status(400).json({ message: error.errors[0]?.message || 'Invalid request' });
+      return;
+    }
+    next(error);
+  }
+};
+
+export const clearAllShapes = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { roomId } = req.params;
+    const validatedRoomId = RoomIdSchema.parse(roomId);
+    
+    if (!roomId) {
+      res.status(400).json({ message: "Room ID is required" });
+      return;
+    }
+
+    // Only admins can clear all shapes
+    const member = await validateAdminPermission(req.user.id, validatedRoomId);
+    if (!member) {
+      res.status(403).json({ message: "Admin permission required to clear all shapes" });
+      return;
+    }
+
+    const deletedCount = await prisma.shape.deleteMany({
+      where: { roomId: validatedRoomId }
+    });
+
+    res.status(200).json({ 
+      message: "All shapes cleared successfully", 
+      deletedCount: deletedCount.count 
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       res.status(400).json({ message: error.errors[0]?.message || 'Invalid request' });

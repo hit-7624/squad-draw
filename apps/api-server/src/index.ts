@@ -25,6 +25,9 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 
+
+
+
 app.use(errorHandler);
 
 const port = Number(API_SERVER_PORT);

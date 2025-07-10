@@ -2,14 +2,14 @@
 CREATE TYPE "RoomMemberRole" AS ENUM ('ADMIN', 'MEMBER');
 
 -- CreateEnum
-CREATE TYPE "ShapeType" AS ENUM ('RECTANGLE', 'CIRCLE', 'DIAMOND', 'LINE', 'ARROW', 'FREE_DRAW', 'TEXT', 'IMAGE');
+CREATE TYPE "ShapeType" AS ENUM ('RECTANGLE', 'DIAMOND', 'ELLIPSE', 'LINE', 'ARROW', 'FREEDRAW', 'TEXT', 'IMAGE');
 
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "name" TEXT,
-    "password" TEXT,
+    "name" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -19,12 +19,11 @@ CREATE TABLE "users" (
 -- CreateTable
 CREATE TABLE "rooms" (
     "id" TEXT NOT NULL,
-    "name" TEXT,
-    "isPublic" BOOLEAN NOT NULL DEFAULT false,
-    "inviteCode" TEXT,
+    "name" TEXT NOT NULL DEFAULT 'Untitled Room',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "ownerId" TEXT NOT NULL,
+    "isShared" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "rooms_pkey" PRIMARY KEY ("id")
 );
@@ -44,8 +43,7 @@ CREATE TABLE "room_members" (
 CREATE TABLE "shapes" (
     "id" TEXT NOT NULL,
     "type" "ShapeType" NOT NULL,
-    "data" JSONB NOT NULL,
-    "version" INTEGER NOT NULL DEFAULT 1,
+    "dataFromRoughJs" JSONB NOT NULL DEFAULT '{}',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "roomId" TEXT NOT NULL,
@@ -55,21 +53,18 @@ CREATE TABLE "shapes" (
 );
 
 -- CreateTable
-CREATE TABLE "chats" (
+CREATE TABLE "messages" (
     "id" TEXT NOT NULL,
     "message" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "userId" TEXT NOT NULL,
     "roomId" TEXT NOT NULL,
 
-    CONSTRAINT "chats_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "messages_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "rooms_inviteCode_key" ON "rooms"("inviteCode");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "room_members_userId_roomId_key" ON "room_members"("userId", "roomId");
@@ -90,7 +85,7 @@ ALTER TABLE "shapes" ADD CONSTRAINT "shapes_roomId_fkey" FOREIGN KEY ("roomId") 
 ALTER TABLE "shapes" ADD CONSTRAINT "shapes_creatorId_fkey" FOREIGN KEY ("creatorId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "chats" ADD CONSTRAINT "chats_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "messages" ADD CONSTRAINT "messages_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "chats" ADD CONSTRAINT "chats_roomId_fkey" FOREIGN KEY ("roomId") REFERENCES "rooms"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "messages" ADD CONSTRAINT "messages_roomId_fkey" FOREIGN KEY ("roomId") REFERENCES "rooms"("id") ON DELETE CASCADE ON UPDATE CASCADE;

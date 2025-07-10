@@ -16,7 +16,7 @@ const io = new Server(httpServer, {
 
 io.use(authMiddleware);
 
-// Generic error handling wrapper
+// generl error handling 
 const handleSocketEvent = async (
     socket: Socket, 
     eventName: string, 
