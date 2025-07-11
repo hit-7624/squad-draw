@@ -1,9 +1,8 @@
 import { Socket } from "socket.io";
-import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from "@repo/config";
 import { parse } from 'cookie';
+import { prisma } from "@repo/db/ws-server";
 
-export const authMiddleware = (socket: Socket, next: (err?: Error) => void) => {
+export const authMiddleware = async (socket: Socket, next: (err?: Error) => void) => {
     try {
         const cookieHeader = socket.handshake.headers.cookie;
         if (!cookieHeader) {
@@ -11,19 +10,39 @@ export const authMiddleware = (socket: Socket, next: (err?: Error) => void) => {
         }
 
         const cookies = parse(cookieHeader);
-        const token = cookies['auth-token'];
-
+        const token = cookies['better-auth.session']|| cookies['better-auth.session_token'];
+        
         if (!token) {
-            return next(new Error('Authentication error: No auth token found'));
+            return next(new Error('Authentication error: No session token found'));
+        }
+        console.log("token", token);
+        const actialtoken = token.split(".")[0];
+
+        const foundSession = await prisma.session.findUnique({
+            where: {
+                token: actialtoken
+            },
+            include: {
+                user: true
+            }
+        });
+        
+        if (!foundSession) {
+            
+            return next(new Error('Authentication error: Invalid session token'));
         }
 
-        const decoded = jwt.verify(token, JWT_SECRET) as {  id: string; name: string; email: string;  };
-        
-        socket.data.user = decoded;
-        socket.data.currentRoom = null;
+        // Check if session is expired
+        if (foundSession.expiresAt < new Date()) {
+            return next(new Error('Authentication error: Session expired'));
+        }
+
+        socket.data.user = foundSession.user;
+        socket.data.currentRoom = null; 
         
         next();
     } catch (error) {
-        return next(new Error('Authentication error: Invalid token'));
+        console.error('Auth middleware error:', error);
+        return next(new Error('Authentication error: Failed to validate session'));
     }
 };

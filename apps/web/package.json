@@ -12,10 +12,13 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@prisma/client": "^6.1.0",
+    "@repo/db": "workspace:*",
     "@repo/schemas": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.10.0",
+    "better-auth": "^1.2.12",
     "jose": "^6.0.11",
     "jsonwebtoken": "^9.0.2",
     "next": "^15.3.0",
@@ -27,11 +30,8 @@
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^4.1.11",
     "zod": "^3.22.4",
-    "zustand": "^5.0.6",
-    "@repo/db": "workspace:*",
-    "@prisma/client": "^6.1.0"
+    "zustand": "^5.0.6"
   },
-
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",

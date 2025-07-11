@@ -1,19 +1,17 @@
 import { Socket } from "socket.io";
-import { prisma, Shape, Message } from "@repo/db";
+import { prisma, Message } from "@repo/db/ws-server";
+import { ShapeType } from "@repo/db/ws-server";
 
+interface NewShapeData {
+    type: ShapeType;
+    dataFromRoughJs: any;
+    roomId: string;
+    creatorId: string;
+}
 
-
-
-export const newShapeHandler = async (socket: Socket, newShape: Shape) => {
-    const { type, data, roomId, creatorId } = newShape;
-    const createdShape = await prisma.shape.create({
-        data: {
-            type: type,
-            data: data as any,
-            roomId: roomId,
-            creatorId: creatorId,
-        },
-    });
+export const newShapeHandler = async (socket: Socket, newShape: NewShapeData) => {
+    const { type, dataFromRoughJs, roomId, creatorId } = newShape;
+    
     if(socket.data.currentRoom !== roomId) {
         socket.emit('custom-error', {
             code: 400,
@@ -22,6 +20,16 @@ export const newShapeHandler = async (socket: Socket, newShape: Shape) => {
         });
         return;
     }
+    
+    const createdShape = await prisma.shape.create({
+        data: {
+            type: type,
+            dataFromRoughJs: dataFromRoughJs,
+            roomId: roomId,
+            creatorId: creatorId,
+        },
+    });
+    
     socket.to(roomId).emit('new-shape-added', createdShape);
 }
 

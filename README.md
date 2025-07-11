@@ -4,8 +4,8 @@
 
 This monorepo contains a full-stack application with the following structure:
 
-- **apps/web**: Next.js frontend app
-- **apps/api-server**: Express REST API server
+- **apps/web**: Next.js frontend app with integrated API routes
+- **apps/api-server**: ⚠️ **DEPRECATED** - Express REST API server (not maintained, moved to Next.js API routes)
 - **apps/ws-server**: WebSocket server (Socket.IO)
 - **packages/**: Shared code (UI, config, db, schemas, TypeScript config, ESLint config)
 
@@ -13,14 +13,11 @@ This monorepo contains a full-stack application with the following structure:
 
 ## Current Progress
 
-### apps/api-server (REST API)
-- **Framework**: Express
-- **Endpoints**:
-  - `POST /signup`: Registers a new user (expects `email`, `password`, `name` in body; creates user in DB)
-  - `POST /login`: Authenticates a user (expects `email`, `password`; returns JWT if credentials are valid)
-- **Auth**: JWT-based (token issued on login)
-- **DB**: Uses Prisma ORM via `@repo/db`
-- **Status**: Basic user authentication and registration implemented
+### ⚠️ apps/api-server (DEPRECATED)
+- **Status**: **NOT MAINTAINED** - This Express backend is deprecated and incomplete
+- **Reason**: Originally created for learning purposes, functionality has been moved to Next.js API routes
+- **Migration**: All room-related functionality has been migrated to `apps/web/app/api/`
+- **Note**: Authentication will be implemented using better-auth in the Next.js app
 
 ### apps/ws-server (WebSocket Server)
 - **Framework**: Socket.IO (with HTTP server)
@@ -32,11 +29,17 @@ This monorepo contains a full-stack application with the following structure:
 - **DB**: Uses Prisma ORM via `@repo/db` for room and membership checks
 - **Status**: Room join/leave logic fully implemented with robust error handling
 
-### apps/web (Frontend)
+### apps/web (Full-Stack App)
 - **Framework**: Next.js 15, React 19
 - **UI**: Uses local UI package (`@repo/ui`)
-- **Features**: Basic landing page, shared Button component, custom font loading, responsive styles
-- **Status**: Boilerplate Next.js app, ready for further feature development
+- **API**: Integrated Next.js API routes for all backend functionality
+- **Features**: 
+  - Complete room management (create, join, leave, delete)
+  - Member management (kick, promote, demote)
+  - Room sharing functionality
+  - Messages and shapes handling
+  - Responsive UI with custom components
+- **Status**: Active development - full-stack application with integrated API
 
 ### packages/schemas
 - **Validation**: Zod for schema validation

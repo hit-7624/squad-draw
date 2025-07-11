@@ -1,5 +1,15 @@
+
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+
+// we will need to generate two clinets as other than next js application will be not able to use the generated/prisma client due to module conflict
+
+//so generate two clients one for next js (/generated/prisma) and one for ws-server (@prisma/client)
+
+// for generating clint for next js set output path to ../src/generated/prisma
+// for generating clint for ws-server set output path  to default by removing the output path
+
 }
 
 datasource db {
@@ -7,21 +17,72 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  ownedRooms      Room[]       @relation("RoomOwner")
-  roomMemberships RoomMember[]
-  shapes          Shape[]
-  messages        Message[]
-  
-  @@map("users")
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+
+  ownedRooms  Room[]        @relation("RoomOwner")
+  roomMembers RoomMember[]
+  shapes      Shape[]
+  messages    Message[]
+
+  @@unique([email])
+  @@map("user")
 }
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
 
 model Room {
   id          String   @id @default(cuid())
@@ -136,4 +197,3 @@ enum ShapeType {
   TEXT
   IMAGE
 }
-

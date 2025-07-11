@@ -1,4 +1,4 @@
-import { prisma } from "@repo/db";
+import { prisma } from "@repo/db/ws-server";
 import { Socket } from "socket.io";
 
 export const joinRoomHandler = async (socket: Socket, data: { roomId: string }) => {
