@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Caudex, Didact_Gothic, Handlee } from "next/font/google";
-
+import { Toaster } from "sonner";
 import "./globals.css";
 
 
@@ -42,6 +42,7 @@ export default function RootLayout({
         `}
       >
         {children}
+        <Toaster richColors position="top-right" duration={3000} closeButton />
       </body>
     </html>
   );

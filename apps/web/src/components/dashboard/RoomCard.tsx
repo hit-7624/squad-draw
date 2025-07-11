@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { OnlineIndicator } from "@/components/ui/OnlineIndicator";
 import { Room, User } from "./dashboard.types";
+import { useRouter } from "next/navigation";
 
 interface RoomCardProps {
   room: Room;
@@ -44,6 +45,7 @@ export const RoomCard = ({
   canManageRoom,
   isOwner
 }: RoomCardProps) => {
+  const router = useRouter();
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     type: 'delete' | 'leave' | 'leaveTransfer' | 'share' | 'unshare' | null;
@@ -197,7 +199,7 @@ export const RoomCard = ({
         <Button 
           onClick={(e) => {
             e.stopPropagation();
-            window.location.href = `/room/${room.id}`;
+            router.push(`/room/${room.id}`);
           }}
           size="sm"
           className="bg-custom hover:bg-custom-hover text-white text-sm px-3 py-1.5 h-auto font-medium transition-colors shadow-sm"

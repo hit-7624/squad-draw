@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AuthCardProps } from "./auth.types";
+import Link from "next/link";
 
 export const AuthCard = ({ 
   title, 
@@ -25,9 +26,9 @@ export const AuthCard = ({
         <div className="mt-6 text-center">
           <p className="text-base text-font-2">
             {footerText}{" "}
-            <a href={footerLinkHref} className="font-medium text-custom hover:text-custom-hover underline">
+            <Link href={footerLinkHref} className="font-medium text-custom hover:text-custom-hover underline">
               {footerLinkText}
-            </a>
+            </Link>
           </p>
         </div>
       </CardContent>

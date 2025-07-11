@@ -4,6 +4,8 @@ import { RoomNameSchema } from '@repo/schemas';
 import { ZodError } from 'zod';
 import { withAuth } from '@/lib/auth-middleware';
 
+const MAX_CREATED_ROOMS = 3;
+
 export const GET = withAuth(async (request: NextRequest, user) => {
   try {
     const rooms = await prisma.roomMember.findMany({
@@ -54,6 +56,21 @@ export const POST = withAuth(async (request: NextRequest, user) => {
   try {
     const body = await request.json();
     const name = RoomNameSchema.parse(body.name);
+
+    const userCreatedRoomsCount = await prisma.room.count({
+      where: { ownerId: user.id }
+    });
+
+    if (userCreatedRoomsCount >= MAX_CREATED_ROOMS) {
+      return Response.json(
+        { 
+          error: `You can only create up to ${MAX_CREATED_ROOMS} rooms. Please delete an existing room to create a new one.`,
+          limit: MAX_CREATED_ROOMS,
+          current: userCreatedRoomsCount
+        }, 
+        { status: 400 }
+      );
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       const room = await tx.room.create({

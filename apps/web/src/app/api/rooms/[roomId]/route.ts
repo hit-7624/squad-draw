@@ -6,7 +6,6 @@ export const DELETE = withAuth(async (request: NextRequest, user, { params }: { 
   try {
     const { roomId } = await params;
 
-    // Check if user is the owner of the room
     const room = await prisma.room.findUnique({
       where: { id: roomId },
       select: { ownerId: true }
@@ -26,7 +25,6 @@ export const DELETE = withAuth(async (request: NextRequest, user, { params }: { 
       );
     }
 
-    // Delete the room (this will cascade delete members, messages, shapes due to foreign key constraints)
     await prisma.room.delete({
       where: { id: roomId }
     });

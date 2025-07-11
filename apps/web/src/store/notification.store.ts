@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-
+import { toast } from 'sonner';
+  
 interface NotificationState {
   error: string | null;
   success: string | null;
@@ -23,6 +24,7 @@ export const useNotificationStore = create<NotificationStore>()(
       success: null,
 
       showError: (message: string) => {
+        toast.error(message);
         set({ error: message, success: null });
         setTimeout(() => {
           set({ error: null });
@@ -30,6 +32,7 @@ export const useNotificationStore = create<NotificationStore>()(
       },
 
       showSuccess: (message: string) => {
+        toast.success(message);
         set({ success: message, error: null });
         setTimeout(() => {
           set({ success: null });

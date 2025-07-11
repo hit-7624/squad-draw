@@ -6,7 +6,6 @@ export const GET = withAuth(async (request: NextRequest, user, { params }:  { pa
   try {
     const { roomId } = await params;
 
-    // Check if user is a member of the room
     const membership = await prisma.roomMember.findFirst({
       where: {
         roomId: roomId,
@@ -21,7 +20,6 @@ export const GET = withAuth(async (request: NextRequest, user, { params }:  { pa
       );
     }
 
-    // Get members for the room
     const members = await prisma.roomMember.findMany({
       where: { roomId: roomId },
       include: {

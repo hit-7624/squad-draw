@@ -6,7 +6,6 @@ export const GET = withAuth(async (request: NextRequest, user, { params }:  { pa
   try {
     const { roomId } = await params;
 
-    // Check if user is a member of the room
     const membership = await prisma.roomMember.findFirst({
       where: {
         roomId: roomId,
@@ -21,7 +20,6 @@ export const GET = withAuth(async (request: NextRequest, user, { params }:  { pa
       );
     }
 
-    // Get messages for the room
     const messages = await prisma.message.findMany({
       where: { roomId: roomId },
       include: {
@@ -34,7 +32,7 @@ export const GET = withAuth(async (request: NextRequest, user, { params }:  { pa
         }
       },
       orderBy: { createdAt: 'asc' },
-      take: 100 // Limit to last 100 messages
+          take: 100
     });
 
     return Response.json({ 

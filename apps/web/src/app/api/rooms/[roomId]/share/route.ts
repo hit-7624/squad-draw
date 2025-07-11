@@ -6,7 +6,6 @@ export const PATCH = withAuth(async (request: NextRequest, user, { params }: { p
   try {
     const { roomId } = await params;
 
-    // Check if user has permission to share the room (owner or admin)
     const membership = await prisma.roomMember.findFirst({
       where: {
         roomId: roomId,
@@ -39,7 +38,6 @@ export const PATCH = withAuth(async (request: NextRequest, user, { params }: { p
       );
     }
 
-    // Update room to be shared
     await prisma.room.update({
       where: { id: roomId },
       data: { isShared: true }

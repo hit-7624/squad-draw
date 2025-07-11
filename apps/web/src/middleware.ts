@@ -17,17 +17,13 @@ export async function middleware(req: NextRequest) {
   const isOnAuthRoute = nextUrl.pathname === "/signin" || nextUrl.pathname === "/signup";
 
   if ((isOnProtectedRoute || isOnRoomRoute) && !isLoggedIn) {
-    const redirectUrl = new URL("/signin", req.url);
-    redirectUrl.searchParams.set("redirect", nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
+    return NextResponse.redirect(new URL("/signin", req.url));
   }
 
-  // Redirect authenticated users away from auth pages to dashboard
   if (isOnAuthRoute && isLoggedIn) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  // Redirect authenticated users from home to dashboard
   if (nextUrl.pathname === "/" && isLoggedIn) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }

@@ -7,14 +7,25 @@ interface JoinRoomFormProps {
   setJoinRoomId: (id: string) => void;
   onJoinRoom: (e: React.FormEvent) => Promise<void>;
   actionLoading: string | null;
+  joinedRoomsCount: number;
 }
 
-export const JoinRoomForm = ({ joinRoomId, setJoinRoomId, onJoinRoom, actionLoading }: JoinRoomFormProps) => {
+const MAX_JOINED_ROOMS = 5;
+
+export const JoinRoomForm = ({ joinRoomId, setJoinRoomId, onJoinRoom, actionLoading, joinedRoomsCount }: JoinRoomFormProps) => {
+  const isAtLimit = joinedRoomsCount >= MAX_JOINED_ROOMS;
   return (
     <Card className="bg-bg-1 border-border-1">
       <CardHeader>
         <CardTitle className="text-font-1 font-handlee text-xl">Join Room</CardTitle>
-        <CardDescription className="text-font-2 text-base">Enter a room ID to join an existing session</CardDescription>
+        <CardDescription className="text-font-2 text-base">
+          Enter a room ID to join an existing session
+          <br />
+          <span className={`text-sm ${isAtLimit ? 'text-red-400' : 'text-font-3'}`}>
+            {joinedRoomsCount}/{MAX_JOINED_ROOMS} rooms joined
+            {isAtLimit && " - Leave a room to join a new one"}
+          </span>
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onJoinRoom} className="flex gap-3">
@@ -30,10 +41,10 @@ export const JoinRoomForm = ({ joinRoomId, setJoinRoomId, onJoinRoom, actionLoad
           </div>
           <Button 
             type="submit" 
-            disabled={actionLoading === "join" || !joinRoomId.trim()}
-            className="bg-custom text-white hover:bg-custom-hover disabled:opacity-50 text-base px-4 py-2"
+            disabled={actionLoading === "join" || !joinRoomId.trim() || isAtLimit}
+            className={`${isAtLimit ? 'bg-gray-500 cursor-not-allowed' : 'bg-custom hover:bg-custom-hover'} text-white disabled:opacity-50 text-base px-4 py-2`}
           >
-            {actionLoading === "join" ? "Joining..." : "Join"}
+            {actionLoading === "join" ? "Joining..." : isAtLimit ? "Limit Reached" : "Join"}
           </Button>
         </form>
       </CardContent>

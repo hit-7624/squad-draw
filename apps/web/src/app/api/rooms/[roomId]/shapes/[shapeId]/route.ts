@@ -4,12 +4,12 @@ import { withAuth } from '@/lib/auth-middleware';
 import { validateMembership } from '../../../utils';
 
 interface RouteParams {
-  params: { roomId: string; shapeId: string };
+  params: Promise<{ roomId: string; shapeId: string }>;
 }
 
 export const DELETE = withAuth(async (request: NextRequest, user, { params }: RouteParams) => {
   try {
-    const { roomId, shapeId } = params;
+    const { roomId, shapeId } = await params;
 
     const member = await validateMembership(user.id, roomId);
     if (!member) {
@@ -37,7 +37,6 @@ export const DELETE = withAuth(async (request: NextRequest, user, { params }: Ro
       );
     }
 
-    // Check if user is admin, owner, or creator of the shape
     const isAdmin = member.role === 'ADMIN' || member.room.ownerId === user.id;
     const isCreator = shape.creatorId === user.id;
 

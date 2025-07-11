@@ -2,11 +2,12 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@repo/db/nextjs';
 import { withAuth } from '@/lib/auth-middleware';
 
+const MAX_JOINED_ROOMS = 5;
+
 export const POST = withAuth(async (request: NextRequest, user, { params }:  { params: Promise<{ roomId: string }> }) => {
   try {
     const { roomId } = await params;
 
-    // Check if room exists
     const room = await prisma.room.findUnique({
       where: { id: roomId },
       select: { id: true, name: true, isShared: true }
@@ -19,7 +20,6 @@ export const POST = withAuth(async (request: NextRequest, user, { params }:  { p
       );
     }
 
-    // Check if room is shared (public)
     if (!room.isShared) {
       return Response.json(
         { error: "Room is not shared and cannot be joined" }, 
@@ -27,7 +27,6 @@ export const POST = withAuth(async (request: NextRequest, user, { params }:  { p
       );
     }
 
-    // Check if user is already a member
     const existingMember = await prisma.roomMember.findFirst({
       where: {
         roomId: roomId,
@@ -42,7 +41,21 @@ export const POST = withAuth(async (request: NextRequest, user, { params }:  { p
       );
     }
 
-    // Add user as a member
+    const userJoinedRoomsCount = await prisma.roomMember.count({
+      where: { userId: user.id }
+    });
+
+    if (userJoinedRoomsCount >= MAX_JOINED_ROOMS) {
+      return Response.json(
+        { 
+          error: `You can only join up to ${MAX_JOINED_ROOMS} rooms. Please leave an existing room to join a new one.`,
+          limit: MAX_JOINED_ROOMS,
+          current: userJoinedRoomsCount
+        }, 
+        { status: 400 }
+      );
+    }
+
     await prisma.roomMember.create({
       data: {
         roomId: roomId,

@@ -1,16 +1,18 @@
 "use client"
 import { useEffect, useState } from "react";
-import { StatusMessages } from "@/components/dashboard/StatusMessages";
+
 import { UserInfoCard } from "@/components/dashboard/UserInfoCard";
 import { CreateRoomForm } from "@/components/dashboard/CreateRoomForm";
 import { JoinRoomForm } from "@/components/dashboard/JoinRoomForm";
 import { RoomsList, RoomOverview, RoomOverviewEmpty } from "@/components/dashboard";
-import { useUser, useRoom, useNotification, useForm } from "@/hooks";
+import { useRoom, useNotification, useForm } from "@/hooks";
+
 import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Dashboard() {
     const { data: session, isPending: sessionLoading } = authClient.useSession();
-    const { user, loading: userLoading, error: userError, fetchUser } = useUser();
     const { 
         joinedRooms, 
         overviewRoomId, 
@@ -59,14 +61,28 @@ export default function Dashboard() {
     } = useForm();
     
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    // Create user object from session
+    const user = session?.user ? {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        emailVerified: session.user.emailVerified,
+        image: session.user.image || undefined,
+        createdAt: session.user.createdAt?.toISOString(),
+        updatedAt: session.user.updatedAt?.toISOString()
+    } : null;
 
     useEffect(() => {
-        fetchUserAndRooms();
+        if (!sessionLoading) {
+            fetchUserAndRooms();
+        }
         
         return () => {
             disconnectSocket();
         };
-    }, []);
+    }, [sessionLoading]);
 
     useEffect(() => {
         if (session?.user) {
@@ -74,6 +90,10 @@ export default function Dashboard() {
                 id: session.user.id,
                 name: session.user.name,
                 email: session.user.email,
+                emailVerified: session.user.emailVerified,
+                image: session.user.image || undefined,
+                createdAt: session.user.createdAt?.toISOString(),
+                updatedAt: session.user.updatedAt?.toISOString()
             };
             setUser(sessionUser);
         }
@@ -81,12 +101,16 @@ export default function Dashboard() {
 
     const fetchUserAndRooms = async () => {
         try {
-            // Use Better Auth session instead of custom fetchUser
+            setLoading(true);
             if (session?.user) {
                 const sessionUser = {
                     id: session.user.id,
                     name: session.user.name,
                     email: session.user.email,
+                    emailVerified: session.user.emailVerified,
+                    image: session.user.image || undefined,
+                    createdAt: session.user.createdAt?.toISOString(),
+                    updatedAt: session.user.updatedAt?.toISOString()
                 };
                 setUser(sessionUser);
             }
@@ -189,6 +213,15 @@ export default function Dashboard() {
 
     const overviewRoom = getOverviewRoom();
 
+    // Calculate room counts for limits
+    const createdRoomsCount = user ? joinedRooms.filter(room => room.owner.id === user.id).length : 0;
+    const joinedRoomsCount = joinedRooms.length;
+
+    // Debug logging
+    console.log("Session:", session);
+    console.log("User:", user);
+    console.log("Loading:", loading, "Session Loading:", sessionLoading);
+
     if (loading || sessionLoading) {
         return (
             <div className="min-h-screen bg-bg-2 flex items-center justify-center">
@@ -206,7 +239,7 @@ export default function Dashboard() {
                 <div className="text-center text-font-1">
                     <h2 className="text-3xl font-handlee mb-4">Please sign in to access the dashboard</h2>
                     <button 
-                        onClick={() => window.location.href = '/signin'}
+                        onClick={() => router.push('/signin')}
                         className="bg-custom hover:bg-custom-hover text-white px-6 py-2 rounded-md"
                     >
                         Sign In
@@ -221,8 +254,7 @@ export default function Dashboard() {
             <div className="max-w-7xl mx-auto p-6 font-didact-gothic">
                 <h1 className="text-5xl font-handlee mb-8 text-center text-font-1">Squad Draw Dashboard</h1>
                 
-                {/* Status Messages */}
-                <StatusMessages error={error} success={success} />
+
                 
                 {/* Connection Status */}
                 {overviewRoom && (
@@ -240,8 +272,16 @@ export default function Dashboard() {
                     </div>
                 )}
                 
-                {/* User Info */}
-                {user && <UserInfoCard user={user} />}
+                {/* User Info - Always show if user exists */}
+                {user && <UserInfoCard user={user} joinedRooms={joinedRooms} />}
+                
+                {/* Debug info - Remove this after testing */}
+                {!user && session && (
+                    <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded">
+                        <p className="text-yellow-800">Debug: Session exists but user is null</p>
+                        <pre className="text-xs">{JSON.stringify(session.user, null, 2)}</pre>
+                    </div>
+                )}
 
                 {/* Always show two columns - Room Management (Left) and Overview (Right) */}
                 <div className="grid gap-8 lg:grid-cols-2">
@@ -253,6 +293,7 @@ export default function Dashboard() {
                             setNewRoomName={setNewRoomName}
                             onCreateRoom={handleCreateRoom}
                             actionLoading={actionLoading}
+                            createdRoomsCount={createdRoomsCount}
                         />
 
                         {/* Join Room */}
@@ -261,6 +302,7 @@ export default function Dashboard() {
                             setJoinRoomId={setJoinRoomId}
                             onJoinRoom={handleJoinRoom}
                             actionLoading={actionLoading}
+                            joinedRoomsCount={joinedRoomsCount}
                         />
 
                         {/* Joined Rooms */}
