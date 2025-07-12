@@ -1,1 +1,0 @@
-{"root":["./src/index.ts","./src/controllers/auth.controller.ts","./src/controllers/room.controller.ts","./src/middlewares/admin.middleware.ts","./src/middlewares/auth.middleware.ts","./src/middlewares/error.middleware.ts","./src/middlewares/validation.middleware.ts","./src/routes/auth.routes.ts","./src/routes/room.routes.ts","./src/types/api.ts"],"version":"5.8.3"}

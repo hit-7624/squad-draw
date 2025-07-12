@@ -43,96 +43,13 @@ const MessageSchema = z.object({
     .transform(sanitizeString)
 });
 
-const FillStyleSchema = z.enum(['hachure', 'cross-hatch', 'solid', 'zigzag']);
-const StrokeStyleSchema = z.enum(['solid', 'dashed', 'dotted']);
 const ShapeTypeSchema = z.enum(['RECTANGLE', 'DIAMOND', 'ELLIPSE', 'LINE', 'ARROW', 'FREEDRAW', 'TEXT', 'IMAGE']);
 
-// Simplified schema matching current database model
+
 const SimpleShapeSchema = z.object({
   type: ShapeTypeSchema,
-  dataFromRoughJs: z.record(z.any()) // RoughJS drawable object as JSON
+  dataFromRoughJs: z.record(z.any())
 });
-
-// RoughJS Drawable schema - stores complete drawing instructions
-const DrawableSchema = z.object({
-  shape: z.string(),           // Shape type from RoughJS
-  options: z.record(z.any()),  // Options used to generate the shape
-  sets: z.array(z.any())       // Drawing instruction sets (the core path data)
-}).passthrough(); // Allow additional RoughJS properties
-
-const BaseShapeSchema = z.object({
-  id: z.string(),
-  type: ShapeTypeSchema,
-  x: z.number(),
-  y: z.number(),
-  width: z.number(),
-  height: z.number(),
-  
-  // RoughJS drawable for consistent rendering across Canvas and SVG
-  drawable: DrawableSchema,
-  
-  // Styling properties (for UI controls and as fallback)
-  stroke: z.string().default("#000000"),
-  strokeWidth: z.number().default(1),
-  fill: z.string().default("transparent"),
-  fillStyle: FillStyleSchema.default("hachure"),
-  strokeStyle: StrokeStyleSchema.default("solid"),
-  roughness: z.number().default(1),
-  bowing: z.number().default(1),
-  seed: z.number().int().min(0).max(2147483647).default(0),
-  opacity: z.number().min(0).max(1).default(1)
-});
-
-const TextElementDataSchema = z.object({
-  text: z.string(),
-  fontSize: z.number().default(16),
-  fontFamily: z.string().default("Arial"),
-  textAlign: z.enum(['left', 'center', 'right']).default('left'),
-  verticalAlign: z.enum(['top', 'middle', 'bottom']).default('top'),
-  autoResize: z.boolean().default(true),
-  lineHeight: z.number().default(1.2)
-});
-
-const LineElementDataSchema = z.object({
-  points: z.array(z.tuple([z.number(), z.number()])),
-  startArrowhead: z.string().nullable().default(null),
-  endArrowhead: z.string().nullable().default(null)
-});
-
-const ImageElementDataSchema = z.object({
-  fileId: z.string().nullable().default(null),
-  status: z.enum(['pending', 'saved', 'error']).default('pending'),
-  scale: z.tuple([z.number(), z.number()]).default([1, 1])
-});
-
-const FreeDrawElementDataSchema = z.object({
-  points: z.array(z.tuple([z.number(), z.number()])),
-  pressures: z.array(z.number()).default([]),
-  simulatePressure: z.boolean().default(false)
-});
-
-const ShapeSchema = z.discriminatedUnion('type', [
-  BaseShapeSchema.extend({
-    type: z.literal('TEXT'),
-    elementData: TextElementDataSchema
-  }),
-  BaseShapeSchema.extend({
-    type: z.enum(['LINE', 'ARROW']),
-    elementData: LineElementDataSchema
-  }),
-  BaseShapeSchema.extend({
-    type: z.literal('IMAGE'),
-    elementData: ImageElementDataSchema
-  }),
-  BaseShapeSchema.extend({
-    type: z.literal('FREEDRAW'),
-    elementData: FreeDrawElementDataSchema
-  }),
-  BaseShapeSchema.extend({
-    type: z.enum(['RECTANGLE', 'DIAMOND', 'ELLIPSE']),
-    elementData: z.record(z.any()).default({})
-  })
-]);
 
 const UserSignupSchema = z.object({
   name: NameSchema,
@@ -158,28 +75,12 @@ export {
   RoomIdSchema,
   MessageSchema,
   SimpleShapeSchema,
-  ShapeSchema,
   ShapeTypeSchema,
   UserSignupSchema,
   UserLoginSchema,
-  DrawableSchema,
-  FillStyleSchema,
-  StrokeStyleSchema,
-  BaseShapeSchema,
-  TextElementDataSchema,
-  LineElementDataSchema,
-  ImageElementDataSchema,
-  FreeDrawElementDataSchema,
 }
 
 export type UserSignup = z.infer<typeof UserSignupSchema>;
 export type UserLogin = z.infer<typeof UserLoginSchema>;
 export type SimpleShape = z.infer<typeof SimpleShapeSchema>;
-export type Drawable = z.infer<typeof DrawableSchema>;
-export type BaseShape = z.infer<typeof BaseShapeSchema>;
-export type TextElementData = z.infer<typeof TextElementDataSchema>;
-export type LineElementData = z.infer<typeof LineElementDataSchema>;
-export type ImageElementData = z.infer<typeof ImageElementDataSchema>;
-export type FreeDrawElementData = z.infer<typeof FreeDrawElementDataSchema>;
-export type Shape = z.infer<typeof ShapeSchema>;
 export type ShapeType = z.infer<typeof ShapeTypeSchema>;

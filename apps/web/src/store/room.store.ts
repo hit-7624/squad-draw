@@ -2,8 +2,19 @@
     import { devtools } from 'zustand/middleware';
     import { Room, Message, Member, User } from '@/components/dashboard/dashboard.types';
     import { io, Socket } from 'socket.io-client';
+    import { ShapeType } from '@repo/schemas';
 
     const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:3002";
+
+    interface DrawnShape {
+      id?: string;
+      type: ShapeType;
+      dataFromRoughJs: any;
+      style?: any;
+      creatorId?: string;
+      roomId?: string;
+    }
+
     interface RoomState {
       socket: Socket | null;
       user: User | null;
@@ -18,6 +29,7 @@
       error: string | null;
       isConnected: boolean;
       onlineMembers: string[];
+      shapes: DrawnShape[];
     }
 
     interface RoomActions {
@@ -46,6 +58,9 @@
       canManageMembers: (room: Room, user: User | null) => boolean;
       getOverviewRoom: () => Room | undefined;
       setUser: (user: User | null) => void;
+      addShape: (shape: DrawnShape) => void;
+      clearShapes: () => void;
+      fetchShapes: (roomId: string) => Promise<void>;
     }
 
     interface RoomStore extends RoomState, RoomActions {}
@@ -66,6 +81,7 @@
           error: null,
           isConnected: false,
           onlineMembers: [],
+          shapes: [],
 
           fetchJoinedRooms: async () => {
             try {
@@ -410,12 +426,19 @@
                     }
                   });
 
+                  socket.on('new-shape-added', (newShape: DrawnShape) => {
+                    const currentShapes = get().shapes || [];
+                    set({ shapes: [...currentShapes, newShape] });
+                  });
+
                   socket.on('room-joined', (data: { roomId: string, onlineMembers: string[] }) => {
                     console.log('Successfully joined room:', data.roomId);
                     if (data.onlineMembers) {
                       set({ onlineMembers: data.onlineMembers });
                     }
                     socket.emit('get-online-members', { roomId: data.roomId });
+                    // Fetch shapes when joining room
+                    get().fetchShapes(data.roomId);
                   });
 
                   socket.on('custom-error', (error: { code: number, type: string, message: string }) => {
@@ -448,7 +471,6 @@
               
               set({ overviewRoomId: null });
               
-              // Delay disconnect slightly to ensure leave-room event is processed
               setTimeout(() => {
                 get().disconnectSocket();
               }, 100);
@@ -459,11 +481,22 @@
           },
 
           initializeSocket: () => {
-            if (get().socket) {
-              get().disconnectSocket();
+            console.log('initializeSocket called');
+            const currentSocket = get().socket;
+            if (currentSocket?.connected) {
+              console.log('Socket already connected, skipping initialization');
+              return; // Already connected
             }
-            
+
             try {
+              // Clean up existing socket if any
+              if (currentSocket) {
+                console.log('Cleaning up existing socket');
+                currentSocket.removeAllListeners();
+                currentSocket.disconnect();
+              }
+
+              console.log('Creating new socket connection to:', WEBSOCKET_URL);
               const socket = io(WEBSOCKET_URL, {
                 withCredentials: true,
                 transports: ['websocket', 'polling'],
@@ -471,10 +504,9 @@
                 forceNew: true,
               });
 
-              set({ socket: socket, isConnected: false });
-
+              // Set up event listeners before setting socket in state
               socket.on('connect', () => {
-                console.log('Socket connected');
+                console.log('Socket connected successfully');
                 set({ isConnected: true, error: null });
               });
 
@@ -484,30 +516,76 @@
               });
 
               socket.on('connect_error', (error) => {
-                console.error('WebSocket connection error:', error);
-                set({ isConnected: false, error: 'Failed to connect to chat server' });
+                console.error('Socket connection error:', error);
+                set({ 
+                  isConnected: false, 
+                  error: 'Failed to connect to chat server' 
+                });
               });
 
-              socket.on('online-members', (members: string[]) => {
-                set({ onlineMembers: members });
+              socket.on('new-shape-added', (newShape: DrawnShape) => {
+                console.log('Received new shape:', newShape);
+                if (newShape.creatorId !== get().user?.id) {
+                  set((state) => ({ 
+                    shapes: [...state.shapes, newShape] 
+                  }));
+                }
               });
 
-              socket.on('error', (error) => {
-                console.error('Socket error:', error);
-                set({ error: error.message || 'WebSocket error occurred' });
+              socket.on('room-joined', async (data: { roomId: string, onlineMembers: string[] }) => {
+                console.log('Successfully joined room:', data.roomId);
+                set({ onlineMembers: data.onlineMembers || [] });
+                socket.emit('get-online-members', { roomId: data.roomId });
+                
+                try {
+                  await get().fetchShapes(data.roomId);
+                } catch (error) {
+                  console.error('Error fetching shapes:', error);
+                }
               });
+
+              socket.on('custom-error', (error: { code: number, type: string, message: string }) => {
+                console.error('WebSocket custom error:', error);
+                set({ error: error.message });
+              });
+
+              // Set socket in state after all listeners are set up
+              console.log('Setting socket in state');
+              set({ socket, isConnected: false, error: null });
+
             } catch (error) {
               console.error('Failed to initialize socket:', error);
-              set({ error: 'Failed to initialize chat connection' });
+              set({ 
+                socket: null,
+                isConnected: false,
+                error: 'Failed to initialize chat connection' 
+              });
             }
           },
 
           disconnectSocket: () => {
             const socket = get().socket;
-            if (socket) {
+            if (!socket) return;
+
+            try {
+              // First remove all listeners
               socket.removeAllListeners();
+              
+              // Then disconnect the socket
               socket.disconnect();
-              set({ socket: null, isConnected: false, onlineMembers: [] });
+              
+              // Update state with partial state update
+              set((state) => ({
+                ...state,
+                socket: null,
+                isConnected: false,
+                onlineMembers: [],
+                shapes: [],
+                error: null,
+                overviewRoomId: null
+              }));
+            } catch (error) {
+              console.error('Error during socket disconnection:', error);
             }
           },
 
@@ -591,15 +669,15 @@
           },
 
           canManageRoom: (room: Room, user: User | null) => {
-            return user?.id === room.ownerId || room.userRole === 'ADMIN';
+            return user?.id === room.owner.id || room.userRole === 'ADMIN';
           },
 
           isOwner: (room: Room, user: User | null) => {
-            return user?.id === room.ownerId;
+            return user?.id === room.owner.id;
           },
 
           canManageMembers: (room: Room, user: User | null) => {
-            return user?.id === room.ownerId || room.userRole === 'ADMIN';
+            return user?.id === room.owner.id || room.userRole === 'ADMIN';
           },
 
           getOverviewRoom: () => {
@@ -609,6 +687,62 @@
 
           setUser: (user: User | null) => {
             set({ user });
+          },
+
+          addShape: (shape: DrawnShape) => {
+            console.log('addShape called with:', shape);
+            const socket = get().socket;
+            const user = get().user;
+            
+            console.log('addShape - socket:', !!socket, 'user:', !!user, 'isConnected:', get().isConnected);
+            
+            if (!socket || !user) {
+              console.error('Socket or user not available for addShape');
+              return;
+            }
+
+            // Add shape to local state
+            console.log('Adding shape to local state');
+            set((state) => ({ shapes: [...state.shapes, shape] }));
+
+            // Emit to other users if not already emitted
+            if (!shape.roomId) {
+              console.log('Shape missing roomId, not emitting');
+            } else {
+              console.log('Emitting new-shape event:', shape);
+              socket.emit('new-shape', shape);
+            }
+          },
+
+          clearShapes: () => {
+            const socket = get().socket;
+            const currentRoomId = get().overviewRoomId;
+            
+            if (socket && currentRoomId) {
+              socket.emit('clear-shapes', { roomId: currentRoomId });
+            }
+            
+            set({ shapes: [] });
+          },
+
+          fetchShapes: async (roomId: string) => {
+            try {
+              set({ loading: true, error: null });
+              const response = await fetch(`/api/rooms/${roomId}/shapes`, {
+                credentials: 'include'
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                set({ shapes: data.shapes || [], loading: false });
+              } else {
+                throw new Error('Failed to fetch shapes');
+              }
+            } catch (err: any) {
+              const errorMessage = err.message || "Failed to fetch shapes";
+              set({ error: errorMessage, loading: false });
+              throw err;
+            }
           },
         }),
         {

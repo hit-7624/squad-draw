@@ -89,20 +89,20 @@ export const DELETE = withAuth(async (request: NextRequest, user, context: Route
   try {
     const { roomId } = await context.params;
 
-    await validateAdminPermission(user.id, roomId);
+    const member = await validateMembership(user.id, roomId);
+    if (!member) {
+      return Response.json(
+        { error: "You are not a member of this room" },
+        { status: 403 }
+      );
+    }
 
     await prisma.shape.deleteMany({
       where: { roomId }
     });
 
-    return Response.json({ message: "All shapes cleared successfully" });
-  } catch (error: any) {
-    if (error.message === 'Not a member of this room') {
-      return Response.json({ error: error.message }, { status: 403 });
-    }
-    if (error.message === 'Admin permission required') {
-      return Response.json({ error: error.message }, { status: 403 });
-    }
+    return Response.json({ message: "All shapes cleared" });
+  } catch (error) {
     console.error('Failed to clear shapes:', error);
     return Response.json(
       { error: "Failed to clear shapes" },
