@@ -42,14 +42,14 @@ export const RoomsList = ({
   isOwner
 }: RoomsListProps) => {
   return (
-    <Card className="bg-bg-1 border-border-1">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-font-1 font-handlee text-xl">Your Rooms ({rooms.length})</CardTitle>
-        <CardDescription className="text-font-2 text-base">Manage your drawing rooms</CardDescription>
+        <CardTitle>Your Rooms ({rooms.length})</CardTitle>
+        <CardDescription className="font-serif">Manage your drawing rooms</CardDescription>
       </CardHeader>
       <CardContent>
         {rooms.length === 0 ? (
-          <p className="text-font-2 italic text-center py-8 text-lg">
+          <p className="text-muted-foreground italic text-center py-8 text-lg">
             No rooms yet. Create one or join using a room ID.
           </p>
         ) : (

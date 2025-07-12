@@ -1,7 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { OnlineIndicator } from "@/components/ui/OnlineIndicator";
 import { MemberCard } from "./MemberCard";
 import { Room, Message, Member, User } from "./dashboard.types";
 import { useEffect, useRef } from "react";
@@ -54,12 +53,12 @@ export const RoomOverview = ({
   return (
     <div className="space-y-6">
       {/* Room Header */}
-      <Card className="bg-bg-1 border-border-1">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-font-1 font-handlee text-xl">Room: {overviewRoom.name}</CardTitle>
-              <CardDescription className="text-font-2 text-base">
+              <CardTitle>Room: {overviewRoom.name}</CardTitle>
+              <CardDescription>
                 Room Overview • Created: {new Date(overviewRoom.createdAt).toLocaleDateString()}
               </CardDescription>
             </div>
@@ -77,7 +76,7 @@ export const RoomOverview = ({
               <Button 
                 onClick={onCloseOverview}
                 size="sm"
-                className="bg-gray-500 hover:bg-gray-600 text-white text-xs px-3 py-1"
+                variant="secondary"
               >
                 Close
               </Button>
@@ -87,26 +86,26 @@ export const RoomOverview = ({
       </Card>
 
       {/* Messages Section */}
-      <Card className="bg-bg-1 border-border-1">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-font-1 font-handlee text-lg">Messages ({messages.length})</CardTitle>
-          <CardDescription className="text-font-2 text-base">Recent room activity</CardDescription>
+          <CardTitle>Messages ({messages.length})</CardTitle>
+          <CardDescription>Recent room activity</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {/* Messages List */}
-            <div className="max-h-64 overflow-y-auto space-y-3 bg-bg-2 p-4 rounded-lg border border-border-1">
+            <div className="max-h-64 overflow-y-auto space-y-3 bg-muted p-4 rounded-lg border">
               {messages.length === 0 ? (
-                <p className="text-font-2 text-center py-4 text-sm">No messages yet. Be the first to send one!</p>
+                <p className="text-muted-foreground text-center py-4 text-sm">No messages yet. Be the first to send one!</p>
               ) : (
                 <>
                   {messages.slice(-10).map((message) => (
-                    <div key={message.id} className="border-b border-border-1/30 pb-2 last:border-b-0">
+                    <div key={message.id} className="border-b border-border/30 pb-2 last:border-b-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-font-1 font-medium text-sm">{message.user.name}</span>
-                        <span className="text-font-3 text-xs">{new Date(message.createdAt).toLocaleTimeString()}</span>
+                        <span className="font-medium text-sm">{message.user.name}</span>
+                        <span className="text-muted-foreground text-xs">{new Date(message.createdAt).toLocaleTimeString()}</span>
                       </div>
-                      <p className="text-font-2 text-sm">{message.message}</p>
+                      <p className="text-sm">{message.message}</p>
                     </div>
                   ))}
                   {/* Invisible element for auto-scroll */}
@@ -126,22 +125,21 @@ export const RoomOverview = ({
                     placeholder={isConnected ? "Type your message..." : "Connecting to chat..."}
                     disabled={!isConnected || actionLoading === "sendMessage"}
                     maxLength={1000}
-                    className="bg-bg-2 text-font-1 border-border-1 placeholder:text-font-2 focus:border-custom text-base py-2"
                   />
                 </div>
                 <Button 
                   type="submit" 
                   disabled={!isConnected || actionLoading === "sendMessage" || !newMessage.trim() || newMessage.length > 1000}
-                  className="bg-custom text-white hover:bg-custom-hover disabled:opacity-50 text-base px-4 py-2"
+                  variant="default"
                 >
                   {!isConnected ? "Offline" : actionLoading === "sendMessage" ? "Sending..." : "Send"}
                 </Button>
               </div>
               {/* Character counter */}
-              <div className="flex justify-between text-xs text-font-3">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>
                   {newMessage.length > 950 && (
-                    <span className={`${newMessage.length > 1000 ? 'text-red-500' : 'text-yellow-500'}`}>
+                    <span className={`${newMessage.length > 1000 ? 'text-destructive' : 'text-yellow-500'}`}>
                       {newMessage.length}/1000 characters
                     </span>
                   )}
@@ -159,9 +157,9 @@ export const RoomOverview = ({
       </Card>
 
       {/* Members Section */}
-      <Card className="bg-bg-1 border-border-1">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-font-1 font-handlee text-lg">
+          <CardTitle>
             Members ({members.length})
             {onlineMembers.length > 0 && (
               <span className="text-green-600 text-sm font-normal ml-2">
@@ -169,7 +167,7 @@ export const RoomOverview = ({
               </span>
             )}
           </CardTitle>
-          <CardDescription className="text-font-2 text-base">Room participants</CardDescription>
+          <CardDescription>Room participants</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -194,9 +192,9 @@ export const RoomOverview = ({
                   <div key={member.id}>
                     {showSeparator && (
                       <div className="flex items-center gap-2 py-2">
-                        <div className="flex-1 h-px bg-border-1"></div>
-                        <span className="text-xs text-font-3 px-2">Offline ({offlineCount})</span>
-                        <div className="flex-1 h-px bg-border-1"></div>
+                        <div className="flex-1 h-px bg-border"></div>
+                        <span className="text-xs text-muted-foreground px-2">Offline ({offlineCount})</span>
+                        <div className="flex-1 h-px bg-border"></div>
                       </div>
                     )}
                     <MemberCard

@@ -46,7 +46,7 @@ export const MemberCard = ({
   });
 
   const isCurrentUser = currentUser?.id === member.id;
-  const isMemberOwner = member.id === room.ownerId;
+  const isMemberOwner = member.id === room.owner.id;
   const isAdmin = member.role === 'ADMIN';
   const isMember = member.role === 'MEMBER';
 
@@ -108,76 +108,76 @@ export const MemberCard = ({
 
   return (
     <>
-      <div className="flex items-center justify-between p-4 bg-bg-1 rounded-lg border border-border-1 hover:bg-bg-1/80 transition-colors">
+      <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
         {/* Left side - User info and tags */}
         <div className="flex items-center gap-4">
-                      <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="flex items-center gap-2">
-                  <OnlineIndicator isOnline={isOnline} size="sm" />
-                  <p className="text-font-1 font-medium text-sm">{member.name}</p>
-                </div>
-              
-              {/* Role tags side by side after username */}
-              <div className="flex gap-1.5">
-                {isCurrentUser && (
-                  <span className="text-xs px-2 py-0.5 bg-custom text-white rounded-full font-medium">You</span>
-                )}
-                {isMemberOwner && (
-                  <span className="text-xs px-2 py-0.5 bg-custom text-white rounded-full font-medium">Owner</span>
-                )}
-                {isAdmin && !isMemberOwner && (
-                  <span className="text-xs px-2 py-0.5 bg-custom/70 text-white rounded-full font-medium">Admin</span>
-                )}
-                {isMember && (
-                  <span className="text-xs px-2 py-0.5 bg-custom/40 text-font-1 rounded-full font-medium">Member</span>
-                )}
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2">
+                <OnlineIndicator isOnline={isOnline} size="sm" />
+                <p className="font-medium text-sm">{member.name}</p>
               </div>
+            
+            {/* Role tags side by side after username */}
+            <div className="flex gap-1.5">
+              {isCurrentUser && (
+                <span className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">You</span>
+              )}
+              {isMemberOwner && (
+                <span className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">Owner</span>
+              )}
+              {isAdmin && !isMemberOwner && (
+                <span className="text-xs px-2 py-0.5 bg-primary/70 text-primary-foreground rounded-full font-medium">Admin</span>
+              )}
+              {isMember && (
+                <span className="text-xs px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full font-medium">Member</span>
+              )}
             </div>
-            <p className="text-font-3 text-xs">{member.email}</p>
           </div>
-        </div>
-
-        {/* Right side - Action buttons */}
-        <div className="flex items-center gap-2 ml-4">
-          {showCannotManageOwner && (
-            <span className="text-xs text-font-3 px-2 py-1 italic">Cannot manage owner</span>
-          )}
-          
-          {showPromoteButton && (
-            <Button
-              onClick={handlePromote}
-              disabled={actionLoading === `promote-${member.id}`}
-              size="sm"
-              className="bg-tertiary hover:bg-quaternary text-font-1 text-xs px-3 py-1.5 h-auto font-medium transition-colors shadow-sm"
-            >
-              {actionLoading === `promote-${member.id}` ? "Promoting..." : "Promote"}
-            </Button>
-          )}
-
-          {showDemoteButton && (
-            <Button
-              onClick={handleDemote}
-              disabled={actionLoading === `demote-${member.id}`}
-              size="sm"
-              className="bg-custom hover:bg-custom-hover text-white text-xs px-3 py-1.5 h-auto font-medium transition-colors shadow-sm"
-            >
-              {actionLoading === `demote-${member.id}` ? "Demoting..." : "Demote"}
-            </Button>
-          )}
-
-          {showKickButton && (
-            <Button
-              onClick={handleKick}
-              disabled={actionLoading === `kick-${member.id}`}
-              size="sm"
-              className="bg-delete hover:bg-delete-hover text-white text-xs px-3 py-1.5 h-auto font-medium transition-colors shadow-sm"
-            >
-              {actionLoading === `kick-${member.id}` ? "Kicking..." : "Kick"}
-            </Button>
-          )}
+          <p className="text-muted-foreground text-xs">{member.email}</p>
         </div>
       </div>
+
+      {/* Right side - Action buttons */}
+      <div className="flex items-center gap-2 ml-4">
+        {showCannotManageOwner && (
+          <span className="text-xs text-muted-foreground px-2 py-1 italic">Cannot manage owner</span>
+        )}
+        
+        {showPromoteButton && (
+          <Button
+            onClick={handlePromote}
+            disabled={actionLoading === `promote-${member.id}`}
+            size="sm"
+            variant="secondary"
+          >
+            {actionLoading === `promote-${member.id}` ? "Promoting..." : "Promote"}
+          </Button>
+        )}
+
+        {showDemoteButton && (
+          <Button
+            onClick={handleDemote}
+            disabled={actionLoading === `demote-${member.id}`}
+            size="sm"
+            variant="default"
+          >
+            {actionLoading === `demote-${member.id}` ? "Demoting..." : "Demote"}
+          </Button>
+        )}
+
+        {showKickButton && (
+          <Button
+            onClick={handleKick}
+            disabled={actionLoading === `kick-${member.id}`}
+            size="sm"
+            variant="destructive"
+          >
+            {actionLoading === `kick-${member.id}` ? "Kicking..." : "Kick"}
+          </Button>
+        )}
+      </div>
+    </div>
 
       <Modal
         isOpen={modalState.isOpen}

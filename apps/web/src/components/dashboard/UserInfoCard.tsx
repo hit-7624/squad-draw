@@ -22,12 +22,12 @@ export const UserInfoCard = ({ user, joinedRooms = [] }: UserInfoCardProps) => {
   };
 
   return (
-    <Card className="mb-8 bg-bg-1 border-border-1">
+    <Card className="mb-8">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {/* Profile Picture or Initial */}
-            <div className="w-16 h-16 rounded-full bg-custom flex items-center justify-center text-white text-xl font-handlee">
+            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xl">
               {user.image ? (
                 <img 
                   src={user.image} 
@@ -41,11 +41,11 @@ export const UserInfoCard = ({ user, joinedRooms = [] }: UserInfoCardProps) => {
             
             {/* User Info */}
             <div>
-              <CardTitle className="text-font-1 font-handlee text-2xl">Welcome, {user.name}</CardTitle>
-              <CardDescription className="text-font-2 text-base">{user.email}</CardDescription>
+              <CardTitle>Welcome, {user.name}</CardTitle>
+              <CardDescription>{user.email}</CardDescription>
               
               {/* Additional Info */}
-              <div className="flex items-center gap-4 mt-2 text-sm text-font-2">
+              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                 <span>
                   Member since {new Date(user.createdAt || Date.now()).toLocaleDateString()}
                 </span>
@@ -53,11 +53,11 @@ export const UserInfoCard = ({ user, joinedRooms = [] }: UserInfoCardProps) => {
             </div>
           </div>
           
-          {/* Action Buttons */}
+                    {/* Action Buttons */}
           <div className="flex items-center gap-3">
             <Button 
               onClick={handleSignOut}
-              className="bg-delete text-white hover:bg-delete-hover"
+              variant="destructive"
             >
               Sign Out
             </Button>
@@ -68,20 +68,20 @@ export const UserInfoCard = ({ user, joinedRooms = [] }: UserInfoCardProps) => {
       {/* Room Stats */}
       <CardContent className="pt-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-bg-2 p-4 rounded-lg border border-border-1 text-center">
-            <div className="text-2xl font-bold text-custom">{joinedRooms.length}/5</div>
-            <div className="text-sm text-font-1">Joined Rooms</div>
-            <div className="text-xs text-font-3 mt-1">
+          <div className="bg-muted p-4 rounded-lg border text-center">
+            <div className="text-2xl font-bold text-primary">{joinedRooms.length}/5</div>
+            <div className="text-sm">Joined Rooms</div>
+            <div className="text-xs text-muted-foreground mt-1">
               {joinedRooms.length >= 5 ? "Limit reached" : `${5 - joinedRooms.length} remaining`}
             </div>
           </div>
           
-          <div className="bg-bg-2 p-4 rounded-lg border border-border-1 text-center">
-            <div className="text-2xl font-bold text-custom">
+          <div className="bg-muted p-4 rounded-lg border text-center">
+            <div className="text-2xl font-bold text-primary">
               {joinedRooms.filter(room => room.owner.id === user.id).length}/3
             </div>
-            <div className="text-sm text-font-1">Created Rooms</div>
-            <div className="text-xs text-font-3 mt-1">
+            <div className="text-sm">Created Rooms</div>
+            <div className="text-xs text-muted-foreground mt-1">
               {joinedRooms.filter(room => room.owner.id === user.id).length >= 3 
                 ? "Limit reached" 
                 : `${3 - joinedRooms.filter(room => room.owner.id === user.id).length} remaining`}

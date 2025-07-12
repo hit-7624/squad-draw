@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Caudex, Didact_Gothic, Handlee } from "next/font/google";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
-
 
 const caudex = Caudex({
   subsets: ["latin"],
@@ -22,12 +22,15 @@ const didactGothic = Didact_Gothic({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-didact-gothic",
-  weight: "400",
+  weight: "400",    
 })
 
 export const metadata: Metadata = {
   title: "Squad Draw",
   description: "Collaborative drawing platform",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -36,13 +39,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body 
-        className={` ${caudex.variable} ${handlee.variable} ${didactGothic.variable}  
-        `}
+        className={`${caudex.variable} ${handlee.variable} ${didactGothic.variable}`}
       >
-        {children}
-        <Toaster richColors position="top-right" duration={3000} closeButton />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+          <Toaster richColors position="top-right" duration={3000} closeButton />
+        </ThemeProvider>
       </body>
     </html>
   );

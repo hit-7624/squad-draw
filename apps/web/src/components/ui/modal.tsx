@@ -35,15 +35,15 @@ export const Modal = ({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       onClick={handleBackdropClick}
     >
-      <div className="bg-bg-1 rounded-lg p-6 max-w-md w-full mx-4 border border-border-1">
-        <h3 className="text-xl font-semibold text-font-1 mb-4">{title}</h3>
-        <p className="text-font-2 mb-6 leading-relaxed">{message}</p>
+      <div className="bg-card rounded-lg p-6 max-w-md w-full mx-4 border border-border">
+        <h3 className="text-xl font-semibold text-foreground mb-4">{title}</h3>
+        <p className="text-muted-foreground mb-6 leading-relaxed">{message}</p>
         
         <div className="flex gap-3 justify-end">
           <Button
             onClick={onClose}
             variant="outline"
-            className="bg-bg-2 text-font-2 border-border-1 hover:bg-bg-1"
+            className="bg-secondary text-secondary-foreground border-border hover:bg-secondary/80"
           >
             {cancelText}
           </Button>

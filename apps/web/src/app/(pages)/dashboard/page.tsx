@@ -5,6 +5,7 @@ import { UserInfoCard } from "@/components/dashboard/UserInfoCard";
 import { CreateRoomForm } from "@/components/dashboard/CreateRoomForm";
 import { JoinRoomForm } from "@/components/dashboard/JoinRoomForm";
 import { RoomsList, RoomOverview, RoomOverviewEmpty } from "@/components/dashboard";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useRoom, useNotification, useForm } from "@/hooks";
 
 import { authClient } from "@/lib/auth-client";
@@ -224,10 +225,10 @@ export default function Dashboard() {
 
     if (loading || sessionLoading) {
         return (
-            <div className="min-h-screen bg-bg-2 flex items-center justify-center">
-                <div className="text-center text-font-1">
-                    <h2 className="text-3xl font-handlee mb-4">Loading Dashboard...</h2>
-                    <div className="w-8 h-8 border-4 border-custom border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center text-foreground">
+                    <h2 className="text-3xl font-serif mb-4">Loading Dashboard...</h2>
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
                 </div>
             </div>
         );
@@ -235,12 +236,12 @@ export default function Dashboard() {
 
     if (!session) {
         return (
-            <div className="min-h-screen bg-bg-2 flex items-center justify-center">
-                <div className="text-center text-font-1">
-                    <h2 className="text-3xl font-handlee mb-4">Please sign in to access the dashboard</h2>
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center text-foreground">
+                    <h2 className="text-3xl font-serif mb-4">Please sign in to access the dashboard</h2>
                     <button 
                         onClick={() => router.push('/signin')}
-                        className="bg-custom hover:bg-custom-hover text-white px-6 py-2 rounded-md"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-md"
                     >
                         Sign In
                     </button>
@@ -250,13 +251,19 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-bg-2 text-font-1">
-            <div className="max-w-7xl mx-auto p-6 font-didact-gothic">
-                <h1 className="text-5xl font-handlee mb-8 text-center text-font-1">Squad Draw Dashboard</h1>
+        <div className="min-h-screen bg-background text-foreground">
+            <div className="max-w-7xl mx-auto p-6">
+                <div className="absolute top-4 right-4 z-10">
+                    <ThemeToggle />
+                </div>
+                <div className="flex items-center justify-center gap-4 mb-8">
+                  <img src="/logo.svg" alt="Squad Draw" className="w-60 h-auto" />
+                  <h1 className="text-5xl font-sans text-foreground">Dashboard</h1>
+                </div>
                 
 
                 
-                {/* Connection Status */}
+                    {/* Connection Status */}
                 {overviewRoom && (
                     <div className="mb-4 text-center">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
