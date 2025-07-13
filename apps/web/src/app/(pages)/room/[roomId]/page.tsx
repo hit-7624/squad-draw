@@ -199,7 +199,7 @@ export default function RoomPage() {
                         break;
                     }
                     case "RECTANGLE": {
-                        roughCanvasRef.current?.rectangle(startPoint[0], startPoint[1], width, height, { ...drawingOptions, seed: 1 });
+                        roughCanvasRef.current?.rectangle(startPoint[0], startPoint[1], x - startPoint[0], y - startPoint[1], { ...drawingOptions, seed: 1 });
                         break;
                     }
                     case "LINE": {
@@ -276,7 +276,7 @@ export default function RoomPage() {
                         break;
                     }
                     case "RECTANGLE": {
-                        shape = roughCanvasRef.current?.rectangle(startPoint[0], startPoint[1], width, height, { ...drawingOptions, seed: 1 }) as Drawable;
+                        shape = roughCanvasRef.current?.rectangle(startPoint[0], startPoint[1], x - startPoint[0], y - startPoint[1], { ...drawingOptions, seed: 1 }) as Drawable;
                         break;
                     }
                     case "LINE": {

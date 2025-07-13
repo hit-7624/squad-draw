@@ -35,14 +35,14 @@ export const Modal = ({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       onClick={handleBackdropClick}
     >
-      <div className="bg-card rounded-lg p-6 max-w-md w-full mx-4 border border-border">
+      <div className="bg-background rounded-lg p-6 max-w-md w-full mx-4 border border-border shadow-lg">
         <h3 className="text-xl font-semibold text-foreground mb-4">{title}</h3>
         <p className="text-muted-foreground mb-6 leading-relaxed">{message}</p>
         
         <div className="flex gap-3 justify-end">
           <Button
             onClick={onClose}
-            variant="outline"
+            variant="secondary"
           >
             {cancelText}
           </Button>
@@ -51,11 +51,7 @@ export const Modal = ({
               onConfirm();
               onClose();
             }}
-            className={
-              variant === 'danger'
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-custom text-white hover:bg-custom-hover"
-            }
+            variant={variant === 'danger' ? 'destructive' : 'default'}
           >
             {confirmText}
           </Button>
