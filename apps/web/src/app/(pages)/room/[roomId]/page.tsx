@@ -9,8 +9,10 @@ import { Drawable } from "roughjs/bin/core";
 import { ShapeType, SimpleShape } from "@repo/schemas";
 import { useRoomStore } from "@/store/room.store";
 import ShapeSelector from "@/components/ShapeSelector";
-import TypeControlPanel from '@/components/ControlPanel';
-import type { DrawingOptions } from '@/components/ControlPanel';
+import TypeControlPanel, { DrawingOptions } from '@/components/ControlPanel';
+import { GroupChatbot } from "@/components/GroupChatbot";
+import { MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 function drawShapesFromArray(shapes: SimpleShape[], canvasRef: React.RefObject<HTMLCanvasElement | null>){
     if(!canvasRef.current) return;
@@ -44,6 +46,7 @@ export default function RoomPage() {
         strokeLineDash: [],
         fillOpacity: 0.25
     });
+    const [isChatOpen, setIsChatOpen] = useState(false);
     
     const {
         shapes,
@@ -54,11 +57,12 @@ export default function RoomPage() {
         addShape,
         clearShapes,
         canManageCurrentRoom,
-        fetchCurrentRoomData,
-        fetchShapes,
         initializeSocket,
-        disconnectSocket
+        disconnectSocket,
+        fetchCurrentRoomData,
+        fetchRoomData,
     } = useRoomStore();
+
     useEffect(() => {
         if (!sessionLoading) {
             setLoading(false);
@@ -70,9 +74,11 @@ export default function RoomPage() {
             openOverview(roomId);
             initializeSocket();
             fetchCurrentRoomData(roomId);
+            fetchRoomData(roomId);
             
             const interval = setInterval(() => {
                 fetchCurrentRoomData(roomId);
+                fetchRoomData(roomId);
             }, 30000);
             
             return () => {
@@ -81,7 +87,7 @@ export default function RoomPage() {
                 disconnectSocket();
             };
         }
-    }, [session, roomId, sessionLoading, loading, openOverview, closeOverview, initializeSocket, disconnectSocket, fetchCurrentRoomData]);
+    }, [session, roomId, sessionLoading, loading, openOverview, closeOverview, initializeSocket, disconnectSocket, fetchCurrentRoomData, fetchRoomData]);
 
     useEffect(()=>{
         const canvas = canvasRef.current;
@@ -143,16 +149,19 @@ export default function RoomPage() {
                 const height = Math.abs(y - startPoint[1]);
                 
                 switch(currentShape) {
-                    case "ELLIPSE":
+                    case "ELLIPSE": {
                         roughCanvasRef.current?.ellipse(centerX, centerY, width, height, { ...drawingOptions, seed: 1 });
                         break;
-                    case "RECTANGLE":
+                    }
+                    case "RECTANGLE": {
                         roughCanvasRef.current?.rectangle(startPoint[0], startPoint[1], width, height, { ...drawingOptions, seed: 1 });
                         break;
-                    case "LINE":
+                    }
+                    case "LINE": {
                         roughCanvasRef.current?.line(startPoint[0], startPoint[1], x, y, { ...drawingOptions, seed: 1 });
                         break;
-                    case "DIAMOND":
+                    }
+                    case "DIAMOND": {
                         const points = [
                             [centerX, startPoint[1]] as [number, number],
                             [x, centerY] as [number, number],
@@ -161,7 +170,8 @@ export default function RoomPage() {
                         ];
                         roughCanvasRef.current?.polygon(points, { ...drawingOptions, seed: 1 });
                         break;
-                    case "ARROW":
+                    }
+                    case "ARROW": {
                         roughCanvasRef.current?.line(startPoint[0], startPoint[1], x, y, { ...drawingOptions, seed: 1 });
                         const angle = Math.atan2(y - startPoint[1], x - startPoint[0]);
                         const arrowLength = 15;
@@ -173,6 +183,7 @@ export default function RoomPage() {
                         roughCanvasRef.current?.line(x, y, arrowX1, arrowY1, { ...drawingOptions, seed: 1 });
                         roughCanvasRef.current?.line(x, y, arrowX2, arrowY2, { ...drawingOptions, seed: 1 });
                         break;
+                    }
                 }
             }
         };
@@ -215,16 +226,19 @@ export default function RoomPage() {
                 let shape: Drawable | undefined;
                 
                 switch(currentShape) {
-                    case "ELLIPSE":
+                    case "ELLIPSE": {
                         shape = roughCanvasRef.current?.ellipse(centerX, centerY, width, height, { ...drawingOptions, seed: 1 }) as Drawable;
                         break;
-                    case "RECTANGLE":
+                    }
+                    case "RECTANGLE": {
                         shape = roughCanvasRef.current?.rectangle(startPoint[0], startPoint[1], width, height, { ...drawingOptions, seed: 1 }) as Drawable;
                         break;
-                    case "LINE":
+                    }
+                    case "LINE": {
                         shape = roughCanvasRef.current?.line(startPoint[0], startPoint[1], x, y, { ...drawingOptions, seed: 1 }) as Drawable;
                         break;
-                    case "DIAMOND":
+                    }
+                    case "DIAMOND": {
                         const points = [
                             [centerX, startPoint[1]] as [number, number],
                             [x, centerY] as [number, number],
@@ -233,7 +247,8 @@ export default function RoomPage() {
                         ];
                         shape = roughCanvasRef.current?.polygon(points, { ...drawingOptions, seed: 1 }) as Drawable;
                         break;
-                    case "ARROW":
+                    }
+                    case "ARROW": {
                         shape = roughCanvasRef.current?.line(startPoint[0], startPoint[1], x, y, { ...drawingOptions, seed: 1 }) as Drawable;
                         const angle = Math.atan2(y - startPoint[1], x - startPoint[0]);
                         const arrowLength = 15;
@@ -268,6 +283,7 @@ export default function RoomPage() {
                             addShape(arrowHead2Shape, session.user.id);
                         }
                         break;
+                    }
                 }
                 
                 if(shape && session?.user?.id && currentShape !== "ARROW"){
@@ -293,7 +309,7 @@ export default function RoomPage() {
             canvas.removeEventListener("mousemove", handleMouseMove);
             canvas.removeEventListener("mouseup", handleMouseUp);
         };
-    },[shapes, roomId, currentShape, isDrawing, currentPath, startPoint, session?.user?.id, drawingOptions]);
+    },[shapes, roomId, currentShape, isDrawing, currentPath, startPoint, session?.user?.id, drawingOptions, addShape]);
 
     const [previousShapesLength, setPreviousShapesLength] = useState(0);
 
@@ -384,7 +400,26 @@ export default function RoomPage() {
                 currentShape={currentShape}
                 onShapeChange={setCurrentShape}
             />
-            <TypeControlPanel options={drawingOptions} onChange={setDrawingOptions} />
+            <TypeControlPanel 
+                options={drawingOptions}
+                onChange={setDrawingOptions}
+            />
+            <div className="fixed bottom-6 right-6 z-40">
+                <Button
+                    onClick={() => setIsChatOpen(!isChatOpen)}
+                    size="icon"
+                    className="rounded-full h-14 w-14 shadow-lg"
+                    variant="outline"
+                >
+                    <MessageCircle className="h-7 w-7" />
+                </Button>
+            </div>
+
+            <GroupChatbot
+                isOpen={isChatOpen}
+                onClose={() => setIsChatOpen(false)}
+            />
+            
             <canvas 
                 id="canvas" 
                 ref={canvasRef} 
