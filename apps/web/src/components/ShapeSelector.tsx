@@ -1,0 +1,58 @@
+"use client";
+import { useState } from "react";
+import { ShapeType } from "@repo/schemas";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import { 
+  Circle, 
+  Square, 
+  Minus, 
+  Diamond, 
+  ArrowRight, 
+  PenTool, 
+  Type, 
+  Image 
+} from "lucide-react";
+
+interface ShapeSelectorProps {
+  currentShape: ShapeType;
+  onShapeChange: (shape: ShapeType) => void;
+}
+
+const shapeOptions: { type: ShapeType; label: string; icon: React.ReactNode; disabled?: boolean }[] = [
+  { type: "ELLIPSE", label: "Ellipse", icon: <Circle size={16} /> },
+  { type: "RECTANGLE", label: "Rectangle", icon: <Square size={16} /> },
+  { type: "LINE", label: "Line", icon: <Minus size={16} /> },
+  { type: "DIAMOND", label: "Diamond", icon: <Diamond size={16} /> },
+  { type: "ARROW", label: "Arrow", icon: <ArrowRight size={16} /> },
+  { type: "FREEDRAW", label: "Free Draw", icon: <PenTool size={16} /> },
+  { type: "TEXT", label: "Text", icon: <Type size={16} />, disabled: true },
+  { type: "IMAGE", label: "Image", icon: <Image size={16} />, disabled: true },
+];
+
+export default function ShapeSelector({ currentShape, onShapeChange }: ShapeSelectorProps) {
+  return (
+    <Card className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-background/90 backdrop-blur-sm border">
+      <div className="flex flex-col gap-2">
+        <div className="text-xs font-medium text-center text-muted-foreground mb-1">
+          Shapes
+        </div>
+        {shapeOptions.map((shape) => (
+          <Button
+            key={shape.type}
+            variant={currentShape === shape.type ? "default" : "outline"}
+            size="sm"
+            onClick={() => !shape.disabled && onShapeChange(shape.type)}
+            disabled={shape.disabled}
+            className={`w-10 h-10 p-0 flex items-center justify-center transition-transform ${
+              shape.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+            }`}
+            title={shape.disabled ? `${shape.label} (Coming Soon)` : shape.label}
+          >
+            {shape.icon}
+          </Button>
+        ))}
+      </div>
+    </Card>
+  );
+} 
