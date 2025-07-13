@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sun, Moon, Laptop } from "lucide-react";
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -20,7 +20,7 @@ export function ThemeToggle() {
   const isDark = (theme === "dark") || (theme === "system" && resolvedTheme === "dark");
 
   return (
-    <div className="absolute top-4 right-4 z-10">
+    <div className={className}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button

@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import { ShapeType } from "@repo/schemas";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -11,12 +10,14 @@ import {
   ArrowRight, 
   PenTool, 
   Type, 
-  Image 
+  Image,
+  Eraser
 } from "lucide-react";
 
 interface ShapeSelectorProps {
   currentShape: ShapeType;
   onShapeChange: (shape: ShapeType) => void;
+  onClearShapes?: () => void;
 }
 
 const shapeOptions: { type: ShapeType; label: string; icon: React.ReactNode; disabled?: boolean }[] = [
@@ -30,9 +31,9 @@ const shapeOptions: { type: ShapeType; label: string; icon: React.ReactNode; dis
   { type: "IMAGE", label: "Image", icon: <Image size={16} />, disabled: true },
 ];
 
-export default function ShapeSelector({ currentShape, onShapeChange }: ShapeSelectorProps) {
+export default function ShapeSelector({ currentShape, onShapeChange, onClearShapes }: ShapeSelectorProps) {
   return (
-    <Card className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-background/90 backdrop-blur-sm border">
+    <Card className="absolute left-4 top-4 z-10 p-2 bg-background/90 backdrop-blur-sm border">
       <div className="flex flex-col gap-2">
         <div className="text-xs font-medium text-center text-muted-foreground mb-1">
           Shapes
@@ -52,6 +53,22 @@ export default function ShapeSelector({ currentShape, onShapeChange }: ShapeSele
             {shape.icon}
           </Button>
         ))}
+        
+        {/* Separator */}
+        <div className="w-full h-px bg-border my-1"></div>
+        
+        {/* Eraser button */}
+        {onClearShapes && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClearShapes}
+            className="w-10 h-10 p-0 flex items-center justify-center transition-transform hover:scale-105 hover:bg-destructive hover:text-destructive-foreground"
+            title="Clear All Shapes"
+          >
+            <Eraser size={16} />
+          </Button>
+        )}
       </div>
     </Card>
   );

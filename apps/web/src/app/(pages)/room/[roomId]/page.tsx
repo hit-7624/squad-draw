@@ -11,7 +11,9 @@ import { useRoomStore } from "@/store/room.store";
 import ShapeSelector from "@/components/ShapeSelector";
 import TypeControlPanel, { DrawingOptions } from '@/components/ControlPanel';
 import { GroupChatbot } from "@/components/GroupChatbot";
-import { MessageCircle } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Modal } from "@/components/ui/modal";
+import { MessageCircle, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function drawShapesFromArray(shapes: SimpleShape[], canvasRef: React.RefObject<HTMLCanvasElement | null>){
@@ -47,6 +49,22 @@ export default function RoomPage() {
         fillOpacity: 0.25
     });
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
+    const [modalState, setModalState] = useState<{
+        isOpen: boolean;
+        type: 'clearShapes' | null;
+        title: string;
+        message: string;
+        confirmText: string;
+        variant: 'default' | 'danger';
+    }>({
+        isOpen: false,
+        type: null,
+        title: '',
+        message: '',
+        confirmText: '',
+        variant: 'default'
+    });
     
     const {
         shapes,
@@ -62,6 +80,33 @@ export default function RoomPage() {
         fetchCurrentRoomData,
         fetchRoomData,
     } = useRoomStore();
+
+    const handleClearShapes = () => {
+        setModalState({
+            isOpen: true,
+            type: 'clearShapes',
+            title: 'Clear All Shapes',
+            message: 'Are you sure you want to clear all shapes? This action cannot be undone and all shapes will be permanently removed from the canvas.',
+            confirmText: 'Clear All',
+            variant: 'danger'
+        });
+    };
+
+    const handleConfirm = async () => {
+        if (modalState.type === 'clearShapes') {
+            try {
+                await clearShapes();
+                toast.success('All shapes cleared successfully!');
+            } catch (error) {
+                toast.error('Failed to clear shapes');
+                console.error('Error clearing shapes:', error);
+            }
+        }
+    };
+
+    const closeModal = () => {
+        setModalState(prev => ({ ...prev, isOpen: false }));
+    };
 
     useEffect(() => {
         if (!sessionLoading) {
@@ -364,56 +409,55 @@ export default function RoomPage() {
 
     return (
         <div className="relative">
-            <div className="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur-sm rounded-lg p-3 border">
-                <div className="flex items-center gap-2 mb-2">
-                    <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                    <span className="text-sm font-medium">
-                        {isConnected ? 'Connected' : 'Disconnected'}
-                    </span>
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
+                <ThemeToggle />
+                <div className="bg-background/80 backdrop-blur-sm rounded-lg p-3 border">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <span className="text-sm font-medium">
+                            {isConnected ? 'Connected' : 'Disconnected'}
+                        </span>
+                    </div>
+                    <div className="text-sm text-muted-foreground mb-2">
+                        Online: {onlineMembers.length} members
+                    </div>
+                    <div className="text-xs text-muted-foreground mb-2">
+                        Role: {canManageCurrentRoom(session?.user) ? 'Admin/Owner' : 'Member'}
+                    </div>
                 </div>
-                <div className="text-sm text-muted-foreground mb-2">
-                    Online: {onlineMembers.length} members
-                </div>
-                <div className="text-xs text-muted-foreground mb-2">
-                    Role: {canManageCurrentRoom(session?.user) ? 'Admin/Owner' : 'Member'}
-                </div>
-                {canManageCurrentRoom(session?.user) && (
-                    <button
-                        onClick={async () => {
-                            if (confirm('Are you sure you want to clear all shapes? This action cannot be undone.')) {
-                                try {
-                                    await clearShapes();
-                                    toast.success('All shapes cleared successfully!');
-                                } catch (error) {
-                                    toast.error('Failed to clear shapes');
-                                    console.error('Error clearing shapes:', error);
-                                }
-                            }
-                        }}
-                        className="w-full text-xs bg-destructive text-destructive-foreground px-3 py-2 rounded hover:bg-destructive/90 transition-colors"
-                    >
-                        Clear All Shapes
-                    </button>
-                )}
             </div>
             <ShapeSelector 
                 currentShape={currentShape}
                 onShapeChange={setCurrentShape}
+                onClearShapes={canManageCurrentRoom(session?.user) ? handleClearShapes : undefined}
             />
-            <TypeControlPanel 
-                options={drawingOptions}
-                onChange={setDrawingOptions}
-            />
+            <div className="fixed bottom-6 left-6 z-40">
+                <Button
+                    onClick={() => setIsControlPanelOpen(!isControlPanelOpen)}
+                    size="icon"
+                    className="rounded-lg h-14 w-14 shadow-lg"
+                    variant="outline"
+                >
+                    <Palette className="h-7 w-7" />
+                </Button>
+            </div>
             <div className="fixed bottom-6 right-6 z-40">
                 <Button
                     onClick={() => setIsChatOpen(!isChatOpen)}
                     size="icon"
-                    className="rounded-full h-14 w-14 shadow-lg"
+                    className="rounded-lg h-14 w-14 shadow-lg"
                     variant="outline"
                 >
                     <MessageCircle className="h-7 w-7" />
                 </Button>
             </div>
+
+            <TypeControlPanel 
+                options={drawingOptions}
+                onChange={setDrawingOptions}
+                isOpen={isControlPanelOpen}
+                onClose={() => setIsControlPanelOpen(false)}
+            />
 
             <GroupChatbot
                 isOpen={isChatOpen}
@@ -426,6 +470,16 @@ export default function RoomPage() {
                 width={window.innerWidth} 
                 height={window.innerHeight}
                 className="cursor-crosshair"
+            />
+
+            <Modal
+                isOpen={modalState.isOpen}
+                onClose={closeModal}
+                title={modalState.title}
+                message={modalState.message}
+                confirmText={modalState.confirmText}
+                variant={modalState.variant}
+                onConfirm={handleConfirm}
             />
         </div>
     );

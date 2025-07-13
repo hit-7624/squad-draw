@@ -43,7 +43,6 @@ export const Modal = ({
           <Button
             onClick={onClose}
             variant="outline"
-            className="bg-secondary text-secondary-foreground border-border hover:bg-secondary/80"
           >
             {cancelText}
           </Button>

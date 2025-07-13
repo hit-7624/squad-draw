@@ -45,7 +45,7 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
-          <Toaster richColors position="top-right" duration={3000} closeButton />
+          <Toaster richColors position="top-right" duration={3000}  />
         </ThemeProvider>
       </body>
     </html>

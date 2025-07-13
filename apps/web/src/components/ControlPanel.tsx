@@ -1,6 +1,9 @@
 "use client";
+import React from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface DrawingOptions {
   stroke: string;
@@ -16,6 +19,8 @@ export interface DrawingOptions {
 interface ControlPanelProps {
   options: DrawingOptions;
   onChange: (opts: DrawingOptions) => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 function hexToHex8(hex: string, alpha: number) {
@@ -27,108 +32,221 @@ function hexToHex8(hex: string, alpha: number) {
 }
 function setFillWithOpacity(fill: string, opacity: number) {
   if (fill.startsWith('rgba')) {
-    return fill.replace(/rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/, (m, r, g, b, a) => `rgba(${r}, ${g}, ${b}, ${opacity})`);
+    return fill.replace(/rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/, (m, r, g, b) => `rgba(${r}, ${g}, ${b}, ${opacity})`);
   }
   if (fill.startsWith('#')) {
-    return hexToHex8(fill, opacity);
+    const baseColor = fill.length === 9 ? fill.slice(0, 7) : fill;
+    return hexToHex8(baseColor, opacity);
   }
   if (fill === 'rgba(0,0,0,0)' || fill === 'transparent') {
-    return `rgba(0,0,0,${opacity})`;
+    return opacity === 0 ? 'rgba(0,0,0,0)' : `rgba(0,0,0,${opacity})`;
   }
-  // fallback for named colors
+  // fallback for named colors - convert to rgba
+  const tempDiv = document.createElement('div');
+  tempDiv.style.color = fill;
+  document.body.appendChild(tempDiv);
+  const computedColor = window.getComputedStyle(tempDiv).color;
+  document.body.removeChild(tempDiv);
+  
+  if (computedColor.startsWith('rgb(')) {
+    const match = computedColor.match(/rgb\((\d+), (\d+), (\d+)\)/);
+    if (match) {
+      return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${opacity})`;
+    }
+  }
+  
   return fill;
 }
 const fillOpacities = [0, 0.25, 0.5, 0.75, 1];
 
 const strokeColors = [
-  "#e5e5e5", "#ff8686", "#4ec16e", "#6cb6ff", "#c46a0a", "#f47c3c"
+  "#f5f6fa", "#353b48", "#009432", "#4834d4", "#e84118"
 ];
 const backgroundColors = [
-  "#23232a", "#6b3535", "#0e3d1c", "#0e2a3d", "#3d2a0e", "transparent"
+  "#f5f6fa", "#353b48", "#009432", "#4834d4", "#e84118"
 ];
 const strokeWidths = [1, 2, 3, 4, 5];
 const roughness = [0, 1, 2, 3, 4];
 
-const strokeDashOptions = [
+interface StrokeDashOption {
+  label: string;
+  value: number[];
+  icon: React.ReactNode;
+}
+
+const strokeDashOptions: StrokeDashOption[] = [
   { label: 'Solid', value: [], icon: (
-    <div className="w-8 h-1 bg-[#f5f5f5] rounded-full" />
+    <svg width="24" height="8"><line x1="2" y1="4" x2="22" y2="4" stroke="currentColor" strokeWidth="2" /></svg>
   ) },
   { label: 'Dashed', value: [8, 4], icon: (
-    <svg width="32" height="8"><line x1="2" y1="4" x2="30" y2="4" stroke="#f5f5f5" strokeWidth="2" strokeDasharray="8,4" /></svg>
+    <svg width="24" height="8"><line x1="2" y1="4" x2="22" y2="4" stroke="currentColor" strokeWidth="2" strokeDasharray="6,3" /></svg>
   ) },
-  { label: 'Dotted', value: [1, 3], icon: (
-    <svg width="32" height="8"><line x1="2" y1="4" x2="30" y2="4" stroke="#f5f5f5" strokeWidth="2" strokeDasharray="1,3" /></svg>
+  { label: 'Dotted', value: [2, 2], icon: (
+    <svg width="24" height="8"><line x1="2" y1="4" x2="22" y2="4" stroke="currentColor" strokeWidth="2" strokeDasharray="1,2" /></svg>
   ) },
-  { label: 'Dash-dot', value: [8, 3, 1, 3], icon: (
-    <svg width="32" height="8"><line x1="2" y1="4" x2="30" y2="4" stroke="#f5f5f5" strokeWidth="2" strokeDasharray="8,3,1,3" /></svg>
+  { label: 'Dash-dot', value: [8, 3, 2, 3], icon: (
+    <svg width="24" height="8"><line x1="2" y1="4" x2="22" y2="4" stroke="currentColor" strokeWidth="2" strokeDasharray="6,2,1,2" /></svg>
   ) },
-  { label: 'Long dash', value: [14, 6], icon: (
-    <svg width="32" height="8"><line x1="2" y1="4" x2="30" y2="4" stroke="#f5f5f5" strokeWidth="2" strokeDasharray="14,6" /></svg>
+  { label: 'Long dash', value: [12, 4], icon: (
+    <svg width="24" height="8"><line x1="2" y1="4" x2="22" y2="4" stroke="currentColor" strokeWidth="2" strokeDasharray="10,3" /></svg>
   ) },
 ];
 
-export default function ControlPanel({ options, onChange }: ControlPanelProps) {
+export default function ControlPanel({ options, onChange, isOpen = false, onClose }: ControlPanelProps) {
   const opts = { ...options };
   return (
-    <Card className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 p-4 bg-background/90 backdrop-blur-sm border min-w-[260px] min-h-[400px] flex flex-col gap-6">
-      <div className="flex flex-col gap-4">
+    <div
+      className={cn(
+        "fixed bottom-24 left-6 transition-all duration-300 ease-in-out z-30",
+        isOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
+      )}
+    >
+      <Card className="p-3 bg-background/90 backdrop-blur-sm border shadow-2xl rounded-xl">
+        <div className="flex items-center justify-between ">
+          <h3 className="text-sm font-semibold">Drawing Options</h3>
+          {onClose && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 rounded-full" 
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
+        <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-2">
           <div className="text-sm font-medium">Stroke</div>
-          <div className="flex gap-2">
+          <div className="flex gap-1 flex-wrap">
             {strokeColors.map((color: string) => (
-              <Button key={color} className="w-7 h-7 p-0 rounded" style={{ background: color, border: opts.stroke === color ? '2px solid #7c7bb7' : undefined }} variant={opts.stroke === color ? "default" : "outline"} onClick={() => onChange({ ...opts, stroke: color })} />
+              <Button 
+                key={color} 
+                className="w-8 h-8 p-0" 
+                style={{ 
+                  background: color, 
+                  border: opts.stroke === color 
+                    ? '2px solid hsl(var(--ring)) !important' 
+                    : '1px solid hsl(var(--foreground) / 0.8) !important'
+                }} 
+                variant={opts.stroke === color ? "default" : "outline"} 
+                onClick={() => onChange({ ...opts, stroke: color })} 
+              />
             ))}
           </div>
         </div>
         <div className="flex flex-col gap-2">
           <div className="text-sm font-medium">Background</div>
-          <div className="flex gap-2">
-            {backgroundColors.map((color: string) => (
-              <Button key={color} className="w-7 h-7 p-0 rounded" style={{ background: color === 'transparent' ? 'repeating-linear-gradient(45deg, #23232a 0 4px, #333 4px 8px)' : color, border: opts.fill === color ? '2px solid #7c7bb7' : undefined }} variant={opts.fill === color ? "default" : "outline"} onClick={() => onChange({ ...opts, fill: setFillWithOpacity(color === 'transparent' ? 'rgba(0,0,0,0)' : color, opts.fillOpacity) })} />
-            ))}
+          <div className="flex gap-1 flex-wrap">
+            {backgroundColors.map((color: string) => {
+              const isSelected = (() => {
+                const fill = opts.fill ?? '';
+                if (color === 'transparent') {
+                  return fill === 'transparent' || fill === 'rgba(0,0,0,0)' || fill.startsWith('rgba(0, 0, 0,') || fill.startsWith('rgba(0,0,0,');
+                }
+                if (fill.startsWith('#') && color.startsWith('#')) {
+                  // Compare hex colors (with or without alpha)
+                  const fillBase = fill.length === 9 ? fill.slice(0, 7) : fill;
+                  return fillBase === color;
+                }
+                if (fill.startsWith('rgba') && color.startsWith('#')) {
+                  // Convert rgba to hex for comparison
+                  const rgbaMatch = fill.match(/rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/);
+                  if (rgbaMatch && rgbaMatch[1] && rgbaMatch[2] && rgbaMatch[3]) {
+                    const [, r, g, b] = rgbaMatch;
+                    const hexFromRgba = `#${parseInt(r).toString(16).padStart(2, '0')}${parseInt(g).toString(16).padStart(2, '0')}${parseInt(b).toString(16).padStart(2, '0')}`;
+                    return hexFromRgba === color;
+                  }
+                }
+                return fill === color;
+              })();
+              
+              return (
+                <Button 
+                  key={color} 
+                  className="w-8 h-8 p-0" 
+                  style={{ 
+                    background: color === 'transparent' ? 'repeating-linear-gradient(45deg, hsl(var(--muted)) 0 4px, hsl(var(--muted-foreground) / 0.3) 4px 8px)' : color, 
+                    border: isSelected 
+                      ? '2px solid hsl(var(--ring)) !important' 
+                      : '1px solid hsl(var(--foreground) / 0.8) !important'
+                  }} 
+                  variant={isSelected ? "default" : "outline"} 
+                  onClick={() => {
+                    const newFill = color === 'transparent' ? 'rgba(0,0,0,0)' : setFillWithOpacity(color, opts.fillOpacity);
+                    onChange({ ...opts, fill: newFill });
+                  }} 
+                />
+              );
+            })}
           </div>
         </div>
         <div className="flex flex-col gap-2">
           <div className="text-sm font-medium">Stroke width</div>
-          <div className="flex gap-2">
+          <div className="flex gap-1 flex-wrap">
             {strokeWidths.map((w: number) => (
-              <Button key={w} className="w-12 h-10 flex items-center justify-center" variant={opts.strokeWidth === w ? "default" : "outline"} onClick={() => onChange({ ...opts, strokeWidth: w })}>
-                <div className={`w-8 rounded-full`} style={{ height: w, background: '#f5f5f5' }} />
+              <Button 
+                key={w} 
+                className="w-8 h-8 flex items-center justify-center p-0" 
+                style={{
+                  border: opts.strokeWidth === w 
+                    ? '2px solid hsl(var(--ring)) !important' 
+                    : '1px solid hsl(var(--foreground) / 0.8) !important'
+                }}
+                variant={opts.strokeWidth === w ? "default" : "outline"} 
+                onClick={() => onChange({ ...opts, strokeWidth: w })}
+              >
+                <svg width="24" height="8">
+                  <line x1="2" y1="4" x2="22" y2="4" stroke="currentColor" strokeWidth={w} />
+                </svg>
               </Button>
             ))}
           </div>
         </div>
         <div className="flex flex-col gap-2">
           <div className="text-sm font-medium">Roughness</div>
-          <div className="flex gap-2">
+          <div className="flex gap-1 flex-wrap">
             {roughness.map((r: number) => (
-              <Button key={r} className="w-12 h-10 flex items-center justify-center" variant={opts.roughness === r ? "default" : "outline"} onClick={() => onChange({ ...opts, roughness: r })}>
-                <div className="flex items-center justify-center w-8 h-6">
-                  <svg width="32" height="12">
-                    {r === 0 ? (
-                      <line x1="2" y1="6" x2="30" y2="6" stroke="#f5f5f5" strokeWidth="2" />
-                    ) : r === 1 ? (
-                      <path d="M2 8 Q8 4 16 8 Q24 12 30 8" stroke="#f5f5f5" strokeWidth="2" fill="none" />
-                    ) : r === 2 ? (
-                      <path d="M2 10 Q8 2 16 10 Q24 18 30 10" stroke="#f5f5f5" strokeWidth="2" fill="none" />
-                    ) : r === 3 ? (
-                      <path d="M2 11 Q8 1 16 11 Q24 21 30 11" stroke="#f5f5f5" strokeWidth="2" fill="none" />
-                    ) : (
-                      <path d="M2 12 Q8 0 16 12 Q24 24 30 12" stroke="#f5f5f5" strokeWidth="2" fill="none" />
-                    )}
-                  </svg>
-                </div>
+              <Button 
+                key={r} 
+                className="w-8 h-8 flex items-center justify-center p-0" 
+                style={{
+                  border: opts.roughness === r 
+                    ? '2px solid hsl(var(--ring)) !important' 
+                    : '1px solid hsl(var(--foreground) / 0.8) !important'
+                }}
+                variant={opts.roughness === r ? "default" : "outline"} 
+                onClick={() => onChange({ ...opts, roughness: r })}
+              >
+                <svg width="24" height="8">
+                  {r === 0 ? (
+                    <line x1="2" y1="4" x2="22" y2="4" stroke="currentColor" strokeWidth="2" />
+                  ) : r === 1 ? (
+                    <path d="M2 4 Q8 2 16 4 Q20 6 22 4" stroke="currentColor" strokeWidth="2" fill="none" />
+                  ) : r === 2 ? (
+                    <path d="M2 4 Q8 1 16 4 Q20 7 22 4" stroke="currentColor" strokeWidth="2" fill="none" />
+                  ) : r === 3 ? (
+                    <path d="M2 4 Q8 0 16 4 Q20 8 22 4" stroke="currentColor" strokeWidth="2" fill="none" />
+                  ) : (
+                    <path d="M2 4 Q8 0 16 4 Q20 8 22 4" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                  )}
+                </svg>
               </Button>
             ))}
           </div>
         </div>
         <div className="flex flex-col gap-2">
           <div className="text-sm font-medium">Stroke Dash</div>
-          <div className="flex gap-2">
-            {strokeDashOptions.map((opt: any, idx: number) => (
+          <div className="flex gap-1 flex-wrap">
+            {strokeDashOptions.map((opt: StrokeDashOption) => (
               <Button
                 key={opt.label}
-                className="w-12 h-10 flex items-center justify-center"
+                className="w-8 h-8 flex items-center justify-center p-0"
+                style={{
+                  border: JSON.stringify(opts.strokeLineDash) === JSON.stringify(opt.value) 
+                    ? '2px solid hsl(var(--ring)) !important' 
+                    : '1px solid hsl(var(--foreground) / 0.8) !important'
+                }}
                 variant={JSON.stringify(opts.strokeLineDash) === JSON.stringify(opt.value) ? "default" : "outline"}
                 onClick={() => onChange({ ...opts, strokeLineDash: opt.value })}
               >
@@ -139,33 +257,50 @@ export default function ControlPanel({ options, onChange }: ControlPanelProps) {
         </div>
         <div className="flex flex-col gap-2">
           <div className="text-sm font-medium">Fill Opacity</div>
-          <div className="flex gap-2">
-            {fillOpacities.map((opacity) => (
-              <Button
-                key={opacity}
-                className="w-12 h-10 flex items-center justify-center"
-                variant={(() => {
-                  const fill = opts.fill ?? '';
-                  if (fill.startsWith('rgba')) {
-                    const match = fill.match(/rgba\(\d+, \d+, \d+, ([\d.]+)\)/);
-                    return match && Number(match[1]) === opacity ? "default" : "outline";
-                  }
-                  if (fill.startsWith('#') && fill.length === 9) {
-                    // #RRGGBBAA
-                    const aa = fill.slice(-2);
-                    const aaDec = parseInt(aa, 16) / 255;
-                    return Math.abs(aaDec - opacity) < 0.01 ? "default" : "outline";
-                  }
-                  return opacity === 1 && (!fill || fill === 'transparent' || fill === 'rgba(0,0,0,0)') ? "default" : "outline";
-                })()}
-                onClick={() => onChange({ ...opts, fill: setFillWithOpacity(opts.fill ?? 'rgba(0,0,0,0)', opacity), fillOpacity: opacity })}
-              >
-                {Math.round(opacity * 100)}%
-              </Button>
-            ))}
+          <div className="flex gap-1 flex-wrap">
+            {fillOpacities.map((opacity) => {
+              const isSelected = Math.abs(opts.fillOpacity - opacity) < 0.01;
+              return (
+                <Button
+                  key={opacity}
+                  className="w-8 h-8 flex items-center justify-center text-xs p-0"
+                  style={{
+                    border: isSelected 
+                      ? '2px solid hsl(var(--ring)) !important' 
+                      : '1px solid hsl(var(--foreground) / 0.8) !important'
+                  }}
+                  variant={isSelected ? "default" : "outline"}
+                  onClick={() => {
+                    const currentFillBase = (() => {
+                      const fill = opts.fill ?? '';
+                      if (fill === 'transparent' || fill === 'rgba(0,0,0,0)') {
+                        return 'rgba(0,0,0,0)';
+                      }
+                      if (fill.startsWith('rgba')) {
+                        return fill.replace(/rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/, (m, r, g, b) => `rgba(${r}, ${g}, ${b}, ${opacity})`);
+                      }
+                      if (fill.startsWith('#')) {
+                        const baseColor = fill.length === 9 ? fill.slice(0, 7) : fill;
+                        return hexToHex8(baseColor, opacity);
+                      }
+                      return fill;
+                    })();
+                    
+                    onChange({ 
+                      ...opts, 
+                      fill: currentFillBase,
+                      fillOpacity: opacity 
+                    });
+                  }}
+                >
+                  {Math.round(opacity * 100)}
+                </Button>
+              );
+            })}
           </div>
         </div>
-      </div>
-    </Card>
+        </div>
+      </Card>
+    </div>
   );
 } 

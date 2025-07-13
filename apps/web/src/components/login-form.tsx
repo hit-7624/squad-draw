@@ -80,7 +80,7 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="relative">
-        <ThemeToggle />
+        <ThemeToggle className="absolute top-4 right-4 z-10" />
         <CardHeader className="text-center">
           <CardTitle className="text-xl">
             {isSignUp ? "Create an account" : "Welcome back"}
