@@ -146,3 +146,103 @@ export const newMessageHandler = async (socket: Socket, data: { message: string;
         });
     }
 };
+
+export const clearShapesHandler = async (socket: Socket, data: { roomId: string }) => {
+    console.log('clearShapesHandler called with data:', data);
+    console.log('socket.data.user:', socket.data.user);
+    console.log('socket.data.currentRoom:', socket.data.currentRoom);
+    
+    // Validate user authentication
+    if (!socket.data.user) {
+        console.log('User not authenticated');
+        socket.emit('custom-error', {
+            code: 401,
+            type: 'UNAUTHORIZED',
+            message: 'User not authenticated'
+        });
+        return;
+    }
+
+    // Validate roomId
+    if (!data.roomId || typeof data.roomId !== 'string' || !data.roomId.trim()) {
+        socket.emit('custom-error', {
+            code: 400,
+            type: 'INVALID_ROOM_ID',
+            message: 'Room ID is required and must be a valid string'
+        });
+        return;
+    }
+
+    // Check if user is in the room
+    if (socket.data.currentRoom !== data.roomId) {
+        socket.emit('custom-error', {
+            code: 400,
+            type: 'NOT_IN_ROOM',
+            message: 'You are not in this room'
+        });
+        return;
+    }
+
+    try {
+        // Verify room exists and user is a member with admin privileges
+        const roomMembership = await prisma.roomMember.findFirst({
+            where: {
+                roomId: data.roomId,
+                userId: socket.data.user.id,
+            },
+            include: {
+                room: true
+            }
+        });
+
+        if (!roomMembership) {
+            socket.emit('custom-error', {
+                code: 403,
+                type: 'FORBIDDEN',
+                message: 'You are not a member of this room'
+            });
+            return;
+        }
+
+        // Check if user is owner or admin
+        const isOwner = roomMembership.room.ownerId === socket.data.user.id;
+        const isAdmin = roomMembership.role === 'ADMIN';
+
+        console.log('Permission check:', { isOwner, isAdmin, userId: socket.data.user.id, ownerId: roomMembership.room.ownerId, role: roomMembership.role });
+
+        if (!isOwner && !isAdmin) {
+            console.log('User not authorized to clear shapes');
+            socket.emit('custom-error', {
+                code: 403,
+                type: 'FORBIDDEN',
+                message: 'Only room owners and admins can clear all shapes'
+            });
+            return;
+        }
+
+        console.log('Clearing shapes for room:', data.roomId);
+        
+        // Delete all shapes from the room
+        const deletedCount = await prisma.shape.deleteMany({
+            where: {
+                roomId: data.roomId
+            }
+        });
+
+        console.log('Deleted shapes count:', deletedCount);
+
+        // Broadcast to all room members
+        socket.to(data.roomId).emit('shapes-cleared', { roomId: data.roomId });
+        socket.emit('shapes-cleared', { roomId: data.roomId });
+        
+        console.log('Shapes cleared successfully');
+
+    } catch (error) {
+        console.error('Error clearing shapes:', error);
+        socket.emit('custom-error', {
+            code: 500,
+            type: 'INTERNAL_ERROR',
+            message: 'Failed to clear shapes'
+        });
+    }
+};

@@ -56,8 +56,10 @@
       isOwner: (room: Room, user: User | null) => boolean;
       canManageMembers: (room: Room, user: User | null) => boolean;
       getOverviewRoom: () => Room | undefined;
+      canManageCurrentRoom: (user: User | null) => boolean;
+      fetchCurrentRoomData: (roomId: string) => Promise<void>;
       addShape: (shape: DrawnShape, userId?: string) => void;
-      clearShapes: () => void;
+      clearShapes: () => Promise<void>;
       fetchShapes: (roomId: string) => Promise<void>;
     }
 
@@ -428,6 +430,12 @@
                     set({ shapes: [...currentShapes, newShape] });
                   });
 
+                  socket.on('shapes-cleared', (data: { roomId: string }) => {
+                    if (data.roomId === roomId) {
+                      set({ shapes: [] });
+                    }
+                  });
+
                   socket.on('room-joined', (data: { roomId: string, onlineMembers: string[] }) => {
                     console.log('Successfully joined room:', data.roomId);
                     if (data.onlineMembers) {
@@ -456,6 +464,7 @@
 
               setupRoomListeners();
               get().fetchRoomData(roomId);
+              get().fetchCurrentRoomData(roomId);
             } else {
               get().disconnectSocket();
             }
@@ -526,6 +535,11 @@
                 set((state) => ({ 
                   shapes: [...state.shapes, newShape] 
                 }));
+              });
+
+              socket.on('shapes-cleared', (data: { roomId: string }) => {
+                console.log('Shapes cleared for room:', data.roomId);
+                set({ shapes: [] });
               });
 
               socket.on('room-joined', async (data: { roomId: string, onlineMembers: string[] }) => {
@@ -681,14 +695,51 @@
             return joinedRooms.find(room => room.id === overviewRoomId);
           },
 
+          canManageCurrentRoom: (user: User | null) => {
+            const room = get().getOverviewRoom();
+            console.log('canManageCurrentRoom check:', { user, room });
+            if (!room || !user) {
+              console.log('canManageCurrentRoom: No room or user');
+              return false;
+            }
+            const canManage = get().canManageRoom(room, user);
+            console.log('canManageCurrentRoom result:', canManage, { userRole: room.userRole, ownerId: room.owner.id, userId: user.id });
+            return canManage;
+          },
+
+          fetchCurrentRoomData: async (roomId: string) => {
+            try {
+              const response = await fetch(`/api/rooms/${roomId}`, {
+                credentials: 'include'
+              });
+              
+              if (response.ok) {
+                const roomData = await response.json();
+                console.log('Fetched room data:', roomData);
+                
+                // Update joinedRooms with current room if not already present
+                set((state) => {
+                  const existingRoom = state.joinedRooms.find(r => r.id === roomId);
+                  if (!existingRoom) {
+                    return { joinedRooms: [...state.joinedRooms, roomData.room] };
+                  }
+                  return state;
+                });
+              }
+            } catch (error) {
+              console.error('Error fetching room data:', error);
+            }
+          },
+
           addShape: (shape: DrawnShape, userId?: string) => {
             console.log('addShape called with:', shape);
             const socket = get().socket;
+            const currentRoomId = get().overviewRoomId;
             
             console.log('addShape - socket:', !!socket, 'user:', !!userId, 'isConnected:', get().isConnected);
             
-            if (!socket || !userId) {
-              console.error('Socket or user not available for addShape');
+            if (!socket || !userId || !currentRoomId) {
+              console.error('Socket, user, or room not available for addShape');
               return;
             }
 
@@ -696,24 +747,67 @@
             console.log('Adding shape to local state');
             set((state) => ({ shapes: [...state.shapes, shape] }));
 
-            // Emit to other users if not already emitted
-            if (!shape.roomId) {
-              console.log('Shape missing roomId, not emitting');
-            } else {
-              console.log('Emitting new-shape event:', shape);
-              socket.emit('new-shape', shape);
-            }
+            // Emit to websocket server
+            console.log('Emitting new-shape event:', shape);
+            socket.emit('new-shape', {
+              ...shape,
+              roomId: currentRoomId,
+              creatorId: userId
+            });
           },
 
-          clearShapes: () => {
+          clearShapes: async () => {
             const socket = get().socket;
             const currentRoomId = get().overviewRoomId;
             
-            if (socket && currentRoomId) {
-              socket.emit('clear-shapes', { roomId: currentRoomId });
-            }
+            console.log('clearShapes called:', { 
+              socket: !!socket, 
+              currentRoomId, 
+              isConnected: get().isConnected,
+              socketConnected: socket?.connected,
+              socketId: socket?.id
+            });
             
+            // Clear local state immediately for better UX
             set({ shapes: [] });
+            
+            if (socket && currentRoomId && get().isConnected) {
+              console.log('Emitting clear-shapes event to room:', currentRoomId);
+              socket.emit('clear-shapes', { roomId: currentRoomId });
+              
+              // Add a callback to check if the event was received
+              socket.on('shapes-cleared', (data) => {
+                console.log('Received shapes-cleared confirmation:', data);
+                set({ shapes: [] });
+              });
+              
+              socket.on('custom-error', (error) => {
+                console.error('Received custom error:', error);
+              });
+            } else {
+              console.log('Socket not available, using API fallback');
+              // Fallback to API call if websocket is not available
+              try {
+                const response = await fetch(`/api/rooms/${currentRoomId}/shapes`, {
+                  method: 'DELETE',
+                  credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                  console.error('Failed to clear shapes via API');
+                  // Revert local state if API call fails
+                  const shapesResponse = await fetch(`/api/rooms/${currentRoomId}/shapes`, {
+                    credentials: 'include'
+                  });
+                  if (shapesResponse.ok) {
+                    const data = await shapesResponse.json();
+                    set({ shapes: data.shapes || [] });
+                  }
+                }
+              } catch (error) {
+                console.error('Error clearing shapes via API:', error);
+              }
+            }
           },
 
           fetchShapes: async (roomId: string) => {

@@ -12,7 +12,7 @@ interface RouteParams {
 export const GET = withAuth(async (request: NextRequest, user, context: RouteParams) => {
   try {
     const { roomId } = await context.params;
-
+    console.log("GET request received", roomId);
     const member = await validateMembership(user.id, roomId);
     if (!member) {
       return Response.json(
@@ -42,6 +42,7 @@ export const GET = withAuth(async (request: NextRequest, user, context: RoutePar
 });
 
 export const POST = withAuth(async (request: NextRequest, user, context: RouteParams) => {
+  console.log("POST request received");
   try {
     const { roomId } = await context.params;
     const body = await request.json();
@@ -68,7 +69,7 @@ export const POST = withAuth(async (request: NextRequest, user, context: RoutePa
         }
       }
     });
-
+    console.log("Shape created:", shape);
     return Response.json({ shape }, { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) {

@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { API_SERVER_PORT, ORIGIN_URL, WS_SERVER_PORT } from '@repo/config';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { joinRoomHandler, leaveRoomHandler, getOnlineMembersHandler } from './handlers/connection.handlers';
-import { newMessageHandler, newShapeHandler } from './handlers/content.handlers';
+import { newMessageHandler, newShapeHandler, clearShapesHandler } from './handlers/content.handlers';
 
 const httpServer = createServer();
 const io = new Server(httpServer, {
@@ -56,6 +56,11 @@ io.on('connection', (socket: Socket) => {
 
     socket.on('new-message', async (data) => {
         await handleSocketEvent(socket, 'new-message', newMessageHandler, data);
+    });
+
+    socket.on('clear-shapes', async (data) => {
+        console.log('Received clear-shapes event from client:', socket.id, 'with data:', data);
+        await handleSocketEvent(socket, 'clear-shapes', clearShapesHandler, data);
     });
 
     socket.on('error', (error) => {
