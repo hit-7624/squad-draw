@@ -17,7 +17,6 @@
 
     interface RoomState {
       socket: Socket | null;
-      user: User | null;
       joinedRooms: Room[];
       overviewRoomId: string | null;
       messages: Message[];
@@ -43,7 +42,7 @@
       unshareRoom: (roomId: string) => Promise<void>;
       copyShareLink: (roomId: string) => void;
       copyRoomId: (roomId: string) => void;
-      sendMessage: (message: string) => Promise<void>;
+      sendMessage: (message: string, user?: User) => Promise<void>;
       openOverview: (roomId: string | null) => void;
       closeOverview: () => void;
       initializeSocket: () => void;
@@ -57,8 +56,7 @@
       isOwner: (room: Room, user: User | null) => boolean;
       canManageMembers: (room: Room, user: User | null) => boolean;
       getOverviewRoom: () => Room | undefined;
-      setUser: (user: User | null) => void;
-      addShape: (shape: DrawnShape) => void;
+      addShape: (shape: DrawnShape, userId?: string) => void;
       clearShapes: () => void;
       fetchShapes: (roomId: string) => Promise<void>;
     }
@@ -69,7 +67,6 @@
       devtools(
         (set, get) => ({
           socket: null,
-          user: null,
           joinedRooms: [],
           overviewRoomId: null,
           messages: [],
@@ -309,8 +306,8 @@
             });
           },
 
-          sendMessage: async (message: string) => {
-            const { overviewRoomId, socket, isConnected, user } = get();
+          sendMessage: async (message: string, user?: User) => {
+            const { overviewRoomId, socket, isConnected } = get();
 
             if (!message || typeof message !== 'string') {
               set({ error: "Invalid message format" });
@@ -525,11 +522,10 @@
 
               socket.on('new-shape-added', (newShape: DrawnShape) => {
                 console.log('Received new shape:', newShape);
-                if (newShape.creatorId !== get().user?.id) {
-                  set((state) => ({ 
-                    shapes: [...state.shapes, newShape] 
-                  }));
-                }
+                // We'll handle the user ID check in the component that calls addShape
+                set((state) => ({ 
+                  shapes: [...state.shapes, newShape] 
+                }));
               });
 
               socket.on('room-joined', async (data: { roomId: string, onlineMembers: string[] }) => {
@@ -685,18 +681,13 @@
             return joinedRooms.find(room => room.id === overviewRoomId);
           },
 
-          setUser: (user: User | null) => {
-            set({ user });
-          },
-
-          addShape: (shape: DrawnShape) => {
+          addShape: (shape: DrawnShape, userId?: string) => {
             console.log('addShape called with:', shape);
             const socket = get().socket;
-            const user = get().user;
             
-            console.log('addShape - socket:', !!socket, 'user:', !!user, 'isConnected:', get().isConnected);
+            console.log('addShape - socket:', !!socket, 'user:', !!userId, 'isConnected:', get().isConnected);
             
-            if (!socket || !user) {
+            if (!socket || !userId) {
               console.error('Socket or user not available for addShape');
               return;
             }

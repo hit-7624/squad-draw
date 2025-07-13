@@ -45,8 +45,7 @@ export default function Dashboard() {
         canManageRoom,
         isOwner,
         canManageMembers,
-        getOverviewRoom,
-        setUser
+        getOverviewRoom
     } = useRoom();
     const { error, success, showError, showSuccess } = useNotification();
     const { 
@@ -64,17 +63,6 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
-    // Create user object from session
-    const user = session?.user ? {
-        id: session.user.id,
-        name: session.user.name,
-        email: session.user.email,
-        emailVerified: session.user.emailVerified,
-        image: session.user.image || undefined,
-        createdAt: session.user.createdAt?.toISOString(),
-        updatedAt: session.user.updatedAt?.toISOString()
-    } : null;
-
     useEffect(() => {
         if (!sessionLoading) {
             fetchUserAndRooms();
@@ -85,36 +73,9 @@ export default function Dashboard() {
         };
     }, [sessionLoading]);
 
-    useEffect(() => {
-        if (session?.user) {
-            const sessionUser = {
-                id: session.user.id,
-                name: session.user.name,
-                email: session.user.email,
-                emailVerified: session.user.emailVerified,
-                image: session.user.image || undefined,
-                createdAt: session.user.createdAt?.toISOString(),
-                updatedAt: session.user.updatedAt?.toISOString()
-            };
-            setUser(sessionUser);
-        }
-    }, [session, setUser]);
-
     const fetchUserAndRooms = async () => {
         try {
             setLoading(true);
-            if (session?.user) {
-                const sessionUser = {
-                    id: session.user.id,
-                    name: session.user.name,
-                    email: session.user.email,
-                    emailVerified: session.user.emailVerified,
-                    image: session.user.image || undefined,
-                    createdAt: session.user.createdAt?.toISOString(),
-                    updatedAt: session.user.updatedAt?.toISOString()
-                };
-                setUser(sessionUser);
-            }
             await fetchJoinedRooms();
         } catch (err: any) {
             console.error("Error fetching room data:", err);
@@ -201,7 +162,7 @@ export default function Dashboard() {
         if (!newMessage.trim()) return;
         
         try {
-            await sendMessage(newMessage);
+            await sendMessage(newMessage, session?.user);
             resetNewMessage();
         } catch (err: any) {
             showError(roomError || "Failed to send message");
@@ -215,19 +176,14 @@ export default function Dashboard() {
     const overviewRoom = getOverviewRoom();
 
     // Calculate room counts for limits
-    const createdRoomsCount = user ? joinedRooms.filter(room => room.owner.id === user.id).length : 0;
+    const createdRoomsCount = session?.user ? joinedRooms.filter(room => room.owner.id === session.user.id).length : 0;
     const joinedRoomsCount = joinedRooms.length;
-
-    // Debug logging
-    console.log("Session:", session);
-    console.log("User:", user);
-    console.log("Loading:", loading, "Session Loading:", sessionLoading);
 
     if (loading || sessionLoading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center text-foreground">
-                    <h2 className="text-3xl font-serif mb-4">Loading Dashboard...</h2>
+                    <h2 className="text-3xl font-sans mb-4">Loading Dashboard...</h2>
                     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
                 </div>
             </div>
@@ -238,7 +194,7 @@ export default function Dashboard() {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center text-foreground">
-                    <h2 className="text-3xl font-serif mb-4">Please sign in to access the dashboard</h2>
+                    <h2 className="text-3xl font-sans mb-4">Please sign in to access the dashboard</h2>
                     <button 
                         onClick={() => router.push('/signin')}
                         className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-md"
@@ -261,9 +217,7 @@ export default function Dashboard() {
                   <h1 className="text-5xl font-sans text-foreground">Dashboard</h1>
                 </div>
                 
-
-                
-                    {/* Connection Status */}
+                {/* Connection Status */}
                 {overviewRoom && (
                     <div className="mb-4 text-center">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
@@ -280,15 +234,7 @@ export default function Dashboard() {
                 )}
                 
                 {/* User Info - Always show if user exists */}
-                {user && <UserInfoCard user={user} joinedRooms={joinedRooms} />}
-                
-                {/* Debug info - Remove this after testing */}
-                {!user && session && (
-                    <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded">
-                        <p className="text-yellow-800">Debug: Session exists but user is null</p>
-                        <pre className="text-xs">{JSON.stringify(session.user, null, 2)}</pre>
-                    </div>
-                )}
+                {session?.user && <UserInfoCard user={session.user} joinedRooms={joinedRooms} />}
 
                 {/* Always show two columns - Room Management (Left) and Overview (Right) */}
                 <div className="grid gap-8 lg:grid-cols-2">
@@ -315,7 +261,7 @@ export default function Dashboard() {
                         {/* Joined Rooms */}
                         <RoomsList
                             rooms={joinedRooms}
-                            user={user}
+                            user={session?.user}
                             overviewRoomId={overviewRoomId}
                             expandedRoom={expandedRoom}
                             actionLoading={actionLoading}
@@ -329,8 +275,8 @@ export default function Dashboard() {
                             onLeaveRoom={handleLeaveRoom}
                             onCopyShareLink={handleCopyShareLink}
                             onCopyRoomId={handleCopyRoomId}
-                            canManageRoom={(room) => canManageRoom(room, user)}
-                            isOwner={(room) => isOwner(room, user)}
+                            canManageRoom={(room) => canManageRoom(room, session?.user)}
+                            isOwner={(room) => isOwner(room, session?.user)}
                         />
                     </div>
 
@@ -341,7 +287,7 @@ export default function Dashboard() {
                                 overviewRoom={overviewRoom}
                                 messages={messages}
                                 members={members}
-                                currentUser={user}
+                                currentUser={session?.user}
                                 newMessage={newMessage}
                                 setNewMessage={setNewMessage}
                                 onSendMessage={handleSendMessage}
@@ -349,8 +295,8 @@ export default function Dashboard() {
                                 actionLoading={actionLoading}
                                 isConnected={isConnected}
                                 onlineMembers={onlineMembers}
-                                canManageMembers={canManageMembers(overviewRoom, user)}
-                                isOwner={isOwner(overviewRoom, user)}
+                                canManageMembers={canManageMembers(overviewRoom, session?.user)}
+                                isOwner={isOwner(overviewRoom, session?.user)}
                                 onPromoteToAdmin={promoteToAdmin}
                                 onDemoteFromAdmin={demoteFromAdmin}
                                 onKickMember={kickMember}

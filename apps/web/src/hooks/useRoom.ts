@@ -37,7 +37,6 @@ export const useRoom = () => {
   const isOwner = useRoomStore((state) => state.isOwner);
   const canManageMembers = useRoomStore((state) => state.canManageMembers);
   const getOverviewRoom = useRoomStore((state) => state.getOverviewRoom);
-  const setUser = useRoomStore((state) => state.setUser);
 
   return {
     joinedRooms,
@@ -75,6 +74,5 @@ export const useRoom = () => {
     isOwner,
     canManageMembers,
     getOverviewRoom,
-    setUser,
   };
 }; 

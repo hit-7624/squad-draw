@@ -1,7 +1,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  // output   = "../src/generated/prisma"
 
 // we will need to generate two clinets as other than next js application will be not able to use the generated/prisma client due to module conflict
 

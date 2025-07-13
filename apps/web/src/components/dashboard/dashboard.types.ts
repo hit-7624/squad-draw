@@ -3,9 +3,9 @@ export interface User {
   name: string;
   email: string;
   emailVerified?: boolean;
-  image?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  image?: string | null;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 export interface Room {

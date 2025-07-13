@@ -5,6 +5,7 @@ import { Modal } from "@/components/ui/modal";
 import { OnlineIndicator } from "@/components/ui/OnlineIndicator";
 import { Room, User } from "./dashboard.types";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface RoomCardProps {
   room: Room;
@@ -199,7 +200,14 @@ export const RoomCard = ({
         <Button 
           onClick={(e) => {
             e.stopPropagation();
-            router.push(`/room/${room.id}`);
+            console.log("Visiting room", room.id);
+            try{
+              router.push(`/room/${room.id}`);
+            } catch (error) {
+              console.error("Error visiting room", error);
+              toast.error("Error visiting room");
+            }
+
           }}
           size="sm"
           variant="default"
