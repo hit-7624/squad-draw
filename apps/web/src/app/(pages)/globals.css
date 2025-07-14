@@ -184,3 +184,10 @@
   
 
 }
+
+/* Ensure all buttons have pointer cursor */
+button:not(:disabled),
+button[data-slot="button"]:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}

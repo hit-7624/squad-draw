@@ -101,7 +101,7 @@ export default function ControlPanel({ options, onChange, isOpen = false, onClos
         isOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
       )}
     >
-      <Card className="p-3 bg-background/90 backdrop-blur-sm border shadow-2xl rounded-xl">
+      <Card className="p-3 bg-background/90 backdrop-blur-sm border shadow-2xl rounded-xl  gap-0">
         <div className="flex items-center justify-between ">
           <h3 className="text-sm font-semibold">Drawing Options</h3>
           {onClose && (

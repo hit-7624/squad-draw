@@ -35,6 +35,7 @@ export default function RoomPage() {
     const router = useRouter();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const roughCanvasRef = useRef<RoughCanvas | null>(null);
+    const previousConnectionStatus = useRef<boolean | null>(null);
     const [currentShape, setCurrentShape] = useState<ShapeType>("ELLIPSE");
     const [isDrawing, setIsDrawing] = useState(false);
     const [currentPath, setCurrentPath] = useState<[number, number][]>([]);
@@ -356,7 +357,7 @@ export default function RoomPage() {
         };
     },[shapes, roomId, currentShape, isDrawing, currentPath, startPoint, session?.user?.id, drawingOptions, addShape]);
 
-    const [previousShapesLength, setPreviousShapesLength] = useState(0);
+    const [previousShapesLength, setPreviousShapesLength] = useState<number | null>(null);
 
     useEffect(() => {
         if (shapes.length > 0) {
@@ -373,12 +374,26 @@ export default function RoomPage() {
         }
 
         // Show notification when shapes are cleared by other users
-        if (previousShapesLength > 0 && shapes.length === 0) {
+        // Only show if we had shapes before and now we don't (actual clearing)
+        if (previousShapesLength !== null && previousShapesLength > 0 && shapes.length === 0) {
             toast.info('All shapes have been cleared');
         }
         
         setPreviousShapesLength(shapes.length);
     }, [shapes, previousShapesLength]);
+
+    // Monitor connection status and show toast notifications
+    useEffect(() => {
+        if (previousConnectionStatus.current !== null) {
+            if (!isConnected && previousConnectionStatus.current) {
+                toast.error('Connection lost! Shapes will not be shared until reconnected.');
+            } else if (isConnected && !previousConnectionStatus.current) {
+                toast.success('Connected to server! You can now share shapes.');
+            }
+        }
+        
+        previousConnectionStatus.current = isConnected;
+    }, [isConnected]);
 
     if (loading || sessionLoading) {
         return (
@@ -435,20 +450,20 @@ export default function RoomPage() {
                 <Button
                     onClick={() => setIsControlPanelOpen(!isControlPanelOpen)}
                     size="icon"
-                    className="rounded-lg h-14 w-14 shadow-lg"
+                    className="rounded-lg h-10 w-10 shadow-lg"
                     variant="outline"
                 >
-                    <Palette className="h-7 w-7" />
+                    <Palette className="h-5 w-5" />
                 </Button>
             </div>
             <div className="fixed bottom-6 right-6 z-40">
                 <Button
                     onClick={() => setIsChatOpen(!isChatOpen)}
                     size="icon"
-                    className="rounded-lg h-14 w-14 shadow-lg"
+                    className="rounded-lg h-10 w-10 shadow-lg"
                     variant="outline"
                 >
-                    <MessageCircle className="h-7 w-7" />
+                    <MessageCircle className="h-5 w-5" />
                 </Button>
             </div>
 

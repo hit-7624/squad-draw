@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useNotification } from "@/hooks/useNotification";
 
 interface LoginFormProps extends React.ComponentProps<"div"> {
   mode?: "signin" | "signup";
@@ -25,56 +26,100 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [showResendVerification, setShowResendVerification] = useState(false);
   const router = useRouter();
+  const { showError, showSuccess } = useNotification();
 
   const isSignUp = mode === "signup";
+
+  const handleResendVerification = async () => {
+    setIsLoading(true);
+    
+    await authClient.sendVerificationEmail({
+      email,
+      callbackURL: "/dashboard"
+    }, {
+      onError: (ctx) => {
+        console.error("Resend verification error:", ctx.error);
+        showError(ctx.error.message || "Failed to send verification email");
+        setIsLoading(false);
+      },
+      onSuccess: () => {
+        showSuccess("Verification email sent! Please check your inbox.");
+        setShowResendVerification(false);
+        setIsLoading(false);
+      }
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setShowResendVerification(false);
 
-    try {
-      if (isSignUp) {
-        await authClient.signUp.email({
-          email,
-          password,
-          name,
-        });
-      } else {
-        await authClient.signIn.email({
-          email,
-          password,
-        });
-      }
-      
-      router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
-    } finally {
-      setIsLoading(false);
+    if (isSignUp) {
+      await authClient.signUp.email({
+        email,
+        password,
+        name,
+      }, {
+        onError: (ctx) => {
+          console.error("Sign up error:", ctx.error);
+          showError(ctx.error.message || "An error occurred during sign up");
+          setIsLoading(false);
+        },
+        onSuccess: () => {
+          showSuccess("Account created! Please check your email to verify your account before signing in.");
+          setIsLoading(false);
+        }
+      });
+    } else {
+      await authClient.signIn.email({
+        email,
+        password,
+      }, {
+        onError: (ctx) => {
+          console.error("Sign in error:", ctx.error);
+          console.log("Error status:", ctx.error.status);
+          console.log("Error message:", ctx.error.message);
+          
+          // Handle email verification error specifically
+          if (ctx.error.status === 403) {
+            showError("Please verify your email address before signing in. Check your inbox for a verification email. Verify email with the latest link.");
+            setShowResendVerification(true);
+          } else {
+            showError(ctx.error.message || "An error occurred during sign in");
+          }
+          setIsLoading(false);
+        },
+        onSuccess: () => {
+          router.push("/dashboard");
+          setIsLoading(false);
+        }
+      });
     }
   };
 
   const handleGoogleSignIn = async () => {
-    try {
-      await authClient.signIn.social({
-        provider: "google",
-      });
-    } catch (err: any) {
-      setError(err.message || "Google sign in failed");
-    }
+    await authClient.signIn.social({
+      provider: "google",
+    }, {
+      onError: (ctx) => {
+        console.error("Google sign in error:", ctx.error);
+        showError(ctx.error.message || "Google sign in failed");
+      }
+    });
   };
 
   const handleGithubSignIn = async () => {
-    try {
-      await authClient.signIn.social({
-        provider: "github",
-      });
-    } catch (err: any) {
-      setError(err.message || "GitHub sign in failed");
-    }
+    await authClient.signIn.social({
+      provider: "github",
+    }, {
+      onError: (ctx) => {
+        console.error("GitHub sign in error:", ctx.error);
+        showError(ctx.error.message || "GitHub sign in failed");
+      }
+    });
   };
 
   return (
@@ -133,10 +178,16 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
                 </span>
               </div>
               <div className="grid gap-6">
-                {error && (
-                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                    {error}
-                  </div>
+                {showResendVerification && !isSignUp && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleResendVerification}
+                    disabled={isLoading}
+                  >
+                    Resend Verification Email
+                  </Button>
                 )}
                 {isSignUp && (
                   <div className="grid gap-3">
@@ -169,7 +220,7 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
                     <Label htmlFor="password">Password</Label>
                     {!isSignUp && (
                       <a
-                        href="#"
+                        href="/forgot-password"
                         className="ml-auto text-sm underline-offset-4 hover:underline"
                       >
                         Forgot your password?
