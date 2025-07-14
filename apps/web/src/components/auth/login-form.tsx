@@ -32,7 +32,6 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
 
   const isSignUp = mode === "signup";
 
-  // Setup forms for both modes to avoid conditional hooks
   const signupForm = useForm<UserSignup>({
     resolver: zodResolver(UserSignupSchema),
     defaultValues: {
