@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,15 +18,13 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useNotification } from "@/hooks/useNotification";
+import { UserSignupSchema, UserLoginSchema, type UserSignup, type UserLogin } from "@repo/schemas";
 
 interface LoginFormProps extends React.ComponentProps<"div"> {
   mode?: "signin" | "signup";
 }
 
 export function LoginForm({ className, mode = "signin", ...props }: LoginFormProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showResendVerification, setShowResendVerification] = useState(false);
   const router = useRouter();
@@ -32,8 +32,28 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
 
   const isSignUp = mode === "signup";
 
+  // Setup forms for both modes to avoid conditional hooks
+  const signupForm = useForm<UserSignup>({
+    resolver: zodResolver(UserSignupSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+  });
+
+  const signinForm = useForm<UserLogin>({
+    resolver: zodResolver(UserLoginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
   const handleResendVerification = async () => {
     setIsLoading(true);
+    const formValues = signinForm.getValues();
+    const email = formValues.email;
     
     await authClient.sendVerificationEmail({
       email,
@@ -52,16 +72,16 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (data: UserSignup | UserLogin) => {
     setIsLoading(true);
     setShowResendVerification(false);
 
     if (isSignUp) {
+      const signupData = data as UserSignup;
       await authClient.signUp.email({
-        email,
-        password,
-        name,
+        email: signupData.email,
+        password: signupData.password,
+        name: signupData.name,
       }, {
         onError: (ctx) => {
           console.error("Sign up error:", ctx.error);
@@ -74,9 +94,10 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
         }
       });
     } else {
+      const signinData = data as UserLogin;
       await authClient.signIn.email({
-        email,
-        password,
+        email: signinData.email,
+        password: signinData.password,
       }, {
         onError: (ctx) => {
           console.error("Sign in error:", ctx.error);
@@ -138,7 +159,7 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={isSignUp ? signupForm.handleSubmit(handleSubmit) : signinForm.handleSubmit(handleSubmit)}>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
                 <Button 
@@ -196,11 +217,12 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
                       id="name"
                       type="text"
                       placeholder="John Doe"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
+                      {...signupForm.register("name")}
                       disabled={isLoading}
                     />
+                    {signupForm.formState.errors.name && (
+                      <p className="text-sm text-red-500">{signupForm.formState.errors.name.message}</p>
+                    )}
                   </div>
                 )}
                 <div className="grid gap-3">
@@ -209,11 +231,14 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
                     id="email"
                     type="email"
                     placeholder="m@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    {...(isSignUp ? signupForm.register("email") : signinForm.register("email"))}
                     disabled={isLoading}
                   />
+                  {(isSignUp ? signupForm.formState.errors.email : signinForm.formState.errors.email) && (
+                    <p className="text-sm text-red-500">
+                      {(isSignUp ? signupForm.formState.errors.email : signinForm.formState.errors.email)?.message}
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-3">
                   <div className="flex items-center">
@@ -230,11 +255,14 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
                   <Input 
                     id="password" 
                     type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    {...(isSignUp ? signupForm.register("password") : signinForm.register("password"))}
                     disabled={isLoading}
                   />
+                  {(isSignUp ? signupForm.formState.errors.password : signinForm.formState.errors.password) && (
+                    <p className="text-sm text-red-500">
+                      {(isSignUp ? signupForm.formState.errors.password : signinForm.formState.errors.password)?.message}
+                    </p>
+                  )}
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Loading..." : (isSignUp ? "Sign up" : "Login")}

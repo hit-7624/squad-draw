@@ -4,7 +4,7 @@
     import { io, Socket } from 'socket.io-client';
     import { ShapeType } from '@repo/schemas';
 
-    const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:3002";
+    const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
 
     interface DrawnShape {
       id?: string;

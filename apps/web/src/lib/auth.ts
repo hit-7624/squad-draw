@@ -9,12 +9,12 @@ export const auth = betterAuth({
     }),
     rateLimit: {
         enabled: true,
-        window: 60, // time window in seconds
-        max: 100,   // max requests in the window
+        window: Number(process.env.RATE_LIMIT_WINDOW),
+        max: Number(process.env.RATE_LIMIT_MAX),
         customRules: {
             "/send-verification-email": {
-                window: 60 * 1000, // 1 minute
-                max: 3,     // max 3 requests per minute
+                window: Number(process.env.VERIFICATION_EMAIL_RATE_LIMIT_WINDOW),
+                max: Number(process.env.VERIFICATION_EMAIL_RATE_LIMIT_MAX),
             },
         },
     },
@@ -84,5 +84,5 @@ export const auth = betterAuth({
             }
         }
     },
-    trustedOrigins: ["http://localhost:3000"],
+    trustedOrigins: [process.env.NEXT_PUBLIC_BASE_URL as string],
 });

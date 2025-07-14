@@ -55,8 +55,12 @@ const UserSignupSchema = z.object({
   name: NameSchema,
   email: EmailSchema,
   password: PasswordSchema,
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
+})
+
+const resetPasswordSchema = z.object({
+  newPassword: PasswordSchema,
+  confirmPassword: PasswordSchema
+}).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"]
 });

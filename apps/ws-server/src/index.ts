@@ -1,14 +1,17 @@
 import { Server, Socket } from 'socket.io';
 import { createServer } from 'http';
-import { API_SERVER_PORT, ORIGIN_URL, WS_SERVER_PORT } from '@repo/config';
+import dotenv from 'dotenv';
+import path from 'path';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { joinRoomHandler, leaveRoomHandler, getOnlineMembersHandler } from './handlers/connection.handlers';
 import { newMessageHandler, newShapeHandler, clearShapesHandler } from './handlers/content.handlers';
 
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 const httpServer = createServer();
 const io = new Server(httpServer, {
     cors: { 
-        origin: ORIGIN_URL,
+        origin: process.env.ORIGIN_URL,
         methods: ['GET', 'POST'],
         credentials: true,
     },
@@ -80,8 +83,8 @@ io.engine.on('connection_error', (error) => {
     console.error('Connection error:', error);
 });
 
-httpServer.listen(WS_SERVER_PORT, () => {
-    console.log(`WebSocket server is running on port ${WS_SERVER_PORT}`);
+httpServer.listen(process.env.WS_SERVER_PORT, () => {
+    console.log(`WebSocket server is running on port ${process.env.WS_SERVER_PORT}`);
 });
 
 

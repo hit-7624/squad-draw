@@ -43,9 +43,12 @@ export const PATCH = withAuth(async (request: NextRequest, user, { params }: { p
       data: { isShared: true }
     });
 
+    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+    if (!BASE_URL) throw new Error('NEXT_PUBLIC_BASE_URL environment variable is required');
+
     return Response.json({ 
       message: "Room shared successfully",
-      shareLink: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/room/${roomId}`
+      shareLink: `${BASE_URL}/room/${roomId}`
     });
   } catch (error) {
     console.error('Failed to share room:', error);

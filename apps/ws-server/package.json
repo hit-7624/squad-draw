@@ -18,7 +18,6 @@
     "socket.io": "^4.8.1"
   },
   "dependencies": {
-    "@repo/config": "workspace:*",
     "@repo/db": "workspace:*",
     "@types/jsonwebtoken": "^9.0.10",
     "cookie": "^1.0.2",
