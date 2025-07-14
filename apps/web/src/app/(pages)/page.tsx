@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import Link from "next/link"
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 
@@ -21,7 +21,9 @@ export default function Home() {
         <div className="flex items-center justify-center gap-3 mb-4">
           <img src="/logo.svg" alt="Squad Draw" className="w-40 h-auto" />
         </div>
-        <p className="text-muted-foreground text-lg">Collaborative drawing made simple</p>
+        <p className="text-muted-foreground text-lg">
+          Collaborative drawing made simple
+        </p>
       </div>
 
       {session?.user ? (

@@ -1,9 +1,9 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 // Create nodemailer transporter for Gmail
 export const createEmailTransporter = () => {
   return nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -12,9 +12,12 @@ export const createEmailTransporter = () => {
 };
 
 // Email verification template
-export const getVerificationEmailTemplate = (verificationUrl: string, userName?: string) => {
+export const getVerificationEmailTemplate = (
+  verificationUrl: string,
+  userName?: string,
+) => {
   return {
-    subject: 'Verify Your Email Address - Squad Draw',
+    subject: "Verify Your Email Address - Squad Draw",
     html: `
       <!DOCTYPE html>
       <html lang="en">
@@ -138,7 +141,7 @@ export const getVerificationEmailTemplate = (verificationUrl: string, userName?:
               
               <div class="title">Verify Your Email Address</div>
               
-              <div class="greeting">Hi${userName ? ` ${userName}` : ''},</div>
+              <div class="greeting">Hi${userName ? ` ${userName}` : ""},</div>
               
               <div class="message">
                   Welcome to Squad Draw! We're excited to have you join our collaborative drawing community. To complete your registration and start creating amazing artwork with your team, please verify your email address.
@@ -166,7 +169,7 @@ export const getVerificationEmailTemplate = (verificationUrl: string, userName?:
       </html>
     `,
     text: `
-      Hi${userName ? ` ${userName}` : ''},
+      Hi${userName ? ` ${userName}` : ""},
       
       Thanks for signing up for Squad Draw! To complete your registration, please verify your email address by visiting this link:
       
@@ -178,14 +181,17 @@ export const getVerificationEmailTemplate = (verificationUrl: string, userName?:
       
       Best regards,
       The Squad Draw Team
-    `
+    `,
   };
 };
 
 // Password reset email template
-export const getPasswordResetEmailTemplate = (resetUrl: string, userName?: string) => {
+export const getPasswordResetEmailTemplate = (
+  resetUrl: string,
+  userName?: string,
+) => {
   return {
-    subject: 'Reset Your Password - Squad Draw',
+    subject: "Reset Your Password - Squad Draw",
     html: `
       <!DOCTYPE html>
       <html lang="en">
@@ -327,7 +333,7 @@ export const getPasswordResetEmailTemplate = (resetUrl: string, userName?: strin
               
               <div class="title">🔐 Reset Your Password</div>
               
-              <div class="greeting">Hi${userName ? ` ${userName}` : ''},</div>
+              <div class="greeting">Hi${userName ? ` ${userName}` : ""},</div>
               
               <div class="message">
                   We received a request to reset your password for your Squad Draw account. Click the button below to create a new password.
@@ -361,7 +367,7 @@ export const getPasswordResetEmailTemplate = (resetUrl: string, userName?: strin
       </html>
     `,
     text: `
-      Hi${userName ? ` ${userName}` : ''},
+      Hi${userName ? ` ${userName}` : ""},
       
       We received a request to reset your password for your Squad Draw account.
       
@@ -374,29 +380,35 @@ export const getPasswordResetEmailTemplate = (resetUrl: string, userName?: strin
       
       Best regards,
       The Squad Draw Team
-    `
+    `,
   };
 };
 
 // Send password reset email
 export const sendPasswordResetEmail = async (
-  email: string, 
-  resetUrl: string, 
-  userName?: string
+  email: string,
+  resetUrl: string,
+  userName?: string,
 ) => {
   try {
     // Validate inputs
     if (!email || !resetUrl) {
-      throw new Error('Email and reset URL are required');
+      throw new Error("Email and reset URL are required");
     }
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || !process.env.EMAIL_FROM) {
-      throw new Error('Email configuration missing. Please check EMAIL_USER, EMAIL_PASS, and EMAIL_FROM environment variables.');
+    if (
+      !process.env.EMAIL_USER ||
+      !process.env.EMAIL_PASS ||
+      !process.env.EMAIL_FROM
+    ) {
+      throw new Error(
+        "Email configuration missing. Please check EMAIL_USER, EMAIL_PASS, and EMAIL_FROM environment variables.",
+      );
     }
 
     const transporter = createEmailTransporter();
     const emailTemplate = getPasswordResetEmailTemplate(resetUrl, userName);
-    
+
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
@@ -407,57 +419,67 @@ export const sendPasswordResetEmail = async (
 
     console.log(`📤 Attempting to send password reset email to: ${email}`);
     const result = await transporter.sendMail(mailOptions);
-    
-    console.log('✅ Password reset email sent successfully:', {
+
+    console.log("✅ Password reset email sent successfully:", {
       messageId: result.messageId,
       to: email,
-      response: result.response
+      response: result.response,
     });
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       messageId: result.messageId,
-      recipient: email
+      recipient: email,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
     // Log detailed error information
-    console.error('❌ Failed to send password reset email:', {
+    console.error("❌ Failed to send password reset email:", {
       error: errorMessage,
       email: email,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // Return detailed error information
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: errorMessage,
       recipient: email,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 };
 
 // Send verification email
 export const sendVerificationEmail = async (
-  email: string, 
-  verificationUrl: string, 
-  userName?: string
+  email: string,
+  verificationUrl: string,
+  userName?: string,
 ) => {
   try {
     // Validate inputs
     if (!email || !verificationUrl) {
-      throw new Error('Email and verification URL are required');
+      throw new Error("Email and verification URL are required");
     }
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || !process.env.EMAIL_FROM) {
-      throw new Error('Email configuration missing. Please check EMAIL_USER, EMAIL_PASS, and EMAIL_FROM environment variables.');
+    if (
+      !process.env.EMAIL_USER ||
+      !process.env.EMAIL_PASS ||
+      !process.env.EMAIL_FROM
+    ) {
+      throw new Error(
+        "Email configuration missing. Please check EMAIL_USER, EMAIL_PASS, and EMAIL_FROM environment variables.",
+      );
     }
 
     const transporter = createEmailTransporter();
-    const emailTemplate = getVerificationEmailTemplate(verificationUrl, userName);
-    
+    const emailTemplate = getVerificationEmailTemplate(
+      verificationUrl,
+      userName,
+    );
+
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
@@ -468,34 +490,35 @@ export const sendVerificationEmail = async (
 
     console.log(`📤 Attempting to send email to: ${email}`);
     const result = await transporter.sendMail(mailOptions);
-    
-    console.log('✅ Verification email sent successfully:', {
+
+    console.log("✅ Verification email sent successfully:", {
       messageId: result.messageId,
       to: email,
-      response: result.response
+      response: result.response,
     });
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       messageId: result.messageId,
-      recipient: email
+      recipient: email,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
     // Log detailed error information
-    console.error('❌ Failed to send verification email:', {
+    console.error("❌ Failed to send verification email:", {
       error: errorMessage,
       email: email,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // Return detailed error information
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: errorMessage,
       recipient: email,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 };
@@ -504,36 +527,39 @@ export const sendVerificationEmail = async (
 export const testEmailConnection = async () => {
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      throw new Error('Email credentials not configured. Please check EMAIL_USER and EMAIL_PASS environment variables.');
+      throw new Error(
+        "Email credentials not configured. Please check EMAIL_USER and EMAIL_PASS environment variables.",
+      );
     }
 
-    console.log('🔧 Testing email server connection...');
+    console.log("🔧 Testing email server connection...");
     const transporter = createEmailTransporter();
-    
+
     // Verify the connection
     await transporter.verify();
-    
-    console.log('✅ Email server connection verified successfully');
+
+    console.log("✅ Email server connection verified successfully");
     console.log(`📧 Connected as: ${process.env.EMAIL_USER}`);
-    
-    return { 
-      success: true, 
-      message: 'Email server connection verified',
-      emailUser: process.env.EMAIL_USER
+
+    return {
+      success: true,
+      message: "Email server connection verified",
+      emailUser: process.env.EMAIL_USER,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
-    console.error('❌ Email server connection failed:', {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    console.error("❌ Email server connection failed:", {
       error: errorMessage,
       emailUser: process.env.EMAIL_USER,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    
-    return { 
-      success: false, 
+
+    return {
+      success: false,
       error: errorMessage,
-      emailUser: process.env.EMAIL_USER
+      emailUser: process.env.EMAIL_USER,
     };
   }
 };

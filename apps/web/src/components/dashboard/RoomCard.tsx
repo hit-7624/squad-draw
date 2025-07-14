@@ -44,91 +44,91 @@ export const RoomCard = ({
   onCopyShareLink,
   onCopyRoomId,
   canManageRoom,
-  isOwner
+  isOwner,
 }: RoomCardProps) => {
   const router = useRouter();
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
-    type: 'delete' | 'leave' | 'leaveTransfer' | 'share' | 'unshare' | null;
+    type: "delete" | "leave" | "leaveTransfer" | "share" | "unshare" | null;
     title: string;
     message: string;
     confirmText: string;
-    variant: 'default' | 'danger';
+    variant: "default" | "danger";
   }>({
     isOpen: false,
     type: null,
-    title: '',
-    message: '',
-    confirmText: '',
-    variant: 'default'
+    title: "",
+    message: "",
+    confirmText: "",
+    variant: "default",
   });
 
   const handleDeleteRoom = () => {
     setModalState({
       isOpen: true,
-      type: 'delete',
-      title: 'Delete Room',
+      type: "delete",
+      title: "Delete Room",
       message: `Are you sure you want to delete "${room.name}"? This action cannot be undone and all room data will be permanently lost.`,
-      confirmText: 'Delete Room',
-      variant: 'danger'
+      confirmText: "Delete Room",
+      variant: "danger",
     });
   };
 
   const handleLeaveRoom = () => {
     setModalState({
       isOpen: true,
-      type: 'leave',
-      title: 'Leave Room',
+      type: "leave",
+      title: "Leave Room",
       message: `Are you sure you want to leave "${room.name}"? You won't be able to rejoin unless invited again.`,
-      confirmText: 'Leave Room',
-      variant: 'default'
+      confirmText: "Leave Room",
+      variant: "default",
     });
   };
 
   const handleLeaveTransferRoom = () => {
     setModalState({
       isOpen: true,
-      type: 'leaveTransfer',
-      title: 'Leave & Transfer Ownership',
+      type: "leaveTransfer",
+      title: "Leave & Transfer Ownership",
       message: `Are you sure you want to leave "${room.name}" and transfer ownership? The room will be transferred to another admin or the oldest member.`,
-      confirmText: 'Leave & Transfer',
-      variant: 'danger'
+      confirmText: "Leave & Transfer",
+      variant: "danger",
     });
   };
 
   const handleShareRoom = () => {
     setModalState({
       isOpen: true,
-      type: 'share',
-      title: 'Share Room',
+      type: "share",
+      title: "Share Room",
       message: `Are you sure you want to share "${room.name}"? This will generate a shareable link that others can use to join the room.`,
-      confirmText: 'Share Room',
-      variant: 'default'
+      confirmText: "Share Room",
+      variant: "default",
     });
   };
 
   const handleUnshareRoom = () => {
     setModalState({
       isOpen: true,
-      type: 'unshare',
-      title: 'Unshare Room',
+      type: "unshare",
+      title: "Unshare Room",
       message: `Are you sure you want to unshare "${room.name}"? The current share link will stop working and others won't be able to join using it.`,
-      confirmText: 'Unshare Room',
-      variant: 'default'
+      confirmText: "Unshare Room",
+      variant: "default",
     });
   };
 
   const handleConfirm = async () => {
     try {
-      if (modalState.type === 'delete') {
+      if (modalState.type === "delete") {
         await onDeleteRoom(room.id);
-      } else if (modalState.type === 'leave') {
+      } else if (modalState.type === "leave") {
         await onLeaveRoom(room.id, room.name, false);
-      } else if (modalState.type === 'leaveTransfer') {
+      } else if (modalState.type === "leaveTransfer") {
         await onLeaveRoom(room.id, room.name, true);
-      } else if (modalState.type === 'share') {
+      } else if (modalState.type === "share") {
         await onShareRoom(room.id);
-      } else if (modalState.type === 'unshare') {
+      } else if (modalState.type === "unshare") {
         await onUnshareRoom(room.id);
       }
     } catch (error) {
@@ -137,17 +137,17 @@ export const RoomCard = ({
   };
 
   const closeModal = () => {
-    setModalState(prev => ({ ...prev, isOpen: false }));
+    setModalState((prev) => ({ ...prev, isOpen: false }));
   };
   return (
-    <div 
+    <div
       className={`rounded-lg border transition-all duration-200 cursor-pointer hover:bg-muted/50 ${
-        isSelected 
-          ? 'border-primary bg-primary/10 hover:bg-primary/15' 
-          : 'hover:bg-muted/80'
-      } ${isExpanded ? 'shadow-lg' : 'hover:shadow-md'}`}
+        isSelected
+          ? "border-primary bg-primary/10 hover:bg-primary/15"
+          : "hover:bg-muted/80"
+      } ${isExpanded ? "shadow-lg" : "hover:shadow-md"}`}
       onClick={(e) => {
-        if ((e.target as HTMLElement).closest('button')) {
+        if ((e.target as HTMLElement).closest("button")) {
           return;
         }
         // Auto-expand and open chat when clicking on room
@@ -163,20 +163,23 @@ export const RoomCard = ({
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="text-muted-foreground transition-colors">
-            <svg 
-              className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h4 className="text-lg font-semibold truncate">
-                {room.name}
-              </h4>
+              <h4 className="text-lg font-semibold truncate">{room.name}</h4>
               {isSelected && onlineMembers.length > 0 && (
                 <div className="flex items-center gap-1 text-xs text-green-600">
                   <OnlineIndicator isOnline={true} size="sm" />
@@ -186,28 +189,33 @@ export const RoomCard = ({
             </div>
             <div className="flex items-center gap-1">
               {isOwner(room) && (
-                <span className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">Owner</span>
+                <span className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">
+                  Owner
+                </span>
               )}
-              {!isOwner(room) && room.userRole === 'ADMIN' && (
-                <span className="text-xs px-2 py-0.5 bg-primary/70 text-primary-foreground rounded-full font-medium">Admin</span>
+              {!isOwner(room) && room.userRole === "ADMIN" && (
+                <span className="text-xs px-2 py-0.5 bg-primary/70 text-primary-foreground rounded-full font-medium">
+                  Admin
+                </span>
               )}
-              {room.userRole === 'MEMBER' && (
-                <span className="text-xs px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full font-medium">Member</span>
+              {room.userRole === "MEMBER" && (
+                <span className="text-xs px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full font-medium">
+                  Member
+                </span>
               )}
             </div>
           </div>
         </div>
-        <Button 
+        <Button
           onClick={(e) => {
             e.stopPropagation();
             console.log("Visiting room", room.id);
-            try{
+            try {
               router.push(`/room/${room.id}`);
             } catch (error) {
               console.error("Error visiting room", error);
               toast.error("Error visiting room");
             }
-
           }}
           size="sm"
           variant="default"
@@ -228,23 +236,32 @@ export const RoomCard = ({
                 {room.isShared ? (
                   <div className="flex items-center">
                     <div className="w-3 h-3 rounded-full bg-primary flex items-center justify-center">
-                      <span className="text-primary-foreground text-xs font-bold">✓</span>
+                      <span className="text-primary-foreground text-xs font-bold">
+                        ✓
+                      </span>
                     </div>
                     <span className="ml-1 text-primary text-sm">Yes</span>
                   </div>
                 ) : (
                   <div className="flex items-center">
                     <div className="w-3 h-3 rounded-full bg-muted-foreground flex items-center justify-center">
-                      <span className="text-background text-xs font-bold">✕</span>
+                      <span className="text-background text-xs font-bold">
+                        ✕
+                      </span>
                     </div>
-                    <span className="ml-1 text-muted-foreground text-sm">No</span>
+                    <span className="ml-1 text-muted-foreground text-sm">
+                      No
+                    </span>
                   </div>
                 )}
               </div>
             </div>
-            
+
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2 justify-between" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="flex flex-wrap gap-2 justify-between"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="flex flex-wrap gap-2">
                 {/* Chat Status - Shows current state */}
                 {isSelected && (
@@ -257,14 +274,23 @@ export const RoomCard = ({
                 {/* Share/Unshare - Admin/Owner only */}
                 {canManageRoom(room) && (
                   <Button
-                    onClick={() => room.isShared ? handleUnshareRoom() : handleShareRoom()}
-                    disabled={actionLoading === `share-${room.id}` || actionLoading === `unshare-${room.id}`}
+                    onClick={() =>
+                      room.isShared ? handleUnshareRoom() : handleShareRoom()
+                    }
+                    disabled={
+                      actionLoading === `share-${room.id}` ||
+                      actionLoading === `unshare-${room.id}`
+                    }
                     size="sm"
                     variant={room.isShared ? "secondary" : "default"}
                   >
-                    {actionLoading === `share-${room.id}` ? "Sharing..." : 
-                     actionLoading === `unshare-${room.id}` ? "Unsharing..." :
-                     room.isShared ? "Unshare" : "Share"}
+                    {actionLoading === `share-${room.id}`
+                      ? "Sharing..."
+                      : actionLoading === `unshare-${room.id}`
+                        ? "Unsharing..."
+                        : room.isShared
+                          ? "Unshare"
+                          : "Share"}
                   </Button>
                 )}
               </div>
@@ -279,7 +305,9 @@ export const RoomCard = ({
                     size="sm"
                     variant="destructive"
                   >
-                    {actionLoading === `delete-${room.id}` ? "Deleting..." : "Delete"}
+                    {actionLoading === `delete-${room.id}`
+                      ? "Deleting..."
+                      : "Delete"}
                   </Button>
                 )}
 
@@ -291,7 +319,9 @@ export const RoomCard = ({
                     size="sm"
                     variant="secondary"
                   >
-                    {actionLoading === `leave-${room.id}` ? "Leaving..." : "Leave"}
+                    {actionLoading === `leave-${room.id}`
+                      ? "Leaving..."
+                      : "Leave"}
                   </Button>
                 )}
 
@@ -303,7 +333,9 @@ export const RoomCard = ({
                     size="sm"
                     variant="default"
                   >
-                    {actionLoading === `leave-${room.id}` ? "Leaving..." : "Leave & Transfer"}
+                    {actionLoading === `leave-${room.id}`
+                      ? "Leaving..."
+                      : "Leave & Transfer"}
                   </Button>
                 )}
               </div>
@@ -311,21 +343,26 @@ export const RoomCard = ({
 
             {/* Share Dialog */}
             {room.isShared && (
-              <div className="mt-4 p-4 bg-muted border rounded-lg" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="mt-4 p-4 bg-muted border rounded-lg"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <h5 className="text-sm font-semibold mb-3">Share this room:</h5>
-                
+
                 {/* Room ID Section */}
                 <div className="mb-3">
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Room ID:</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Room ID:
+                  </label>
                   <div className="flex gap-2">
-                    <Input 
-                      type="text" 
+                    <Input
+                      type="text"
                       value={room.id}
                       readOnly
                       className="flex-1 text-xs font-mono"
                       onClick={(e) => e.stopPropagation()}
                     />
-                    <Button 
+                    <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         onCopyRoomId(room.id);
@@ -340,16 +377,18 @@ export const RoomCard = ({
 
                 {/* Share Link Section */}
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Share Link:</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Share Link:
+                  </label>
                   <div className="flex gap-2">
-                    <Input 
-                      type="text" 
+                    <Input
+                      type="text"
                       value={`${window.location.origin}/room/${room.id}`}
                       readOnly
                       className="flex-1 text-xs font-mono"
                       onClick={(e) => e.stopPropagation()}
                     />
-                    <Button 
+                    <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         onCopyShareLink(room.id);
@@ -378,4 +417,4 @@ export const RoomCard = ({
       />
     </div>
   );
-}; 
+};

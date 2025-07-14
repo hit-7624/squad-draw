@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { RoomCard } from "./RoomCard";
 import { Room, User } from "./dashboard.types";
 
@@ -39,13 +45,15 @@ export const RoomsList = ({
   onCopyShareLink,
   onCopyRoomId,
   canManageRoom,
-  isOwner
+  isOwner,
 }: RoomsListProps) => {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Your Rooms ({rooms.length})</CardTitle>
-        <CardDescription className="font-serif">Manage your drawing rooms</CardDescription>
+        <CardDescription className="font-serif">
+          Manage your drawing rooms
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {rooms.length === 0 ? (
@@ -81,4 +89,4 @@ export const RoomsList = ({
       </CardContent>
     </Card>
   );
-}; 
+};

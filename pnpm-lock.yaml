@@ -20,9 +20,6 @@ importers:
 
   apps/api-server:
     dependencies:
-      '@repo/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       '@repo/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
@@ -214,9 +211,6 @@ importers:
 
   apps/ws-server:
     dependencies:
-      '@repo/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       '@repo/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -245,19 +239,6 @@ importers:
       socket.io:
         specifier: ^4.8.1
         version: 4.8.1
-
-  packages/config:
-    dependencies:
-      dotenv:
-        specifier: 17.0.1
-        version: 17.0.1
-    devDependencies:
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../typescript-config
-      '@types/node':
-        specifier: ^22.15.3
-        version: 22.16.3
 
   packages/db:
     dependencies:

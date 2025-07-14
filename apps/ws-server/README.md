@@ -7,6 +7,7 @@ The WebSocket server for Squad Draw provides real-time communication capabilitie
 ## 🚀 Features
 
 ### Real-time Communication
+
 - **Drawing Synchronization**: Real-time sharing of drawing actions
 - **User Presence**: Track online users in each room
 - **Chat Messages**: Real-time group chat within rooms
@@ -14,12 +15,14 @@ The WebSocket server for Squad Draw provides real-time communication capabilitie
 - **Shape Updates**: Live synchronization of canvas shapes
 
 ### Authentication & Security
+
 - **Auth Middleware**: Custom authentication for socket connections
 - **Room-based Access**: Users can only join rooms they're members of
 - **Permission Checks**: Validate user permissions for actions
 - **Secure Connections**: CORS and origin validation
 
 ### Event Handling
+
 - **Connection Management**: Handle user connections and disconnections
 - **Room Management**: Join/leave room functionality
 - **Content Events**: Share drawings, messages, and shapes
@@ -28,6 +31,7 @@ The WebSocket server for Squad Draw provides real-time communication capabilitie
 ## 🛠 Technical Implementation
 
 ### Core Technologies
+
 - **Socket.IO**: WebSocket library for real-time communication
 - **Node.js**: JavaScript runtime
 - **TypeScript**: Type-safe development
@@ -36,21 +40,25 @@ The WebSocket server for Squad Draw provides real-time communication capabilitie
 ### Socket Events
 
 #### Connection Events
+
 - `connection`: New user connects
 - `disconnect`: User disconnects
 - `join-room`: User joins a specific room
 - `leave-room`: User leaves a room
 
 #### Drawing Events
+
 - `new-shape`: New shape drawn on canvas
 - `clear-shapes`: All shapes cleared from canvas
 - `canvas-update`: General canvas updates
 
 #### Chat Events
+
 - `new-message`: New chat message in room
 - `message-history`: Request chat history
 
 #### Membership Events
+
 - `member-joined`: New member joined room
 - `member-left`: Member left room
 - `member-promoted`: Member promoted to admin
@@ -75,6 +83,7 @@ src/
 ## 🔧 Configuration
 
 ### Environment Variables
+
 ```env
 DATABASE_URL="postgresql://..."
 PORT=3001
@@ -83,6 +92,7 @@ NODE_ENV="development"
 ```
 
 ### CORS Configuration
+
 - Configurable allowed origins
 - Credentials support for authentication
 - Development and production modes
@@ -90,6 +100,7 @@ NODE_ENV="development"
 ## 🎯 Event Handlers
 
 ### Connection Handler (`connection.handlers.ts`)
+
 ```typescript
 // Handle user authentication and room joining
 export const connectionHandler = async (socket: Socket, data: any) => {
@@ -97,49 +108,52 @@ export const connectionHandler = async (socket: Socket, data: any) => {
   // Check room membership
   // Add user to room
   // Notify other users
-}
+};
 ```
 
 ### Content Handler (`content.handlers.ts`)
+
 ```typescript
 // Handle drawing and chat events
 export const newShapeHandler = async (socket: Socket, data: ShapeData) => {
   // Validate shape data
   // Save to database
   // Broadcast to room members
-}
+};
 
 export const clearShapesHandler = async (socket: Socket, data: any) => {
   // Check admin permissions
   // Clear shapes from database
   // Notify all room members
-}
+};
 
 export const newMessageHandler = async (socket: Socket, data: MessageData) => {
   // Validate message
   // Save to database
   // Broadcast to room
-}
+};
 ```
 
 ### Membership Handler (`membership.handlers.ts`)
+
 ```typescript
 // Handle room membership changes
 export const memberJoinedHandler = async (socket: Socket, data: any) => {
   // Update room membership
   // Notify existing members
-}
+};
 
 export const memberKickedHandler = async (socket: Socket, data: any) => {
   // Check admin permissions
   // Remove member from room
   // Notify affected users
-}
+};
 ```
 
 ## 🔐 Authentication Middleware
 
 ### Auth Middleware (`auth.middleware.ts`)
+
 ```typescript
 export const authMiddleware = async (socket: Socket, next: Function) => {
   try {
@@ -150,24 +164,27 @@ export const authMiddleware = async (socket: Socket, next: Function) => {
     next();
   } catch (error) {
     // Reject connection
-    next(new Error('Authentication failed'));
+    next(new Error("Authentication failed"));
   }
-}
+};
 ```
 
 ## 🚀 Development
 
 ### Prerequisites
+
 - Node.js 18+
 - pnpm package manager
 - PostgreSQL database (shared with web app)
 
 ### Setup
+
 1. Install dependencies: `pnpm install`
 2. Set up environment variables in `.env`
 3. Start development: `pnpm dev`
 
 ### Scripts
+
 ```bash
 pnpm dev          # Start development server with auto-reload
 pnpm build        # Build TypeScript to JavaScript
@@ -179,30 +196,35 @@ pnpm check-types  # TypeScript type checking
 ## 🔗 Integration
 
 ### Web Application
+
 - Connects to Next.js web app for user authentication
 - Shares database schema for consistency
 - Validates user permissions against room membership
 
 ### Database Integration
+
 - Uses `@repo/db` package for Prisma operations
 - Validates room membership before allowing actions
 - Stores chat messages and drawing data
 - Maintains user session information
 
 ### Shared Packages
-- **@repo/schemas**: Shared validation schemas
+
 - **@repo/db**: Database operations and types
 - **@repo/typescript-config**: TypeScript configuration
+- \*\*@repo/
 
 ## 📊 Performance
 
 ### Optimization Features
+
 - **Room-based Broadcasting**: Only send events to relevant users
 - **Connection Pooling**: Efficient database connection management
 - **Event Throttling**: Prevent spam and reduce server load
 - **Memory Management**: Clean up disconnected users
 
 ### Monitoring
+
 - Connection count tracking
 - Room activity monitoring
 - Error logging and handling
@@ -211,6 +233,7 @@ pnpm check-types  # TypeScript type checking
 ## 🛡️ Security
 
 ### Security Measures
+
 - **JWT Authentication**: Secure token-based authentication
 - **Origin Validation**: CORS protection
 - **Rate Limiting**: Prevent abuse and spam
@@ -220,11 +243,13 @@ pnpm check-types  # TypeScript type checking
 ## 📈 Scalability
 
 ### Horizontal Scaling
+
 - **Redis Adapter**: Support for multiple server instances
 - **Load Balancing**: Distribute connections across servers
 - **Session Sharing**: Shared session store for consistency
 
 ### Future Enhancements
+
 - Message queuing for high-traffic scenarios
 - Database sharding for large-scale deployments
 - CDN integration for static content
@@ -240,4 +265,4 @@ The WebSocket server automatically starts when running the development environme
 2. **Room Joining**: Users join rooms they have access to
 3. **Real-time Drawing**: Drawing actions are synchronized instantly
 4. **Chat Communication**: Messages are delivered in real-time
-5. **Presence Updates**: User online/offline status is tracked 
+5. **Presence Updates**: User online/offline status is tracked

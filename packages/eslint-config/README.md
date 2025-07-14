@@ -55,18 +55,21 @@ module.exports = {
 ## 🔧 Rules
 
 ### Base Configuration
+
 - TypeScript support
 - Import/export validation
 - Code quality rules
 - Best practices enforcement
 
 ### Next.js Configuration
+
 - Next.js specific rules
 - React hooks rules
 - Performance optimizations
 - Accessibility checks
 
 ### React Internal Configuration
+
 - React component best practices
 - Hook usage validation
 - JSX formatting rules
@@ -112,6 +115,7 @@ pnpm lint
 ## 🔗 Integration
 
 This ESLint configuration integrates with:
+
 - **VS Code**: Automatic linting in editor
 - **Pre-commit hooks**: Code quality checks
 - **CI/CD**: Automated linting in builds

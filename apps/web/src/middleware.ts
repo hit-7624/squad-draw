@@ -10,11 +10,13 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
 
   const isLoggedIn = !!sessionCookie;
-  const isOnProtectedRoute = protectedRoutes.some(route => 
-    nextUrl.pathname === route || nextUrl.pathname.startsWith(route + "/")
+  const isOnProtectedRoute = protectedRoutes.some(
+    (route) =>
+      nextUrl.pathname === route || nextUrl.pathname.startsWith(route + "/"),
   );
   const isOnRoomRoute = nextUrl.pathname.startsWith("/room");
-  const isOnAuthRoute = nextUrl.pathname === "/signin" || nextUrl.pathname === "/signup";
+  const isOnAuthRoute =
+    nextUrl.pathname === "/signin" || nextUrl.pathname === "/signup";
 
   if ((isOnProtectedRoute || isOnRoomRoute) && !isLoggedIn) {
     return NextResponse.redirect(new URL("/signin", req.url));

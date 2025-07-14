@@ -1,5 +1,5 @@
-import React from 'react';
-import { Button } from './button';
+import React from "react";
+import { Button } from "./button";
 
 interface ModalProps {
   isOpen: boolean;
@@ -9,7 +9,7 @@ interface ModalProps {
   confirmText?: string;
   cancelText?: string;
   onConfirm: () => void;
-  variant?: 'default' | 'danger';
+  variant?: "default" | "danger";
 }
 
 export const Modal = ({
@@ -20,7 +20,7 @@ export const Modal = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
   onConfirm,
-  variant = 'default'
+  variant = "default",
 }: ModalProps) => {
   if (!isOpen) return null;
 
@@ -31,19 +31,16 @@ export const Modal = ({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       onClick={handleBackdropClick}
     >
       <div className="bg-background rounded-lg p-6 max-w-md w-full mx-4 border border-border shadow-lg">
         <h3 className="text-xl font-semibold text-foreground mb-4">{title}</h3>
         <p className="text-muted-foreground mb-6 leading-relaxed">{message}</p>
-        
+
         <div className="flex gap-3 justify-end">
-          <Button
-            onClick={onClose}
-            variant="secondary"
-          >
+          <Button onClick={onClose} variant="secondary">
             {cancelText}
           </Button>
           <Button
@@ -51,7 +48,7 @@ export const Modal = ({
               onConfirm();
               onClose();
             }}
-            variant={variant === 'danger' ? 'destructive' : 'default'}
+            variant={variant === "danger" ? "destructive" : "default"}
           >
             {confirmText}
           </Button>
@@ -59,4 +56,4 @@ export const Modal = ({
       </div>
     </div>
   );
-}; 
+};

@@ -35,7 +35,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
 }
 
 export function withProtectedRoute<P extends object>(
-  Component: React.ComponentType<P>
+  Component: React.ComponentType<P>,
 ) {
   return function ProtectedComponent(props: P) {
     return (
@@ -44,4 +44,4 @@ export function withProtectedRoute<P extends object>(
       </ProtectedRoute>
     );
   };
-} 
+}

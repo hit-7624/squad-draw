@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 
 interface FormState {
   newRoomName: string;
@@ -55,7 +55,7 @@ export const useFormStore = create<FormStore>()(
       },
     }),
     {
-      name: 'form-store',
-    }
-  )
-); 
+      name: "form-store",
+    },
+  ),
+);

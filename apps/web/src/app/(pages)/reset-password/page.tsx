@@ -1,7 +1,7 @@
 "use client";
-
+export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,6 +16,7 @@ import { resetPassword } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useNotification } from "@/hooks/useNotification";
 import Link from "next/link";
+import { PasswordSchema, resetPasswordSchema } from "@/schemas/index";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -23,38 +24,47 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { showError, showSuccess } = useNotification();
 
   useEffect(() => {
-    const tokenFromUrl = searchParams?.get("token");
-    const errorFromUrl = searchParams?.get("error");
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tokenFromUrl = params.get("token");
+      const errorFromUrl = params.get("error");
 
-    if (errorFromUrl === "invalid_token") {
-      setError("This reset link is invalid or has expired. Please request a new one.");
-    } else if (tokenFromUrl) {
-      setToken(tokenFromUrl);
-    } else {
-      setError("No reset token found. Please request a new password reset link.");
+      if (errorFromUrl === "invalid_token") {
+        setError(
+          "This reset link is invalid or has expired. Please request a new one.",
+        );
+      } else if (tokenFromUrl) {
+        setToken(tokenFromUrl);
+      } else {
+        setError(
+          "No reset token found. Please request a new password reset link.",
+        );
+      }
     }
-  }, [searchParams]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!token) {
-      showError("No reset token found. Please request a new password reset link.");
+      showError(
+        "No reset token found. Please request a new password reset link.",
+      );
       return;
     }
 
-    if (password !== confirmPassword) {
-      showError("Passwords do not match.");
-      return;
-    }
+    // Zod validation
+    const result = resetPasswordSchema.safeParse({
+      newPassword: password,
+      confirmPassword,
+    });
 
-    if (password.length < 8) {
-      showError("Password must be at least 8 characters long.");
+    if (!result.success) {
+      showError(result.error.errors[0]?.message || "Invalid input");
       return;
     }
 
@@ -68,14 +78,18 @@ export default function ResetPasswordPage() {
     if (error) {
       console.error("Password reset error:", error);
       if (error.message && error.message.includes("token")) {
-        showError("This reset link is invalid or has expired. Please request a new one.");
+        showError(
+          "This reset link is invalid or has expired. Please request a new one.",
+        );
       } else {
         showError(error.message || "Failed to reset password");
       }
       setIsLoading(false);
     } else {
       console.log("Password reset successful:", data);
-      showSuccess("Password reset successful! You can now sign in with your new password.");
+      showSuccess(
+        "Password reset successful! You can now sign in with your new password.",
+      );
       // Redirect to sign in page after a short delay
       setTimeout(() => {
         router.push("/signin");
@@ -107,28 +121,15 @@ export default function ResetPasswordPage() {
                 </svg>
               </div>
               <CardTitle className="text-xl">Reset Link Invalid</CardTitle>
-              <CardDescription>
-                {error}
-              </CardDescription>
+              <CardDescription>{error}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col gap-2">
-                <Button 
-                  className="w-full"
-                  asChild
-                >
-                  <Link href="/forgot-password">
-                    Request new reset link
-                  </Link>
+                <Button className="w-full" asChild>
+                  <Link href="/forgot-password">Request new reset link</Link>
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  className="w-full"
-                  asChild
-                >
-                  <Link href="/signin">
-                    Back to sign in
-                  </Link>
+                <Button variant="ghost" className="w-full" asChild>
+                  <Link href="/signin">Back to sign in</Link>
                 </Button>
               </div>
             </CardContent>
@@ -145,9 +146,7 @@ export default function ResetPasswordPage() {
           <ThemeToggle className="absolute top-4 right-4 z-10" />
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Reset your password</CardTitle>
-            <CardDescription>
-              Enter your new password below.
-            </CardDescription>
+            <CardDescription>Enter your new password below.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit}>
@@ -181,14 +180,18 @@ export default function ResetPasswordPage() {
                     minLength={8}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading || !token}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading || !token}
+                >
                   {isLoading ? "Resetting..." : "Reset password"}
                 </Button>
               </div>
             </form>
             <div className="mt-6 text-center">
-              <Link 
-                href="/signin" 
+              <Link
+                href="/signin"
                 className="text-sm underline underline-offset-4 hover:text-primary"
               >
                 Back to sign in

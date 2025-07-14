@@ -18,13 +18,22 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useNotification } from "@/hooks/useNotification";
-import { UserSignupSchema, UserLoginSchema, type UserSignup, type UserLogin } from "@repo/schemas";
+import {
+  UserSignupSchema,
+  UserLoginSchema,
+  type UserSignup,
+  type UserLogin,
+} from "@/schemas/index";
 
 interface LoginFormProps extends React.ComponentProps<"div"> {
   mode?: "signin" | "signup";
 }
 
-export function LoginForm({ className, mode = "signin", ...props }: LoginFormProps) {
+export function LoginForm({
+  className,
+  mode = "signin",
+  ...props
+}: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showResendVerification, setShowResendVerification] = useState(false);
   const router = useRouter();
@@ -53,22 +62,25 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
     setIsLoading(true);
     const formValues = signinForm.getValues();
     const email = formValues.email;
-    
-    await authClient.sendVerificationEmail({
-      email,
-      callbackURL: "/dashboard"
-    }, {
-      onError: (ctx) => {
-        console.error("Resend verification error:", ctx.error);
-        showError(ctx.error.message || "Failed to send verification email");
-        setIsLoading(false);
+
+    await authClient.sendVerificationEmail(
+      {
+        email,
+        callbackURL: "/dashboard",
       },
-      onSuccess: () => {
-        showSuccess("Verification email sent! Please check your inbox.");
-        setShowResendVerification(false);
-        setIsLoading(false);
-      }
-    });
+      {
+        onError: (ctx) => {
+          console.error("Resend verification error:", ctx.error);
+          showError(ctx.error.message || "Failed to send verification email");
+          setIsLoading(false);
+        },
+        onSuccess: () => {
+          showSuccess("Verification email sent! Please check your inbox.");
+          setShowResendVerification(false);
+          setIsLoading(false);
+        },
+      },
+    );
   };
 
   const handleSubmit = async (data: UserSignup | UserLogin) => {
@@ -77,69 +89,87 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
 
     if (isSignUp) {
       const signupData = data as UserSignup;
-      await authClient.signUp.email({
-        email: signupData.email,
-        password: signupData.password,
-        name: signupData.name,
-      }, {
-        onError: (ctx) => {
-          console.error("Sign up error:", ctx.error);
-          showError(ctx.error.message || "An error occurred during sign up");
-          setIsLoading(false);
+      await authClient.signUp.email(
+        {
+          email: signupData.email,
+          password: signupData.password,
+          name: signupData.name,
         },
-        onSuccess: () => {
-          showSuccess("Account created! Please check your email to verify your account before signing in.");
-          setIsLoading(false);
-        }
-      });
+        {
+          onError: (ctx) => {
+            console.error("Sign up error:", ctx.error);
+            showError(ctx.error.message || "An error occurred during sign up");
+            setIsLoading(false);
+          },
+          onSuccess: () => {
+            showSuccess(
+              "Account created! Please check your email to verify your account before signing in.",
+            );
+            setIsLoading(false);
+          },
+        },
+      );
     } else {
       const signinData = data as UserLogin;
-      await authClient.signIn.email({
-        email: signinData.email,
-        password: signinData.password,
-      }, {
-        onError: (ctx) => {
-          console.error("Sign in error:", ctx.error);
-          console.log("Error status:", ctx.error.status);
-          console.log("Error message:", ctx.error.message);
-          
-          // Handle email verification error specifically
-          if (ctx.error.status === 403) {
-            showError("Please verify your email address before signing in. Check your inbox for a verification email. Verify email with the latest link.");
-            setShowResendVerification(true);
-          } else {
-            showError(ctx.error.message || "An error occurred during sign in");
-          }
-          setIsLoading(false);
+      await authClient.signIn.email(
+        {
+          email: signinData.email,
+          password: signinData.password,
         },
-        onSuccess: () => {
-          router.push("/dashboard");
-          setIsLoading(false);
-        }
-      });
+        {
+          onError: (ctx) => {
+            console.error("Sign in error:", ctx.error);
+            console.log("Error status:", ctx.error.status);
+            console.log("Error message:", ctx.error.message);
+
+            // Handle email verification error specifically
+            if (ctx.error.status === 403) {
+              showError(
+                "Please verify your email address before signing in. Check your inbox for a verification email. Verify email with the latest link.",
+              );
+              setShowResendVerification(true);
+            } else {
+              showError(
+                ctx.error.message || "An error occurred during sign in",
+              );
+            }
+            setIsLoading(false);
+          },
+          onSuccess: () => {
+            router.push("/dashboard");
+            setIsLoading(false);
+          },
+        },
+      );
     }
   };
 
   const handleGoogleSignIn = async () => {
-    await authClient.signIn.social({
-      provider: "google",
-    }, {
-      onError: (ctx) => {
-        console.error("Google sign in error:", ctx.error);
-        showError(ctx.error.message || "Google sign in failed");
-      }
-    });
+    await authClient.signIn.social(
+      {
+        provider: "google",
+      },
+      {
+        onError: (ctx) => {
+          console.error("Google sign in error:", ctx.error);
+          showError(ctx.error.message || "Google sign in failed");
+        },
+      },
+    );
   };
 
   const handleGithubSignIn = async () => {
-    await authClient.signIn.social({
-      provider: "github",
-    }, {
-      onError: (ctx) => {
-        console.error("GitHub sign in error:", ctx.error);
-        showError(ctx.error.message || "GitHub sign in failed");
-      }
-    });
+    await authClient.signIn.social(
+      {
+        provider: "github",
+      },
+      {
+        onError: (ctx) => {
+          console.error("GitHub sign in error:", ctx.error);
+          showError(ctx.error.message || "GitHub sign in failed");
+        },
+      },
+    );
   };
 
   return (
@@ -151,19 +181,24 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
             {isSignUp ? "Create an account" : "Welcome back"}
           </CardTitle>
           <CardDescription>
-            {isSignUp 
+            {isSignUp
               ? "Sign up with your email or social account"
-              : "Login with your email or social account"
-            }
+              : "Login with your email or social account"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={isSignUp ? signupForm.handleSubmit(handleSubmit) : signinForm.handleSubmit(handleSubmit)}>
+          <form
+            onSubmit={
+              isSignUp
+                ? signupForm.handleSubmit(handleSubmit)
+                : signinForm.handleSubmit(handleSubmit)
+            }
+          >
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
-                <Button 
+                <Button
                   type="button"
-                  variant="outline" 
+                  variant="outline"
                   className="w-full"
                   onClick={handleGoogleSignIn}
                   disabled={isLoading}
@@ -176,9 +211,9 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
                   </svg>
                   Continue with Google
                 </Button>
-                <Button 
+                <Button
                   type="button"
-                  variant="outline" 
+                  variant="outline"
                   className="w-full"
                   onClick={handleGithubSignIn}
                   disabled={isLoading}
@@ -220,7 +255,9 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
                       disabled={isLoading}
                     />
                     {signupForm.formState.errors.name && (
-                      <p className="text-sm text-red-500">{signupForm.formState.errors.name.message}</p>
+                      <p className="text-sm text-red-500">
+                        {signupForm.formState.errors.name.message}
+                      </p>
                     )}
                   </div>
                 )}
@@ -230,12 +267,21 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
                     id="email"
                     type="email"
                     placeholder="m@example.com"
-                    {...(isSignUp ? signupForm.register("email") : signinForm.register("email"))}
+                    {...(isSignUp
+                      ? signupForm.register("email")
+                      : signinForm.register("email"))}
                     disabled={isLoading}
                   />
-                  {(isSignUp ? signupForm.formState.errors.email : signinForm.formState.errors.email) && (
+                  {(isSignUp
+                    ? signupForm.formState.errors.email
+                    : signinForm.formState.errors.email) && (
                     <p className="text-sm text-red-500">
-                      {(isSignUp ? signupForm.formState.errors.email : signinForm.formState.errors.email)?.message}
+                      {
+                        (isSignUp
+                          ? signupForm.formState.errors.email
+                          : signinForm.formState.errors.email
+                        )?.message
+                      }
                     </p>
                   )}
                 </div>
@@ -251,26 +297,37 @@ export function LoginForm({ className, mode = "signin", ...props }: LoginFormPro
                       </a>
                     )}
                   </div>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    {...(isSignUp ? signupForm.register("password") : signinForm.register("password"))}
+                  <Input
+                    id="password"
+                    type="password"
+                    {...(isSignUp
+                      ? signupForm.register("password")
+                      : signinForm.register("password"))}
                     disabled={isLoading}
                   />
-                  {(isSignUp ? signupForm.formState.errors.password : signinForm.formState.errors.password) && (
+                  {(isSignUp
+                    ? signupForm.formState.errors.password
+                    : signinForm.formState.errors.password) && (
                     <p className="text-sm text-red-500">
-                      {(isSignUp ? signupForm.formState.errors.password : signinForm.formState.errors.password)?.message}
+                      {
+                        (isSignUp
+                          ? signupForm.formState.errors.password
+                          : signinForm.formState.errors.password
+                        )?.message
+                      }
                     </p>
                   )}
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Loading..." : (isSignUp ? "Sign up" : "Login")}
+                  {isLoading ? "Loading..." : isSignUp ? "Sign up" : "Login"}
                 </Button>
               </div>
               <div className="text-center text-sm">
-                {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-                <a 
-                  href={isSignUp ? "/signin" : "/signup"} 
+                {isSignUp
+                  ? "Already have an account?"
+                  : "Don't have an account?"}{" "}
+                <a
+                  href={isSignUp ? "/signin" : "/signup"}
                   className="underline underline-offset-4"
                 >
                   {isSignUp ? "Sign in" : "Sign up"}

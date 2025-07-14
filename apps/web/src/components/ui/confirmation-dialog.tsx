@@ -55,12 +55,13 @@ export function ConfirmationDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {icon || (variant === "destructive" && <AlertTriangle className="h-5 w-5 text-destructive" />)}
+            {icon ||
+              (variant === "destructive" && (
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              ))}
             {title}
           </DialogTitle>
-          <DialogDescription>
-            {description}
-          </DialogDescription>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2">
           <Button

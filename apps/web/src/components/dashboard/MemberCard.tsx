@@ -27,74 +27,75 @@ export const MemberCard = ({
   isOwner,
   onPromoteToAdmin,
   onDemoteFromAdmin,
-  onKickMember
+  onKickMember,
 }: MemberCardProps) => {
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
-    type: 'promote' | 'demote' | 'kick' | null;
+    type: "promote" | "demote" | "kick" | null;
     title: string;
     message: string;
     confirmText: string;
-    variant: 'default' | 'danger';
+    variant: "default" | "danger";
   }>({
     isOpen: false,
     type: null,
-    title: '',
-    message: '',
-    confirmText: '',
-    variant: 'default'
+    title: "",
+    message: "",
+    confirmText: "",
+    variant: "default",
   });
 
   const isCurrentUser = currentUser?.id === member.id;
   const isMemberOwner = member.id === room.owner.id;
-  const isAdmin = member.role === 'ADMIN';
-  const isMember = member.role === 'MEMBER';
+  const isAdmin = member.role === "ADMIN";
+  const isMember = member.role === "MEMBER";
 
   const showCannotManageOwner = isMemberOwner && !isCurrentUser;
   const showPromoteButton = canManageMembers && isMember && !isCurrentUser;
-  const showDemoteButton = canManageMembers && isAdmin && !isCurrentUser && !isMemberOwner;
+  const showDemoteButton =
+    canManageMembers && isAdmin && !isCurrentUser && !isMemberOwner;
   const showKickButton = canManageMembers && !isCurrentUser && !isMemberOwner;
 
   const handlePromote = () => {
     setModalState({
       isOpen: true,
-      type: 'promote',
-      title: 'Promote to Admin',
+      type: "promote",
+      title: "Promote to Admin",
       message: `Are you sure you want to promote ${member.name} to Admin? They will be able to manage other members and room settings.`,
-      confirmText: 'Promote',
-      variant: 'default'
+      confirmText: "Promote",
+      variant: "default",
     });
   };
 
   const handleDemote = () => {
     setModalState({
       isOpen: true,
-      type: 'demote',
-      title: 'Demote from Admin',
+      type: "demote",
+      title: "Demote from Admin",
       message: `Are you sure you want to demote ${member.name} from Admin to Member? They will lose their admin privileges.`,
-      confirmText: 'Demote',
-      variant: 'default'
+      confirmText: "Demote",
+      variant: "default",
     });
   };
 
   const handleKick = () => {
     setModalState({
       isOpen: true,
-      type: 'kick',
-      title: 'Kick Member',
+      type: "kick",
+      title: "Kick Member",
       message: `Are you sure you want to kick ${member.name} from the room? They will be removed immediately and won't be able to rejoin unless invited again.`,
-      confirmText: 'Kick',
-      variant: 'danger'
+      confirmText: "Kick",
+      variant: "danger",
     });
   };
 
   const handleConfirm = async () => {
     try {
-      if (modalState.type === 'promote') {
+      if (modalState.type === "promote") {
         await onPromoteToAdmin(room.id, member.id);
-      } else if (modalState.type === 'demote') {
+      } else if (modalState.type === "demote") {
         await onDemoteFromAdmin(room.id, member.id);
-      } else if (modalState.type === 'kick') {
+      } else if (modalState.type === "kick") {
         await onKickMember(room.id, member.id);
       }
     } catch (error) {
@@ -103,7 +104,7 @@ export const MemberCard = ({
   };
 
   const closeModal = () => {
-    setModalState(prev => ({ ...prev, isOpen: false }));
+    setModalState((prev) => ({ ...prev, isOpen: false }));
   };
 
   return (
@@ -117,67 +118,81 @@ export const MemberCard = ({
                 <OnlineIndicator isOnline={isOnline} size="sm" />
                 <p className="font-medium text-sm">{member.name}</p>
               </div>
-            
-            {/* Role tags side by side after username */}
-            <div className="flex gap-1.5">
-              {isCurrentUser && (
-                <span className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">You</span>
-              )}
-              {isMemberOwner && (
-                <span className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">Owner</span>
-              )}
-              {isAdmin && !isMemberOwner && (
-                <span className="text-xs px-2 py-0.5 bg-primary/70 text-primary-foreground rounded-full font-medium">Admin</span>
-              )}
-              {isMember && (
-                <span className="text-xs px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full font-medium">Member</span>
-              )}
+
+              {/* Role tags side by side after username */}
+              <div className="flex gap-1.5">
+                {isCurrentUser && (
+                  <span className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">
+                    You
+                  </span>
+                )}
+                {isMemberOwner && (
+                  <span className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">
+                    Owner
+                  </span>
+                )}
+                {isAdmin && !isMemberOwner && (
+                  <span className="text-xs px-2 py-0.5 bg-primary/70 text-primary-foreground rounded-full font-medium">
+                    Admin
+                  </span>
+                )}
+                {isMember && (
+                  <span className="text-xs px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full font-medium">
+                    Member
+                  </span>
+                )}
+              </div>
             </div>
+            <p className="text-muted-foreground text-xs">{member.email}</p>
           </div>
-          <p className="text-muted-foreground text-xs">{member.email}</p>
+        </div>
+
+        {/* Right side - Action buttons */}
+        <div className="flex items-center gap-2 ml-4">
+          {showCannotManageOwner && (
+            <span className="text-xs text-muted-foreground px-2 py-1 italic">
+              Cannot manage owner
+            </span>
+          )}
+
+          {showPromoteButton && (
+            <Button
+              onClick={handlePromote}
+              disabled={actionLoading === `promote-${member.id}`}
+              size="sm"
+              variant="secondary"
+            >
+              {actionLoading === `promote-${member.id}`
+                ? "Promoting..."
+                : "Promote"}
+            </Button>
+          )}
+
+          {showDemoteButton && (
+            <Button
+              onClick={handleDemote}
+              disabled={actionLoading === `demote-${member.id}`}
+              size="sm"
+              variant="default"
+            >
+              {actionLoading === `demote-${member.id}`
+                ? "Demoting..."
+                : "Demote"}
+            </Button>
+          )}
+
+          {showKickButton && (
+            <Button
+              onClick={handleKick}
+              disabled={actionLoading === `kick-${member.id}`}
+              size="sm"
+              variant="destructive"
+            >
+              {actionLoading === `kick-${member.id}` ? "Kicking..." : "Kick"}
+            </Button>
+          )}
         </div>
       </div>
-
-      {/* Right side - Action buttons */}
-      <div className="flex items-center gap-2 ml-4">
-        {showCannotManageOwner && (
-          <span className="text-xs text-muted-foreground px-2 py-1 italic">Cannot manage owner</span>
-        )}
-        
-        {showPromoteButton && (
-          <Button
-            onClick={handlePromote}
-            disabled={actionLoading === `promote-${member.id}`}
-            size="sm"
-            variant="secondary"
-          >
-            {actionLoading === `promote-${member.id}` ? "Promoting..." : "Promote"}
-          </Button>
-        )}
-
-        {showDemoteButton && (
-          <Button
-            onClick={handleDemote}
-            disabled={actionLoading === `demote-${member.id}`}
-            size="sm"
-            variant="default"
-          >
-            {actionLoading === `demote-${member.id}` ? "Demoting..." : "Demote"}
-          </Button>
-        )}
-
-        {showKickButton && (
-          <Button
-            onClick={handleKick}
-            disabled={actionLoading === `kick-${member.id}`}
-            size="sm"
-            variant="destructive"
-          >
-            {actionLoading === `kick-${member.id}` ? "Kicking..." : "Kick"}
-          </Button>
-        )}
-      </div>
-    </div>
 
       <Modal
         isOpen={modalState.isOpen}
@@ -190,4 +205,4 @@ export const MemberCard = ({
       />
     </>
   );
-}; 
+};

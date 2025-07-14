@@ -7,9 +7,10 @@ The main Squad Draw application built with Next.js 15 and React 19. This is a fu
 ## 🚀 Features
 
 ### Drawing & Canvas
+
 - **Real-time Collaborative Drawing**: Multiple users can draw simultaneously
 - **Shape Tools**: Ellipse, Rectangle, Line, Diamond, Arrow, Free Draw
-- **Drawing Customization**: 
+- **Drawing Customization**:
   - Stroke color and width
   - Fill color and opacity
   - Roughness levels (0-4)
@@ -18,6 +19,7 @@ The main Squad Draw application built with Next.js 15 and React 19. This is a fu
 - **Live Preview**: Real-time preview while drawing shapes
 
 ### Room Management
+
 - **Room Creation**: Create private or shared rooms
 - **Room Dashboard**: View and manage all your rooms
 - **Member Management**: Kick, promote, and demote members
@@ -26,6 +28,7 @@ The main Squad Draw application built with Next.js 15 and React 19. This is a fu
 - **Clear Canvas**: Admin/Owner can clear all shapes with confirmation modal
 
 ### User Interface
+
 - **Responsive Design**: Works on desktop and mobile devices
 - **Dark/Light Theme**: Toggle between themes with system preference support
 - **Control Panel**: Floating control panel for drawing options
@@ -34,6 +37,7 @@ The main Squad Draw application built with Next.js 15 and React 19. This is a fu
 - **Notifications**: Toast notifications for user actions and updates
 
 ### Authentication & Security
+
 - **Better Auth Integration**: Secure authentication system
 - **Session Management**: Persistent user sessions
 - **Protected Routes**: Middleware for route protection
@@ -42,6 +46,7 @@ The main Squad Draw application built with Next.js 15 and React 19. This is a fu
 ## 🛠 Technical Implementation
 
 ### Frontend Stack
+
 - **Framework**: Next.js 15 with App Router
 - **React**: React 19 with modern hooks and patterns
 - **Styling**: Tailwind CSS with custom component system
@@ -51,6 +56,7 @@ The main Squad Draw application built with Next.js 15 and React 19. This is a fu
 - **Theme**: Next-themes for dark/light mode
 
 ### State Management
+
 - **Zustand**: Global state management for:
   - Room state and real-time updates
   - User authentication state
@@ -58,14 +64,16 @@ The main Squad Draw application built with Next.js 15 and React 19. This is a fu
   - Notification system
 
 ### Real-time Communication
+
 - **Socket.IO Client**: Real-time communication with WebSocket server
-- **Event Handling**: 
+- **Event Handling**:
   - Drawing synchronization
   - Room membership updates
   - User presence tracking
   - Chat messages
 
 ### API Integration
+
 - **Next.js API Routes**: Internal API for all backend operations
 - **Type-safe APIs**: Full TypeScript integration
 - **Error Handling**: Comprehensive error handling with user feedback
@@ -102,12 +110,14 @@ src/
 ## 🔧 API Routes
 
 ### Authentication (`/api/auth/`)
+
 - **POST** `/api/auth/login` - User login
 - **POST** `/api/auth/register` - User registration
 - **POST** `/api/auth/logout` - User logout
 - **GET** `/api/auth/session` - Get current session
 
 ### Room Management (`/api/rooms/`)
+
 - **GET** `/api/rooms` - Get user's rooms
 - **POST** `/api/rooms` - Create new room
 - **GET** `/api/rooms/[id]` - Get room details
@@ -119,12 +129,14 @@ src/
 - **DELETE** `/api/rooms/[id]/share` - Unshare room
 
 ### Member Management (`/api/rooms/[id]/members/`)
+
 - **GET** `/api/rooms/[id]/members` - Get room members
 - **POST** `/api/rooms/[id]/members/[userId]/kick` - Kick member
 - **POST** `/api/rooms/[id]/members/[userId]/promote` - Promote to admin
 - **POST** `/api/rooms/[id]/members/[userId]/demote` - Demote from admin
 
 ### Shapes (`/api/rooms/[id]/shapes/`)
+
 - **GET** `/api/rooms/[id]/shapes` - Get room shapes
 - **POST** `/api/rooms/[id]/shapes` - Add new shape
 - **DELETE** `/api/rooms/[id]/shapes` - Clear all shapes
@@ -132,12 +144,14 @@ src/
 ## 🎨 Components
 
 ### Core Components
+
 - **ControlPanel**: Floating panel for drawing options
 - **ShapeSelector**: Tool selection interface
 - **GroupChatbot**: Real-time chat interface
 - **ThemeToggle**: Dark/light theme switcher
 
 ### UI Components
+
 - **Button**: Custom button with variants
 - **Card**: Container component
 - **Modal**: Confirmation dialogs
@@ -145,23 +159,27 @@ src/
 - **Dialog**: Radix UI dialog wrapper
 
 ### Dashboard Components
+
 - **RoomCard**: Room management interface
 - **MemberCard**: Member management interface
 
 ## 🚀 Development
 
 ### Prerequisites
+
 - Node.js 18+
 - pnpm package manager
 - PostgreSQL database
 
 ### Setup
+
 1. Install dependencies: `pnpm install`
 2. Set up environment variables in `.env.local`
 3. Run database migrations: `pnpm db:push`
 4. Start development: `pnpm dev`
 
 ### Environment Variables
+
 ```env
 DATABASE_URL="postgresql://..."
 BETTER_AUTH_SECRET="your-secret-key"
@@ -170,6 +188,7 @@ NEXT_PUBLIC_WS_URL="http://localhost:3001"
 ```
 
 ### Scripts
+
 ```bash
 pnpm dev          # Start development server
 pnpm build        # Build for production
@@ -181,17 +200,19 @@ pnpm check-types  # TypeScript type checking
 ## 🔗 Integration
 
 ### WebSocket Server
+
 - Connects to `apps/ws-server` for real-time features
 - Handles drawing synchronization and user presence
 - Room-based communication
 
 ### Database
+
 - Uses `@repo/db` package for Prisma integration
 - Shared database schema across monorepo
 - Type-safe database operations
 
 ### Shared Packages
-- **@repo/schemas**: Zod validation schemas
+
 - **@repo/db**: Database operations
 - **@repo/eslint-config**: Linting configuration
 - **@repo/typescript-config**: TypeScript configuration

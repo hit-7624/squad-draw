@@ -17,7 +17,8 @@ export function ThemeToggle({ className }: { className?: string }) {
     setMounted(true);
   }, []);
 
-  const isDark = (theme === "dark") || (theme === "system" && resolvedTheme === "dark");
+  const isDark =
+    theme === "dark" || (theme === "system" && resolvedTheme === "dark");
 
   return (
     <div className={className}>
@@ -29,15 +30,35 @@ export function ThemeToggle({ className }: { className?: string }) {
             type="button"
           >
             {/* Only render icon after mount to avoid hydration mismatch */}
-            {mounted ? (isDark ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />) : <span className="w-5 h-5" />}
+            {mounted ? (
+              isDark ? (
+                <Moon className="w-5 h-5" />
+              ) : (
+                <Sun className="w-5 h-5" />
+              )
+            ) : (
+              <span className="w-5 h-5" />
+            )}
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-40 bg-popover text-popover-foreground border border-border">
-          <DropdownMenuItem onClick={() => setTheme("light")}> <Sun className="w-4 h-4 mr-2" /> Light </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("dark")}> <Moon className="w-4 h-4 mr-2" /> Dark </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("system")}> <Laptop className="w-4 h-4 mr-2" /> System </DropdownMenuItem>
+        <DropdownMenuContent
+          align="end"
+          className="w-40 bg-popover text-popover-foreground border border-border"
+        >
+          <DropdownMenuItem onClick={() => setTheme("light")}>
+            {" "}
+            <Sun className="w-4 h-4 mr-2" /> Light{" "}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTheme("dark")}>
+            {" "}
+            <Moon className="w-4 h-4 mr-2" /> Dark{" "}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTheme("system")}>
+            {" "}
+            <Laptop className="w-4 h-4 mr-2" /> System{" "}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
   );
-} 
+}

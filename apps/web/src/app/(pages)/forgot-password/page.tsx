@@ -67,18 +67,20 @@ export default function ForgotPasswordPage() {
               </div>
               <CardTitle className="text-xl">Check your email</CardTitle>
               <CardDescription>
-                We&apos;ve sent a password reset link to <strong>{email}</strong>
+                We&apos;ve sent a password reset link to{" "}
+                <strong>{email}</strong>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center text-sm text-muted-foreground">
                 <p>
-                  Click the link in your email to reset your password. The link will expire in 1 hour.
+                  Click the link in your email to reset your password. The link
+                  will expire in 1 hour.
                 </p>
               </div>
               <div className="flex flex-col gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full"
                   onClick={() => {
                     setIsSubmitted(false);
@@ -87,14 +89,8 @@ export default function ForgotPasswordPage() {
                 >
                   Send to different email
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  className="w-full"
-                  asChild
-                >
-                  <Link href="/signin">
-                    Back to sign in
-                  </Link>
+                <Button variant="ghost" className="w-full" asChild>
+                  <Link href="/signin">Back to sign in</Link>
                 </Button>
               </div>
             </CardContent>
@@ -112,7 +108,8 @@ export default function ForgotPasswordPage() {
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Forgot your password?</CardTitle>
             <CardDescription>
-              Enter your email address and we&apos;ll send you a link to reset your password.
+              Enter your email address and we&apos;ll send you a link to reset
+              your password.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -136,8 +133,8 @@ export default function ForgotPasswordPage() {
               </div>
             </form>
             <div className="mt-6 text-center">
-              <Link 
-                href="/signin" 
+              <Link
+                href="/signin"
                 className="text-sm underline underline-offset-4 hover:text-primary"
               >
                 Back to sign in

@@ -9,21 +9,21 @@ const caudex = Caudex({
   display: "swap",
   variable: "--font-caudex",
   weight: "400",
-})
+});
 
 const handlee = Handlee({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-handlee",
   weight: "400",
-})
+});
 
 const didactGothic = Didact_Gothic({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-didact-gothic",
-  weight: "400",    
-})
+  weight: "400",
+});
 
 export const metadata: Metadata = {
   title: "Squad Draw",
@@ -40,12 +40,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body 
+      <body
         className={`${caudex.variable} ${handlee.variable} ${didactGothic.variable}`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
-          <Toaster richColors position="top-right" duration={3000} expand={false} />
+          <Toaster
+            richColors
+            position="top-right"
+            duration={3000}
+            expand={false}
+          />
         </ThemeProvider>
       </body>
     </html>

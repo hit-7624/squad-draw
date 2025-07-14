@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -12,7 +18,13 @@ interface JoinRoomFormProps {
 
 const MAX_JOINED_ROOMS = 5;
 
-export const JoinRoomForm = ({ joinRoomId, setJoinRoomId, onJoinRoom, actionLoading, joinedRoomsCount }: JoinRoomFormProps) => {
+export const JoinRoomForm = ({
+  joinRoomId,
+  setJoinRoomId,
+  onJoinRoom,
+  actionLoading,
+  joinedRoomsCount,
+}: JoinRoomFormProps) => {
   const isAtLimit = joinedRoomsCount >= MAX_JOINED_ROOMS;
   return (
     <Card>
@@ -21,7 +33,9 @@ export const JoinRoomForm = ({ joinRoomId, setJoinRoomId, onJoinRoom, actionLoad
         <CardDescription className="font-serif">
           Enter a room ID to join an existing session
           <br />
-          <span className={`text-sm font-serif ${isAtLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
+          <span
+            className={`text-sm font-serif ${isAtLimit ? "text-destructive" : "text-muted-foreground"}`}
+          >
             {joinedRoomsCount}/{MAX_JOINED_ROOMS} rooms joined
             {isAtLimit && " - Leave a room to join a new one"}
           </span>
@@ -38,15 +52,21 @@ export const JoinRoomForm = ({ joinRoomId, setJoinRoomId, onJoinRoom, actionLoad
               disabled={actionLoading === "join"}
             />
           </div>
-          <Button 
-            type="submit" 
-            disabled={actionLoading === "join" || !joinRoomId.trim() || isAtLimit}
+          <Button
+            type="submit"
+            disabled={
+              actionLoading === "join" || !joinRoomId.trim() || isAtLimit
+            }
             variant={isAtLimit ? "secondary" : "default"}
           >
-            {actionLoading === "join" ? "Joining..." : isAtLimit ? "Limit Reached" : "Join"}
+            {actionLoading === "join"
+              ? "Joining..."
+              : isAtLimit
+                ? "Limit Reached"
+                : "Join"}
           </Button>
         </form>
       </CardContent>
     </Card>
   );
-}; 
+};

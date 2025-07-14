@@ -1,7 +1,8 @@
 
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/prisma"
+  output   = env("PRISMA_CLIENT_OUTPUT")
+}
 
 // we will need to generate two clinets as other than next js application will be not able to use the generated/prisma client due to module conflict
 
@@ -10,13 +11,10 @@ generator client {
 // for generating clint for next js set output path to ../src/generated/prisma
 // for generating clint for ws-server set output path  to default by removing the output path
 
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 
 model User {
   id            String    @id
@@ -28,12 +26,10 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
-
   ownedRooms  Room[]        @relation("RoomOwner")
   roomMembers RoomMember[]
   shapes      Shape[]
   messages    Message[]
-
   @@unique([email])
   @@map("user")
 }
@@ -48,7 +44,6 @@ model Session {
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@unique([token])
   @@map("session")
 }
@@ -68,7 +63,6 @@ model Account {
   password              String?
   createdAt             DateTime
   updatedAt             DateTime
-
   @@map("account")
 }
 
@@ -79,24 +73,20 @@ model Verification {
   expiresAt  DateTime
   createdAt  DateTime?
   updatedAt  DateTime?
-
   @@map("verification")
 }
-
 
 model Room {
   id          String   @id @default(cuid())
   name        String   @default("Untitled Room")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
   owner       User         @relation("RoomOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String
   members     RoomMember[]
   shapes      Shape[]
   messages    Message[]
   isShared    Boolean    @default(false)
-  
   @@map("rooms")
 }
 
@@ -104,16 +94,13 @@ model RoomMember {
   id       String           @id @default(cuid())
   role     RoomMemberRole   @default(MEMBER)
   joinedAt DateTime         @default(now())
-  
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId   String
   room     Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
   roomId   String
-  
   @@unique([userId, roomId])
   @@map("room_members")
 }
-
 
 model Shape {
   id        String   @id @default(cuid())
@@ -121,64 +108,21 @@ model Shape {
   dataFromRoughJs Json     @default("{}")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   room      Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
   roomId    String
   creator   User   @relation(fields: [creatorId], references: [id])
   creatorId String
-
   @@map("shapes")
 }
-
-// model Shape {
-//   id        String    @id @default(cuid())
-//   type      ShapeType
-  
-//   // Basic shape properties
-//   x         Float
-//   y         Float
-//   width     Float
-//   height    Float
-  
-//   // RoughJS drawable object (serialized JSON) - contains sets and all drawing instructions
-//   drawable  Json
-  
-//   // Shape styling properties (for UI controls and fallback)
-//   stroke          String  @default("#000000")
-//   strokeWidth     Float   @default(1)
-//   fill            String  @default("transparent")
-//   fillStyle       String  @default("hachure") // "hachure" | "cross-hatch" | "solid" | "zigzag"
-//   strokeStyle     String  @default("solid") // "solid" | "dashed" | "dotted"
-//   roughness       Float   @default(1)
-//   bowing          Float   @default(1)
-//   seed            Int     @default(0)
-//   opacity         Float   @default(1)
-  
-//   // Element-specific data (for text content, points, etc.)
-//   elementData     Json    @default("{}")
-  
-//   // Timestamps
-//   createdAt DateTime  @default(now())
-//   updatedAt DateTime  @updatedAt
-  
-//   room      Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
-//   roomId    String
-//   creator   User   @relation(fields: [creatorId], references: [id])
-//   creatorId String
-
-//   @@map("shapes")
-// }
 
 model Message {
   id        String   @id @default(cuid())
   message   String
   createdAt DateTime @default(now())
-  
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
   room      Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
   roomId    String
-
   @@map("messages")
 }
 

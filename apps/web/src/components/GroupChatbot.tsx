@@ -1,57 +1,63 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, Users, X } from "lucide-react"
-import { useRoomStore } from "@/store/room.store"
-import { authClient } from "@/lib/auth-client"
-import { cn } from "@/lib/utils"
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Send, Users, X } from "lucide-react";
+import { useRoomStore } from "@/store/room.store";
+import { authClient } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 
 interface GroupChatbotProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
-  const { data: session } = authClient.useSession()
-  const { messages, onlineMembers, members, sendMessage } = useRoomStore()
-  const [input, setInput] = useState("")
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { data: session } = authClient.useSession();
+  const { messages, onlineMembers, members, sendMessage } = useRoomStore();
+  const [input, setInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!input.trim() || !session?.user) return
-    await sendMessage(input, session.user)
-    setInput("")
-  }
+    e.preventDefault();
+    if (!input.trim() || !session?.user) return;
+    await sendMessage(input, session.user);
+    setInput("");
+  };
 
   const onlineUsers = onlineMembers.map((userId) => {
-    const memberName = (members ?? []).find((m) => m.id === userId)?.name ?? '';
-    const displayName = memberName ? (memberName.length > 5 ? memberName.slice(0, 5) + '..' : memberName) : `User ${userId.slice(0, 4)}`;
+    const memberName = (members ?? []).find((m) => m.id === userId)?.name ?? "";
+    const displayName = memberName
+      ? memberName.length > 5
+        ? memberName.slice(0, 5) + ".."
+        : memberName
+      : `User ${userId.slice(0, 4)}`;
     return {
       id: userId,
       name: displayName,
-    }
-  })
+    };
+  });
 
   return (
     <div
       className={cn(
         "fixed bottom-24 right-6 w-96 h-[600px] transition-all duration-300 ease-in-out z-30",
-        isOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
+        isOpen
+          ? "translate-y-0 opacity-100"
+          : "translate-y-full opacity-0 pointer-events-none",
       )}
     >
       <Card className="h-full shadow-2xl border bg-card text-card-foreground flex flex-col rounded-xl overflow-hidden gap-0 py-0">
@@ -62,8 +68,15 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
               <span>Room Chat</span>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground font-medium">{onlineUsers.length} online</span>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted" onClick={onClose}>
+              <span className="text-sm text-muted-foreground font-medium">
+                {onlineUsers.length} online
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full hover:bg-muted"
+                onClick={onClose}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -72,10 +85,15 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
 
         <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
           <div className="px-3 py-1.5 border-b bg-muted/20 flex-shrink-0">
-            <h3 className="text-xs font-semibold text-foreground mb-1.5">Online Users</h3>
+            <h3 className="text-xs font-semibold text-foreground mb-1.5">
+              Online Users
+            </h3>
             <div className="flex flex-wrap gap-1.5">
               {onlineUsers.map((user) => (
-                <div key={user.id} className="flex items-center gap-1.5 bg-background/60 border rounded-full px-2 py-1 text-xs">
+                <div
+                  key={user.id}
+                  className="flex items-center gap-1.5 bg-background/60 border rounded-full px-2 py-1 text-xs"
+                >
                   <Avatar className="h-5 w-5 border border-primary/30">
                     <AvatarFallback className="bg-primary/20 text-primary font-semibold text-xs">
                       {user.name.charAt(0)}
@@ -93,42 +111,60 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
             <ScrollArea className="h-full">
               <div className="p-4 space-y-4">
                 {messages.map((msg, index) => {
-                const isYou = msg.user?.id === session?.user?.id
-                return (
-                  <div
-                    key={index}
-                    className={cn("flex gap-3", isYou ? "flex-row-reverse" : "flex-row")}
-                  >
-                    <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
-                        {isYou 
-                          ? (session?.user?.name?.charAt(0)?.toUpperCase() || 'Y') 
-                          : (msg.user?.name?.charAt(0)?.toUpperCase() || msg.user?.id?.charAt(0)?.toUpperCase() || 'U')
-                        }
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className={cn("flex flex-col max-w-[250px] min-w-0", isYou ? "items-end" : "items-start")}>
-                      <div className={cn("flex items-baseline gap-2 mb-1", isYou ? "flex-row-reverse" : "flex-row")}>
-                        <span className="text-xs font-semibold text-foreground">
-                          {isYou ? "You" : (msg.user?.name || "Anonymous")}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
+                  const isYou = msg.user?.id === session?.user?.id;
+                  return (
+                    <div
+                      key={index}
+                      className={cn(
+                        "flex gap-3",
+                        isYou ? "flex-row-reverse" : "flex-row",
+                      )}
+                    >
+                      <Avatar className="h-8 w-8 flex-shrink-0">
+                        <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
+                          {isYou
+                            ? session?.user?.name?.charAt(0)?.toUpperCase() ||
+                              "Y"
+                            : msg.user?.name?.charAt(0)?.toUpperCase() ||
+                              msg.user?.id?.charAt(0)?.toUpperCase() ||
+                              "U"}
+                        </AvatarFallback>
+                      </Avatar>
                       <div
                         className={cn(
-                          "rounded-lg px-3 py-2 text-sm break-words word-wrap",
-                          isYou
-                            ? "bg-primary text-primary-foreground rounded-br-sm"
-                            : "bg-muted text-foreground rounded-bl-sm"
+                          "flex flex-col max-w-[250px] min-w-0",
+                          isYou ? "items-end" : "items-start",
                         )}
                       >
-                        {msg.message}
+                        <div
+                          className={cn(
+                            "flex items-baseline gap-2 mb-1",
+                            isYou ? "flex-row-reverse" : "flex-row",
+                          )}
+                        >
+                          <span className="text-xs font-semibold text-foreground">
+                            {isYou ? "You" : msg.user?.name || "Anonymous"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(msg.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        <div
+                          className={cn(
+                            "rounded-lg px-3 py-2 text-sm break-words word-wrap",
+                            isYou
+                              ? "bg-primary text-primary-foreground rounded-br-sm"
+                              : "bg-muted text-foreground rounded-bl-sm",
+                          )}
+                        >
+                          {msg.message}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )
+                  );
                 })}
               </div>
               <div ref={messagesEndRef} />
@@ -145,9 +181,9 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
               className="flex-1 bg-background border focus:ring-2 focus:ring-primary/20 rounded-lg"
               autoComplete="off"
             />
-            <Button 
-              type="submit" 
-              size="icon" 
+            <Button
+              type="submit"
+              size="icon"
               className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
               disabled={!input.trim()}
             >
@@ -157,5 +193,5 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }

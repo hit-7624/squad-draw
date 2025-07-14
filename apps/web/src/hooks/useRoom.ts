@@ -1,4 +1,4 @@
-import { useRoomStore } from '@/store/room.store';
+import { useRoomStore } from "@/store/room.store";
 
 export const useRoom = () => {
   const joinedRooms = useRoomStore((state) => state.joinedRooms);
@@ -28,7 +28,9 @@ export const useRoom = () => {
   const closeOverview = useRoomStore((state) => state.closeOverview);
   const initializeSocket = useRoomStore((state) => state.initializeSocket);
   const disconnectSocket = useRoomStore((state) => state.disconnectSocket);
-  const toggleRoomExpansion = useRoomStore((state) => state.toggleRoomExpansion);
+  const toggleRoomExpansion = useRoomStore(
+    (state) => state.toggleRoomExpansion,
+  );
   const setShareDialogOpen = useRoomStore((state) => state.setShareDialogOpen);
   const promoteToAdmin = useRoomStore((state) => state.promoteToAdmin);
   const demoteFromAdmin = useRoomStore((state) => state.demoteFromAdmin);
@@ -75,4 +77,4 @@ export const useRoom = () => {
     canManageMembers,
     getOverviewRoom,
   };
-}; 
+};

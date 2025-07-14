@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { toast } from 'sonner';
-  
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { toast } from "sonner";
+
 interface NotificationState {
   error: string | null;
   success: string | null;
@@ -52,7 +52,7 @@ export const useNotificationStore = create<NotificationStore>()(
       },
     }),
     {
-      name: 'notification-store',
-    }
-  )
-); 
+      name: "notification-store",
+    },
+  ),
+);

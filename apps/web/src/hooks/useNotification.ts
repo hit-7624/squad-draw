@@ -1,4 +1,4 @@
-import { useNotificationStore } from '@/store/notification.store';
+import { useNotificationStore } from "@/store/notification.store";
 
 export const useNotification = () => {
   const error = useNotificationStore((state) => state.error);
@@ -18,4 +18,4 @@ export const useNotification = () => {
     clearError,
     clearSuccess,
   };
-}; 
+};

@@ -19,7 +19,7 @@ export interface Room {
     name: string;
     email: string;
   };
-  userRole: 'ADMIN' | 'MEMBER';
+  userRole: "ADMIN" | "MEMBER";
   memberCount: number;
   shapeCount: number;
   messageCount: number;
@@ -29,7 +29,7 @@ export interface Member {
   id: string;
   name: string;
   email: string;
-  role: 'ADMIN' | 'MEMBER';
+  role: "ADMIN" | "MEMBER";
   isOwner: boolean;
 }
 
@@ -59,4 +59,4 @@ export interface Shape {
   creator: User;
   roomId: string;
   creatorId: string;
-} 
+}
