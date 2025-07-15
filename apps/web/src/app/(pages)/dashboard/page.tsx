@@ -14,7 +14,6 @@ import { useRoom, useNotification, useForm } from "@/hooks";
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 
 export default function Dashboard() {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
@@ -51,7 +50,7 @@ export default function Dashboard() {
     canManageMembers,
     getOverviewRoom,
   } = useRoom();
-  const { error, success, showError, showSuccess } = useNotification();
+  const { showError, showSuccess } = useNotification();
   const {
     newRoomName,
     newMessage,

@@ -1,7 +1,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = env("PRISMA_CLIENT_OUTPUT")
+  // output   = env("PRISMA_CLIENT_OUTPUT")
 }
 
 // we will need to generate two clinets as other than next js application will be not able to use the generated/prisma client due to module conflict
@@ -11,9 +11,11 @@ generator client {
 // for generating clint for next js set output path to ../src/generated/prisma
 // for generating clint for ws-server set output path  to default by removing the output path
 
+// now this default output is working for both the clinets 
+
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("postgresql://hit:@localhost:5432/db1")
 }
 
 model User {
