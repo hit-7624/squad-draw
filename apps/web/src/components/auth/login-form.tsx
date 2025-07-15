@@ -125,9 +125,8 @@ export function LoginForm({
             // Handle email verification error specifically
             if (ctx.error.status === 403) {
               showError(
-                "Please verify your email address before signing in. Check your inbox for a verification email. Verify email with the latest link.",
+                "Your email is not verified. A new verification link has been sent to your email. Please check your inbox and use the latest link."
               );
-              setShowResendVerification(true);
             } else {
               showError(
                 ctx.error.message || "An error occurred during sign in",
@@ -233,17 +232,6 @@ export function LoginForm({
                 </span>
               </div>
               <div className="grid gap-6">
-                {showResendVerification && !isSignUp && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleResendVerification}
-                    disabled={isLoading}
-                  >
-                    Resend Verification Email
-                  </Button>
-                )}
                 {isSignUp && (
                   <div className="grid gap-3">
                     <Label htmlFor="name">Name</Label>
