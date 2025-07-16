@@ -103,8 +103,8 @@ io.engine.on("connection_error", (error) => {
   console.error("Connection error:", error);
 });
 
-httpServer.listen(process.env.WS_SERVER_PORT, () => {
+httpServer.listen(8080, () => {
   console.log(
-    `WebSocket server is running on port ${process.env.WS_SERVER_PORT}`,
+    `WebSocket server is running on port 8080`,
   );
 });
