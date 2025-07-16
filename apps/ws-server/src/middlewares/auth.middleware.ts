@@ -14,7 +14,7 @@ export const authMiddleware = async (
 
     const cookies = parse(cookieHeader);
     const token =
-      cookies["better-auth.session"] || cookies["better-auth.session_token"];
+      cookies["__Secure-better-auth.session_token"] ||  cookies["__Secure-better-auth.session"] || cookies["better-auth.session"] || cookies["better-auth.session_token"];
 
     if (!token) {
       return next(new Error("Authentication error: No session token found"));
