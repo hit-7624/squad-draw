@@ -7,60 +7,43 @@ on:
 
 jobs:
   deploy:
-    name: Build & Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install pnpm
-        run: npm install -g pnpm
-
-      - name: Install dependencies
-        run: pnpm install
-
-     
-      - name: Deploy via SSH to Azure VM
+      - name: SSH into VM and deploy
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.AZURE_VM_HOST }}
           username: ${{ secrets.AZURE_VM_USER }}
           key: ${{ secrets.AZURE_VM_SSH_KEY }}
+          port: 22
           script: |
-            echo "🔄 Switching to project directory..."
-            cd ~/squad-draw
+            echo "🔧 Setting up environment paths..."
+            export PATH=$HOME/.local/share/pnpm:$HOME/.nvm/versions/node/$(node -v)/bin:$HOME/.npm-global/bin:$PATH
+            export NVM_DIR=~/.nvm
+            source $NVM_DIR/nvm.sh
 
-            echo "📥 Pulling latest code from main..."
+            echo "📁 Switching to project directory..."
+            cd /home/ubuntu/squad-draw
+
+            echo "📥 Pulling latest code..."
             git pull origin main
 
             echo "📦 Installing dependencies..."
-            pnpm install
+            pnpm install --ignore-scripts
 
-            echo "🧬 Running Prisma generate..."
+            echo "🧬 Generating Prisma client..."
             pnpm turbo run db:generate
 
-            echo "🏗️ Building full project..."
+            echo "🏗️ Building the project..."
             pnpm build
 
-            echo "🧹 Cleaning existing PM2 apps..."
-            pm2 delete all || true
+            echo "🔄 Restarting PM2 apps..."
+            pm2 restart web || pm2 start "pnpm start" --name web --cwd /home/ubuntu/squad-draw/apps/web
+            pm2 restart ws-server || pm2 start "pnpm start" --name ws-server --cwd /home/ubuntu/squad-draw/apps/ws-server
 
-            echo "🚀 Starting web app with PM2..."
-            cd apps/web
-            pm2 start "pnpm start" --name web
-            cd ../..
-
-            echo "🚀 Starting ws-server with PM2..."
-            cd apps/ws-server
-            pm2 start "pnpm start" --name ws-server
-            cd ../..
-
-            echo "💾 Saving PM2 process list for reboot..."
+            echo "💾 Saving PM2 state..."
             pm2 save
