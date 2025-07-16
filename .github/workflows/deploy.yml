@@ -1,0 +1,66 @@
+name: Deploy to Azure VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+     
+      - name: Deploy via SSH to Azure VM
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USER }}
+          key: ${{ secrets.AZURE_VM_SSH_KEY }}
+          script: |
+            echo "🔄 Switching to project directory..."
+            cd ~/squad-draw
+
+            echo "📥 Pulling latest code from main..."
+            git pull origin main
+
+            echo "📦 Installing dependencies..."
+            pnpm install
+
+            echo "🧬 Running Prisma generate..."
+            pnpm turbo run db:generate
+
+            echo "🏗️ Building full project..."
+            pnpm build
+
+            echo "🧹 Cleaning existing PM2 apps..."
+            pm2 delete all || true
+
+            echo "🚀 Starting web app with PM2..."
+            cd apps/web
+            pm2 start "pnpm start" --name web
+            cd ../..
+
+            echo "🚀 Starting ws-server with PM2..."
+            cd apps/ws-server
+            pm2 start "pnpm start" --name ws-server
+            cd ../..
+
+            echo "💾 Saving PM2 process list for reboot..."
+            pm2 save
