@@ -21,7 +21,11 @@ jobs:
           key: ${{ secrets.AZURE_VM_SSH_KEY }}
           port: 22
           script: |
-        
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+
+            export PATH="$HOME/.npm-global/bin:$HOME/.local/share/pnpm:$HOME/.nvm/versions/node/$(nvm current)/bin:$PATH"
+
             cd squad-draw
 
             echo "📥 Pulling latest code..."
