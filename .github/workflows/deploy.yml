@@ -35,7 +35,9 @@ jobs:
 
             echo "🏗️ Building the project..."
             pnpm build
-
+            
+            pm2 delete all
+            
             cd apps/web
             pm2 start "pnpm start" --name web
 
