@@ -22,7 +22,7 @@
     },
     "db:migrate": {
       "cache": false,
-      "persistent": true // This is necessary to interact with the CLI and assign names to your database migrations.
+      "persistent": true
     },
     "db:deploy": {
       "cache": false
