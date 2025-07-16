@@ -93,5 +93,9 @@ export const auth = betterAuth({
       },
     },
   },
-  trustedOrigins: [process.env.NEXT_PUBLIC_BASE_URL as string],
+  trustedOrigins: [
+    "http://localhost:3000",
+    "https://sqauddraw.h1t.tech",
+    process.env.NEXT_PUBLIC_BASE_URL as string,
+  ],
 });
