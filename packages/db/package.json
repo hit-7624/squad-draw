@@ -4,8 +4,10 @@
   "description": "",
   "main": "./src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+      "db:generate": "prisma generate",
+      "db:migrate": "prisma migrate dev --skip-generate",
+      "db:deploy": "prisma migrate deploy"
+    },
   "keywords": [],
   "author": "",
   "license": "ISC",
