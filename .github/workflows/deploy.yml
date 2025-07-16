@@ -21,19 +21,14 @@ jobs:
           key: ${{ secrets.AZURE_VM_SSH_KEY }}
           port: 22
           script: |
-            echo "🔧 Setting up environment paths..."
-            export PATH=$HOME/.local/share/pnpm:$HOME/.nvm/versions/node/$(node -v)/bin:$HOME/.npm-global/bin:$PATH
-            export NVM_DIR=~/.nvm
-            source $NVM_DIR/nvm.sh
-
-            echo "📁 Switching to project directory..."
-            cd /home/ubuntu/squad-draw
+        
+            cd squad-draw
 
             echo "📥 Pulling latest code..."
             git pull origin main
 
             echo "📦 Installing dependencies..."
-            pnpm install --ignore-scripts
+            pnpm install 
 
             echo "🧬 Generating Prisma client..."
             pnpm turbo run db:generate
@@ -41,9 +36,10 @@ jobs:
             echo "🏗️ Building the project..."
             pnpm build
 
-            echo "🔄 Restarting PM2 apps..."
-            pm2 restart web || pm2 start "pnpm start" --name web --cwd /home/ubuntu/squad-draw/apps/web
-            pm2 restart ws-server || pm2 start "pnpm start" --name ws-server --cwd /home/ubuntu/squad-draw/apps/ws-server
+            cd apps/web
+            pm2 start "pnpm start" --name web
 
-            echo "💾 Saving PM2 state..."
-            pm2 save
+            cd ../ws-server
+            pm2 start "pnpm start" --name ws-server
+
+            echo "both apps are running"
