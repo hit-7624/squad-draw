@@ -19,7 +19,7 @@ console.log(process.env.ORIGIN_URL);
 const httpServer = createServer();
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.ORIGIN_URL,
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true,
   },

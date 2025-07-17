@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
@@ -50,7 +50,7 @@ export default function RoomPage() {
     roughness: 0,
     strokeLineDash: [],
     fillOpacity: 0.25,
-  });
+      });
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
   const [modalState, setModalState] = useState<{
@@ -495,6 +495,8 @@ export default function RoomPage() {
     previousConnectionStatus.current = isConnected;
   }, [isConnected]);
 
+  const canManage = useMemo(() => canManageCurrentRoom(session?.user ?? null), [canManageCurrentRoom, session?.user]);
+
   if (loading || sessionLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -541,17 +543,14 @@ export default function RoomPage() {
             Online: {onlineMembers.length} members
           </div>
           <div className="text-xs text-muted-foreground mb-2">
-            Role:{" "}
-            {canManageCurrentRoom(session?.user) ? "Admin/Owner" : "Member"}
+            Role: {canManage ? "Admin/Owner" : "Member"}
           </div>
         </div>
       </div>
       <ShapeSelector
         currentShape={currentShape}
         onShapeChange={setCurrentShape}
-        onClearShapes={
-          canManageCurrentRoom(session?.user) ? handleClearShapes : undefined
-        }
+        onClearShapes={canManage ? handleClearShapes : undefined}
       />
       <div className="fixed bottom-6 left-6 z-40">
         <Button

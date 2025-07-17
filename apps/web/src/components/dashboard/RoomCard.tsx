@@ -264,12 +264,7 @@ export const RoomCard = ({
             >
               <div className="flex flex-wrap gap-2">
                 {/* Chat Status - Shows current state */}
-                {isSelected && (
-                  <div className="flex items-center gap-1 text-xs text-primary px-2 py-1 bg-primary/10 rounded-full border border-primary/30">
-                    <span>💬</span>
-                    <span>Chat Active</span>
-                  </div>
-                )}
+                
 
                 {/* Share/Unshare - Admin/Owner only */}
                 {canManageRoom(room) && (

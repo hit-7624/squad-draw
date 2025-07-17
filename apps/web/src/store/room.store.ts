@@ -53,6 +53,7 @@ interface RoomActions {
   copyRoomId: (roomId: string) => void;
   sendMessage: (message: string, user?: User) => Promise<void>;
   openOverview: (roomId: string | null) => void;
+  openOverviewWithoutSocket: (roomId: string | null) => void;
   closeOverview: () => void;
   initializeSocket: () => void;
   disconnectSocket: () => void;
@@ -517,6 +518,15 @@ export const useRoomStore = create<RoomStore>()(
           get().fetchCurrentRoomData(roomId);
         } else {
           get().disconnectSocket();
+        }
+      },
+
+      openOverviewWithoutSocket: (roomId: string | null) => {
+        set({ overviewRoomId: roomId });
+
+        if (roomId) {
+          get().fetchRoomData(roomId);
+          get().fetchCurrentRoomData(roomId);
         }
       },
 

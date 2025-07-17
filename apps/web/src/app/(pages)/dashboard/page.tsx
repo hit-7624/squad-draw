@@ -20,14 +20,11 @@ export default function Dashboard() {
   const {
     joinedRooms,
     overviewRoomId,
-    messages,
     members,
     actionLoading,
     shareDialogOpen,
     expandedRoom,
     error: roomError,
-    isConnected,
-    onlineMembers,
     fetchJoinedRooms,
     createRoom,
     joinRoom,
@@ -37,29 +34,20 @@ export default function Dashboard() {
     unshareRoom,
     copyShareLink,
     copyRoomId,
-    sendMessage,
-    openOverview,
+    openOverviewWithoutSocket,
     closeOverview,
-    disconnectSocket,
     toggleRoomExpansion,
-    promoteToAdmin,
-    demoteFromAdmin,
-    kickMember,
     canManageRoom,
     isOwner,
-    canManageMembers,
     getOverviewRoom,
   } = useRoom();
   const { showError, showSuccess } = useNotification();
   const {
     newRoomName,
-    newMessage,
     joinRoomId,
     setNewRoomName,
-    setNewMessage,
     setJoinRoomId,
     resetNewRoomName,
-    resetNewMessage,
     resetJoinRoomId,
   } = useForm();
 
@@ -70,10 +58,6 @@ export default function Dashboard() {
     if (!sessionLoading) {
       fetchUserAndRooms();
     }
-
-    return () => {
-      disconnectSocket();
-    };
   }, [sessionLoading]);
 
   const fetchUserAndRooms = async () => {
@@ -164,18 +148,6 @@ export default function Dashboard() {
     showSuccess("Room ID copied to clipboard!");
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-
-    try {
-      await sendMessage(newMessage, session?.user);
-      resetNewMessage();
-    } catch (err: any) {
-      showError(roomError || "Failed to send message");
-    }
-  };
-
   const handleCloseOverview = () => {
     closeOverview();
   };
@@ -228,25 +200,7 @@ export default function Dashboard() {
           <h1 className="text-5xl font-sans text-foreground">Dashboard</h1>
         </div>
 
-        {/* Connection Status */}
-        {overviewRoom && (
-          <div className="mb-4 text-center">
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                isConnected
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
-              }`}
-            >
-              <span
-                className={`w-2 h-2 mr-2 rounded-full ${
-                  isConnected ? "bg-green-400" : "bg-red-400"
-                }`}
-              ></span>
-              {isConnected ? "Connected to chat" : "Disconnected from chat"}
-            </span>
-          </div>
-        )}
+
 
         {/* User Info - Always show if user exists */}
         {session?.user && (
@@ -283,8 +237,8 @@ export default function Dashboard() {
               expandedRoom={expandedRoom}
               actionLoading={actionLoading}
               shareDialogOpen={shareDialogOpen}
-              onlineMembers={onlineMembers}
-              onOpenOverview={openOverview}
+              onlineMembers={[]}
+              onOpenOverview={openOverviewWithoutSocket}
               onToggleExpansion={toggleRoomExpansion}
               onShareRoom={handleShareRoom}
               onUnshareRoom={handleUnshareRoom}
@@ -302,21 +256,10 @@ export default function Dashboard() {
             {overviewRoom ? (
               <RoomOverview
                 overviewRoom={overviewRoom}
-                messages={messages}
                 members={members}
                 currentUser={session?.user}
-                newMessage={newMessage}
-                setNewMessage={setNewMessage}
-                onSendMessage={handleSendMessage}
                 onCloseOverview={handleCloseOverview}
                 actionLoading={actionLoading}
-                isConnected={isConnected}
-                onlineMembers={onlineMembers}
-                canManageMembers={canManageMembers(overviewRoom, session?.user)}
-                isOwner={isOwner(overviewRoom, session?.user)}
-                onPromoteToAdmin={promoteToAdmin}
-                onDemoteFromAdmin={demoteFromAdmin}
-                onKickMember={kickMember}
               />
             ) : (
               <RoomOverviewEmpty

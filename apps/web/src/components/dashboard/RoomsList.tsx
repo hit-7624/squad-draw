@@ -15,7 +15,7 @@ interface RoomsListProps {
   expandedRoom: string | null;
   actionLoading: string | null;
   shareDialogOpen: string | null;
-  onlineMembers: string[];
+  onlineMembers?: string[];
   onOpenOverview: (roomId: string | null) => void;
   onToggleExpansion: (roomId: string) => void;
   onShareRoom: (roomId: string) => void;
@@ -71,7 +71,7 @@ export const RoomsList = ({
                 isSelected={overviewRoomId === room.id}
                 actionLoading={actionLoading}
                 shareDialogOpen={shareDialogOpen}
-                onlineMembers={overviewRoomId === room.id ? onlineMembers : []}
+                onlineMembers={overviewRoomId === room.id ? (onlineMembers || []) : []}
                 onToggleExpansion={onToggleExpansion}
                 onOpenOverview={onOpenOverview}
                 onShareRoom={onShareRoom}

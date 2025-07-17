@@ -3,7 +3,6 @@ import { useRoomStore } from "@/store/room.store";
 export const useRoom = () => {
   const joinedRooms = useRoomStore((state) => state.joinedRooms);
   const overviewRoomId = useRoomStore((state) => state.overviewRoomId);
-  const messages = useRoomStore((state) => state.messages);
   const members = useRoomStore((state) => state.members);
   const loading = useRoomStore((state) => state.loading);
   const actionLoading = useRoomStore((state) => state.actionLoading);
@@ -23,8 +22,8 @@ export const useRoom = () => {
   const unshareRoom = useRoomStore((state) => state.unshareRoom);
   const copyShareLink = useRoomStore((state) => state.copyShareLink);
   const copyRoomId = useRoomStore((state) => state.copyRoomId);
-  const sendMessage = useRoomStore((state) => state.sendMessage);
   const openOverview = useRoomStore((state) => state.openOverview);
+  const openOverviewWithoutSocket = useRoomStore((state) => state.openOverviewWithoutSocket);
   const closeOverview = useRoomStore((state) => state.closeOverview);
   const initializeSocket = useRoomStore((state) => state.initializeSocket);
   const disconnectSocket = useRoomStore((state) => state.disconnectSocket);
@@ -43,7 +42,6 @@ export const useRoom = () => {
   return {
     joinedRooms,
     overviewRoomId,
-    messages,
     members,
     loading,
     actionLoading,
@@ -62,8 +60,8 @@ export const useRoom = () => {
     unshareRoom,
     copyShareLink,
     copyRoomId,
-    sendMessage,
     openOverview,
+    openOverviewWithoutSocket,
     closeOverview,
     initializeSocket,
     disconnectSocket,
