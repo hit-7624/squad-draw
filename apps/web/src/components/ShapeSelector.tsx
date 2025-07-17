@@ -12,6 +12,7 @@ import {
   Type,
   Image,
   Eraser,
+  Hand,
 } from "lucide-react";
 
 interface ShapeSelectorProps {
@@ -26,6 +27,7 @@ const shapeOptions: {
   icon: React.ReactNode;
   disabled?: boolean;
 }[] = [
+  { type: "HAND", label: "Hand", icon: <Hand size={16} /> },
   { type: "ELLIPSE", label: "Ellipse", icon: <Circle size={16} /> },
   { type: "RECTANGLE", label: "Rectangle", icon: <Square size={16} /> },
   { type: "LINE", label: "Line", icon: <Minus size={16} /> },

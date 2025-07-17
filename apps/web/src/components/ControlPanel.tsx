@@ -204,14 +204,15 @@ export default function ControlPanel({
               {strokeColors.map((color: string) => (
                 <Button
                   key={color}
-                  className="w-8 h-8 p-0"
-                  style={{
-                    background: color,
-                    border:
+                  className={
+                    cn(
+                      "w-8 h-8 p-0 border-2 transition-all",
                       opts.stroke === color
-                        ? "2px solid hsl(var(--ring)) !important"
-                        : "1px solid hsl(var(--foreground) / 0.8) !important",
-                  }}
+                        ? "border-primary ring-2 ring-primary/40 bg-primary text-primary-foreground"
+                        : "border-border bg-background"
+                    )
+                  }
+                  style={{ background: color }}
                   variant={opts.stroke === color ? "default" : "outline"}
                   onClick={() => onChange({ ...opts, stroke: color })}
                 />
@@ -260,15 +261,19 @@ export default function ControlPanel({
                 return (
                   <Button
                     key={color}
-                    className="w-8 h-8 p-0"
+                    className={
+                      cn(
+                        "w-8 h-8 p-0 border-2 transition-all",
+                        isSelected
+                          ? "border-primary ring-2 ring-primary/40 bg-primary text-primary-foreground"
+                          : "border-border bg-background"
+                      )
+                    }
                     style={{
                       background:
                         color === "transparent"
                           ? "repeating-linear-gradient(45deg, hsl(var(--muted)) 0 4px, hsl(var(--muted-foreground) / 0.3) 4px 8px)"
                           : color,
-                      border: isSelected
-                        ? "2px solid hsl(var(--ring)) !important"
-                        : "1px solid hsl(var(--foreground) / 0.8) !important",
                     }}
                     variant={isSelected ? "default" : "outline"}
                     onClick={() => {

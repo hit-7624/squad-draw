@@ -795,15 +795,14 @@ export const useRoomStore = create<RoomStore>()(
             const roomData = await response.json();
             console.log("Fetched room data:", roomData);
 
-            // Update joinedRooms with current room if not already present
+            // Always update joinedRooms with the latest room data
             set((state) => {
-              const existingRoom = state.joinedRooms.find(
-                (r) => r.id === roomId,
-              );
-              if (!existingRoom) {
-                return { joinedRooms: [...state.joinedRooms, roomData.room] };
-              }
-              return state;
+              const updatedRooms = state.joinedRooms.some((r) => r.id === roomId)
+                ? state.joinedRooms.map((r) =>
+                    r.id === roomId ? roomData.room : r
+                  )
+                : [...state.joinedRooms, roomData.room];
+              return { joinedRooms: updatedRooms };
             });
           }
         } catch (error) {

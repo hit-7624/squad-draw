@@ -15,6 +15,8 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Modal } from "@/components/ui/modal";
 import { MessageCircle, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "next-themes";
+import { useRoom } from "@/hooks/useRoom";
 
 function drawShapesFromArray(
   shapes: SimpleShape[],
@@ -38,19 +40,27 @@ export default function RoomPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const roughCanvasRef = useRef<RoughCanvas | null>(null);
   const previousConnectionStatus = useRef<boolean | null>(null);
-  const [currentShape, setCurrentShape] = useState<ShapeType>("ELLIPSE");
+  const [currentShape, setCurrentShape] = useState<ShapeType>("HAND");
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState<[number, number][]>([]);
   const [startPoint, setStartPoint] = useState<[number, number] | null>(null);
   const [drawingOptions, setDrawingOptions] = useState<DrawingOptions>({
-    stroke: "#e5e5e5",
+    stroke: "#000000",
     strokeWidth: 2,
     fill: "rgba(255, 255, 255, 0.1)",
     fillStyle: "solid",
-    roughness: 0,
+    roughness: 2,
     strokeLineDash: [],
     fillOpacity: 0.25,
       });
+  const { resolvedTheme } = useTheme();
+  useEffect(() => {
+    if (resolvedTheme === "dark") {
+      setDrawingOptions((opts) => ({ ...opts, stroke: "#ffffff" }));
+    } else if (resolvedTheme === "light") {
+      setDrawingOptions((opts) => ({ ...opts, stroke: "#000000" }));
+    }
+  }, [resolvedTheme]);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
   const [modalState, setModalState] = useState<{
@@ -83,6 +93,8 @@ export default function RoomPage() {
     fetchCurrentRoomData,
     fetchRoomData,
   } = useRoomStore();
+
+  const { getOverviewRoom, canManageRoom } = useRoom();
 
   const handleClearShapes = () => {
     setModalState({
@@ -162,7 +174,9 @@ export default function RoomPage() {
       const x = e.offsetX;
       const y = e.offsetY;
 
-      if (currentShape === "FREEDRAW") {
+      if (currentShape === "HAND") {
+        return;
+      } else if (currentShape === "FREEDRAW") {
         setIsDrawing(true);
         setCurrentPath([[x, y]]);
       } else {
@@ -174,6 +188,9 @@ export default function RoomPage() {
       const x = e.offsetX;
       const y = e.offsetY;
 
+      if (currentShape === "HAND") {
+        return;
+      }
       if (currentShape === "FREEDRAW" && isDrawing) {
         // Handle free draw
         const lastPoint = currentPath[currentPath.length - 1];
@@ -281,6 +298,9 @@ export default function RoomPage() {
       const x = e.offsetX;
       const y = e.offsetY;
 
+      if (currentShape === "HAND") {
+        return;
+      }
       if (currentShape === "FREEDRAW" && isDrawing) {
         // Handle free draw completion
         if (currentPath.length > 1) {
@@ -496,6 +516,14 @@ export default function RoomPage() {
   }, [isConnected]);
 
   const canManage = useMemo(() => canManageCurrentRoom(session?.user ?? null), [canManageCurrentRoom, session?.user]);
+  const canClearShapes = useMemo(() => {
+    const room = getOverviewRoom();
+    return room && session?.user ? canManageRoom(room, session.user) : false;
+  }, [getOverviewRoom, canManageRoom, session?.user]);
+  const isAdmin = useMemo(() => {
+    const room = useRoomStore.getState().getOverviewRoom();
+    return room?.userRole === "ADMIN";
+  }, [useRoomStore, roomId]);
 
   if (loading || sessionLoading) {
     return (
@@ -550,7 +578,7 @@ export default function RoomPage() {
       <ShapeSelector
         currentShape={currentShape}
         onShapeChange={setCurrentShape}
-        onClearShapes={canManage ? handleClearShapes : undefined}
+        onClearShapes={handleClearShapes}
       />
       <div className="fixed bottom-6 left-6 z-40">
         <Button
@@ -587,7 +615,7 @@ export default function RoomPage() {
         ref={canvasRef}
         width={window.innerWidth}
         height={window.innerHeight}
-        className="cursor-crosshair"
+        className={currentShape === "HAND" ? "cursor-pointer" : "cursor-crosshair"}
       />
 
       <Modal
