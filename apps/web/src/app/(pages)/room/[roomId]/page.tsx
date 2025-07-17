@@ -5,7 +5,6 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import rough from "roughjs";
 import { RoughCanvas } from "roughjs/bin/canvas";
-import { Drawable } from "roughjs/bin/core";
 import { ShapeType, SimpleShape } from "@/schemas/index";
 import { useRoomStore } from "@/store/room.store";
 import ShapeSelector from "@/components/ShapeSelector";
@@ -19,7 +18,7 @@ import { useTheme } from "next-themes";
 import { useRoom } from "@/hooks/useRoom";
 
 function drawShapesFromArray(
-  shapes: SimpleShape[],
+  shapes: any[],
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
 ) {
   if (!canvasRef.current) return;
@@ -28,7 +27,29 @@ function drawShapesFromArray(
   const rc = rough.canvas(canvasRef.current);
   ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
   shapes.forEach((shape) => {
-    rc.draw(shape.dataFromRoughJs as Drawable);
+    const d = shape.dataFromRoughJs;
+    switch (d.type) {
+      case "RECTANGLE":
+        rc.rectangle(d.x, d.y, d.width, d.height, d.options);
+        break;
+      case "ELLIPSE":
+        rc.ellipse(d.cx, d.cy, d.rx, d.ry, d.options);
+        break;
+      case "LINE":
+        rc.line(d.x1, d.y1, d.x2, d.y2, d.options);
+        break;
+      case "DIAMOND":
+        rc.polygon(d.points, d.options);
+        break;
+      case "ARROW":
+        rc.line(d.x1, d.y1, d.x2, d.y2, d.options);
+        rc.line(d.x2, d.y2, d.arrowHead1[0], d.arrowHead1[1], d.options);
+        rc.line(d.x2, d.y2, d.arrowHead2[0], d.arrowHead2[1], d.options);
+        break;
+      case "FREEDRAW":
+        rc.linearPath(d.path, d.options);
+        break;
+    }
   });
 }
 
@@ -302,148 +323,133 @@ export default function RoomPage() {
         return;
       }
       if (currentShape === "FREEDRAW" && isDrawing) {
-        // Handle free draw completion
-        if (currentPath.length > 1) {
-          const shape = roughCanvasRef.current?.linearPath(currentPath, {
-            ...drawingOptions,
-            strokeWidth: 3,
-            roughness: 0,
-            disableMultiStroke: true,
-            seed: 1,
-          }) as Drawable;
-
-          if (shape && session?.user?.id) {
-            const newShape = {
-              type: "LINE" as ShapeType, // Use LINE type for free draw
-              dataFromRoughJs: shape,
-              roomId: roomId,
-              creatorId: session.user.id,
-            };
-            addShape(newShape, session.user.id);
-          }
-        }
-
-        setIsDrawing(false);
-        setCurrentPath([]);
-      } else if (startPoint) {
-        // Handle other shapes
-        const centerX = (startPoint[0] + x) / 2;
-        const centerY = (startPoint[1] + y) / 2;
-        const width = Math.abs(x - startPoint[0]);
-        const height = Math.abs(y - startPoint[1]);
-
-        let shape: Drawable | undefined;
-
-        switch (currentShape) {
-          case "ELLIPSE": {
-            shape = roughCanvasRef.current?.ellipse(
-              centerX,
-              centerY,
-              width,
-              height,
-              { ...drawingOptions, seed: 1 },
-            ) as Drawable;
-            break;
-          }
-          case "RECTANGLE": {
-            shape = roughCanvasRef.current?.rectangle(
-              startPoint[0],
-              startPoint[1],
-              x - startPoint[0],
-              y - startPoint[1],
-              { ...drawingOptions, seed: 1 },
-            ) as Drawable;
-            break;
-          }
-          case "LINE": {
-            shape = roughCanvasRef.current?.line(
-              startPoint[0],
-              startPoint[1],
-              x,
-              y,
-              { ...drawingOptions, seed: 1 },
-            ) as Drawable;
-            break;
-          }
-          case "DIAMOND": {
-            const points = [
-              [centerX, startPoint[1]] as [number, number],
-              [x, centerY] as [number, number],
-              [centerX, y] as [number, number],
-              [startPoint[0], centerY] as [number, number],
-            ];
-            shape = roughCanvasRef.current?.polygon(points, {
-              ...drawingOptions,
-              seed: 1,
-            }) as Drawable;
-            break;
-          }
-          case "ARROW": {
-            shape = roughCanvasRef.current?.line(
-              startPoint[0],
-              startPoint[1],
-              x,
-              y,
-              { ...drawingOptions, seed: 1 },
-            ) as Drawable;
-            const angle = Math.atan2(y - startPoint[1], x - startPoint[0]);
-            const arrowLength = 15;
-            const arrowAngle = Math.PI / 6;
-            const arrowX1 = x - arrowLength * Math.cos(angle - arrowAngle);
-            const arrowY1 = y - arrowLength * Math.sin(angle - arrowAngle);
-            const arrowX2 = x - arrowLength * Math.cos(angle + arrowAngle);
-            const arrowY2 = y - arrowLength * Math.sin(angle + arrowAngle);
-            const arrowHead1 = roughCanvasRef.current?.line(
-              x,
-              y,
-              arrowX1,
-              arrowY1,
-              { ...drawingOptions, seed: 1 },
-            ) as Drawable;
-            const arrowHead2 = roughCanvasRef.current?.line(
-              x,
-              y,
-              arrowX2,
-              arrowY2,
-              { ...drawingOptions, seed: 1 },
-            ) as Drawable;
-            if (shape && arrowHead1 && arrowHead2 && session?.user?.id) {
-              const mainArrowShape = {
-                type: currentShape,
-                dataFromRoughJs: shape,
-                roomId: roomId,
-                creatorId: session.user.id,
-              };
-              const arrowHead1Shape = {
-                type: "LINE" as ShapeType,
-                dataFromRoughJs: arrowHead1,
-                roomId: roomId,
-                creatorId: session.user.id,
-              };
-              const arrowHead2Shape = {
-                type: "LINE" as ShapeType,
-                dataFromRoughJs: arrowHead2,
-                roomId: roomId,
-                creatorId: session.user.id,
-              };
-              addShape(mainArrowShape, session.user.id);
-              addShape(arrowHead1Shape, session.user.id);
-              addShape(arrowHead2Shape, session.user.id);
-            }
-            break;
-          }
-        }
-
-        if (shape && session?.user?.id && currentShape !== "ARROW") {
+        if (currentPath.length > 1 && session?.user?.id) {
           const newShape = {
-            type: currentShape,
-            dataFromRoughJs: shape,
+            type: "FREEDRAW" as ShapeType,
+            dataFromRoughJs: {
+              type: "FREEDRAW",
+              path: currentPath,
+              options: {
+                ...drawingOptions,
+                strokeWidth: 3,
+                roughness: 0,
+                disableMultiStroke: true,
+                seed: 1,
+              },
+            },
             roomId: roomId,
             creatorId: session.user.id,
           };
           addShape(newShape, session.user.id);
         }
-
+        setIsDrawing(false);
+        setCurrentPath([]);
+      } else if (startPoint) {
+        const centerX = (startPoint[0] + x) / 2;
+        const centerY = (startPoint[1] + y) / 2;
+        const width = Math.abs(x - startPoint[0]);
+        const height = Math.abs(y - startPoint[1]);
+        if (session?.user?.id) {
+          switch (currentShape) {
+            case "ELLIPSE": {
+              const newShape = {
+                type: "ELLIPSE" as ShapeType,
+                dataFromRoughJs: {
+                  type: "ELLIPSE",
+                  cx: centerX,
+                  cy: centerY,
+                  rx: width,
+                  ry: height,
+                  options: { ...drawingOptions, seed: 1 },
+                },
+                roomId: roomId,
+                creatorId: session.user.id,
+              };
+              addShape(newShape, session.user.id);
+              break;
+            }
+            case "RECTANGLE": {
+              const newShape = {
+                type: "RECTANGLE" as ShapeType,
+                dataFromRoughJs: {
+                  type: "RECTANGLE",
+                  x: startPoint[0],
+                  y: startPoint[1],
+                  width: x - startPoint[0],
+                  height: y - startPoint[1],
+                  options: { ...drawingOptions, seed: 1 },
+                },
+                roomId: roomId,
+                creatorId: session.user.id,
+              };
+              addShape(newShape, session.user.id);
+              break;
+            }
+            case "LINE": {
+              const newShape = {
+                type: "LINE" as ShapeType,
+                dataFromRoughJs: {
+                  type: "LINE",
+                  x1: startPoint[0],
+                  y1: startPoint[1],
+                  x2: x,
+                  y2: y,
+                  options: { ...drawingOptions, seed: 1 },
+                },
+                roomId: roomId,
+                creatorId: session.user.id,
+              };
+              addShape(newShape, session.user.id);
+              break;
+            }
+            case "DIAMOND": {
+              const points = [
+                [centerX, startPoint[1]],
+                [x, centerY],
+                [centerX, y],
+                [startPoint[0], centerY],
+              ];
+              const newShape = {
+                type: "DIAMOND" as ShapeType,
+                dataFromRoughJs: {
+                  type: "DIAMOND",
+                  points,
+                  options: { ...drawingOptions, seed: 1 },
+                },
+                roomId: roomId,
+                creatorId: session.user.id,
+              };
+              addShape(newShape, session.user.id);
+              break;
+            }
+            case "ARROW": {
+              const angle = Math.atan2(y - startPoint[1], x - startPoint[0]);
+              const arrowLength = 15;
+              const arrowAngle = Math.PI / 6;
+              const arrowX1 = x - arrowLength * Math.cos(angle - arrowAngle);
+              const arrowY1 = y - arrowLength * Math.sin(angle - arrowAngle);
+              const arrowX2 = x - arrowLength * Math.cos(angle + arrowAngle);
+              const arrowY2 = y - arrowLength * Math.sin(angle + arrowAngle);
+              const newShape = {
+                type: "ARROW" as ShapeType,
+                dataFromRoughJs: {
+                  type: "ARROW",
+                  x1: startPoint[0],
+                  y1: startPoint[1],
+                  x2: x,
+                  y2: y,
+                  arrowHead1: [arrowX1, arrowY1],
+                  arrowHead2: [arrowX2, arrowY2],
+                  options: { ...drawingOptions, seed: 1 },
+                },
+                roomId: roomId,
+                creatorId: session.user.id,
+              };
+              addShape(newShape, session.user.id);
+              break;
+            }
+          }
+        }
         setStartPoint(null);
       }
     };
