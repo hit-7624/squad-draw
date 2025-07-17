@@ -113,6 +113,7 @@ export default function RoomPage() {
     disconnectSocket,
     fetchCurrentRoomData,
     fetchRoomData,
+    saveAndBroadcastShape,
   } = useRoomStore();
 
   const { getOverviewRoom, canManageRoom } = useRoom();
@@ -340,7 +341,7 @@ export default function RoomPage() {
             roomId: roomId,
             creatorId: session.user.id,
           };
-          addShape(newShape, session.user.id);
+          saveAndBroadcastShape(newShape, session.user.id);
         }
         setIsDrawing(false);
         setCurrentPath([]);
@@ -365,7 +366,7 @@ export default function RoomPage() {
                 roomId: roomId,
                 creatorId: session.user.id,
               };
-              addShape(newShape, session.user.id);
+              saveAndBroadcastShape(newShape, session.user.id);
               break;
             }
             case "RECTANGLE": {
@@ -382,7 +383,7 @@ export default function RoomPage() {
                 roomId: roomId,
                 creatorId: session.user.id,
               };
-              addShape(newShape, session.user.id);
+              saveAndBroadcastShape(newShape, session.user.id);
               break;
             }
             case "LINE": {
@@ -399,7 +400,7 @@ export default function RoomPage() {
                 roomId: roomId,
                 creatorId: session.user.id,
               };
-              addShape(newShape, session.user.id);
+              saveAndBroadcastShape(newShape, session.user.id);
               break;
             }
             case "DIAMOND": {
@@ -419,7 +420,7 @@ export default function RoomPage() {
                 roomId: roomId,
                 creatorId: session.user.id,
               };
-              addShape(newShape, session.user.id);
+              saveAndBroadcastShape(newShape, session.user.id);
               break;
             }
             case "ARROW": {
@@ -445,7 +446,7 @@ export default function RoomPage() {
                 roomId: roomId,
                 creatorId: session.user.id,
               };
-              addShape(newShape, session.user.id);
+              saveAndBroadcastShape(newShape, session.user.id);
               break;
             }
           }
@@ -472,7 +473,7 @@ export default function RoomPage() {
     startPoint,
     session?.user?.id,
     drawingOptions,
-    addShape,
+    saveAndBroadcastShape,
   ]);
 
   const [previousShapesLength, setPreviousShapesLength] = useState<

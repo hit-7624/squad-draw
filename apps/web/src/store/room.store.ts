@@ -71,6 +71,7 @@ interface RoomActions {
   addShape: (shape: DrawnShape, userId?: string) => void;
   clearShapes: () => Promise<void>;
   fetchShapes: (roomId: string) => Promise<void>;
+  saveAndBroadcastShape: (shape: DrawnShape, userId: string) => Promise<void>;
 }
 
 interface RoomStore extends RoomState, RoomActions {}
@@ -840,6 +841,36 @@ export const useRoomStore = create<RoomStore>()(
           roomId: currentRoomId,
           creatorId: userId,
         });
+      },
+
+      saveAndBroadcastShape: async (shape: DrawnShape, userId: string) => {
+        try {
+          const currentRoomId = get().overviewRoomId;
+          if (!currentRoomId) {
+            console.error("No room ID available");
+            return;
+          }
+          get().addShape({ ...shape, roomId: currentRoomId, creatorId: userId }, userId);
+          const response = await fetch(`/api/rooms/${currentRoomId}/shapes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: shape.type,
+              dataFromRoughJs: shape.dataFromRoughJs,
+              style: shape.style || {},
+            }),
+            credentials: "include",
+          });
+          if (!response.ok) {
+            // Optionally: use notification store or toast
+            console.error("Failed to save shape");
+            return;
+          }
+          const { shape: savedShape } = await response.json();
+        } catch (error) {
+          // Optionally: use notification store or toast
+          console.error("Error saving shape:", error);
+        }
       },
 
       clearShapes: async () => {
