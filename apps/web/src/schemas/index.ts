@@ -57,7 +57,6 @@ const MessageSchema = z.object({
 });
 
 const ShapeTypeSchema = z.enum([
-  "HAND",
   "RECTANGLE",
   "DIAMOND",
   "ELLIPSE",

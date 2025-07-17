@@ -16,9 +16,11 @@ import {
 } from "lucide-react";
 
 interface ShapeSelectorProps {
-  currentShape: ShapeType;
-  onShapeChange: (shape: ShapeType) => void;
+  currentShape: ShapeType | 'HAND';
+  onShapeChange: (shape: ShapeType | 'HAND') => void;
   onClearShapes?: () => void;
+  isHandMode: boolean;
+  onHandModeToggle: (active: boolean) => void;
 }
 
 const shapeOptions: {
@@ -27,7 +29,6 @@ const shapeOptions: {
   icon: React.ReactNode;
   disabled?: boolean;
 }[] = [
-  { type: "HAND", label: "Hand", icon: <Hand size={16} /> },
   { type: "ELLIPSE", label: "Ellipse", icon: <Circle size={16} /> },
   { type: "RECTANGLE", label: "Rectangle", icon: <Square size={16} /> },
   { type: "LINE", label: "Line", icon: <Minus size={16} /> },
@@ -42,6 +43,8 @@ export default function ShapeSelector({
   currentShape,
   onShapeChange,
   onClearShapes,
+  isHandMode,
+  onHandModeToggle,
 }: ShapeSelectorProps) {
   return (
     <Card className="absolute left-4 top-4 z-10 p-2 bg-background/90 backdrop-blur-sm border">
@@ -49,12 +52,27 @@ export default function ShapeSelector({
         <div className="text-xs font-medium text-center text-muted-foreground mb-1">
           Shapes
         </div>
+        <Button
+          variant={isHandMode ? "default" : "outline"}
+          size="sm"
+          onClick={() => {
+            onHandModeToggle(!isHandMode);
+            onShapeChange('HAND');
+          }}
+          className={`w-10 h-10 p-0 flex items-center justify-center transition-transform ${isHandMode ? "scale-105" : "hover:scale-105"}`}
+          title="Hand Tool (Pan)"
+        >
+          <Hand size={16} />
+        </Button>
         {shapeOptions.map((shape) => (
           <Button
             key={shape.type}
-            variant={currentShape === shape.type ? "default" : "outline"}
+            variant={!isHandMode && currentShape === shape.type ? "default" : "outline"}
             size="sm"
-            onClick={() => !shape.disabled && onShapeChange(shape.type)}
+            onClick={() => {
+              onHandModeToggle(false);
+              if (!shape.disabled) onShapeChange(shape.type);
+            }}
             disabled={shape.disabled}
             className={`w-10 h-10 p-0 flex items-center justify-center transition-transform ${
               shape.disabled
@@ -68,10 +86,8 @@ export default function ShapeSelector({
             {shape.icon}
           </Button>
         ))}
-
         {/* Separator */}
         <div className="w-full h-px bg-border my-1"></div>
-
         {/* Eraser button */}
         {onClearShapes && (
           <Button

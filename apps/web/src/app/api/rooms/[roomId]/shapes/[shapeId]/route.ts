@@ -35,20 +35,7 @@ export const DELETE = withAuth(
         );
       }
 
-      const isAdmin =
-        member.role === "ADMIN" || member.room.ownerId === user.id;
-      const isCreator = shape.creatorId === user.id;
-
-      if (!isAdmin && !isCreator) {
-        return Response.json(
-          {
-            error:
-              "You can only delete shapes you created or have admin privileges",
-          },
-          { status: 403 },
-        );
-      }
-
+      // Allow any member to delete any shape in the room
       await prisma.shape.delete({
         where: { id: shapeId },
       });

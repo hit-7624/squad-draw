@@ -16,7 +16,7 @@ interface RoomsListProps {
   actionLoading: string | null;
   shareDialogOpen: string | null;
   onlineMembers?: string[];
-  onOpenOverview: (roomId: string | null) => void;
+  onJoinRoomInSocket: (roomId: string | null) => void;
   onToggleExpansion: (roomId: string) => void;
   onShareRoom: (roomId: string) => void;
   onUnshareRoom: (roomId: string) => void;
@@ -36,7 +36,7 @@ export const RoomsList = ({
   actionLoading,
   shareDialogOpen,
   onlineMembers,
-  onOpenOverview,
+  onJoinRoomInSocket,
   onToggleExpansion,
   onShareRoom,
   onUnshareRoom,
@@ -73,7 +73,7 @@ export const RoomsList = ({
                 shareDialogOpen={shareDialogOpen}
                 onlineMembers={overviewRoomId === room.id ? (onlineMembers || []) : []}
                 onToggleExpansion={onToggleExpansion}
-                onOpenOverview={onOpenOverview}
+                onJoinRoomInSocket={onJoinRoomInSocket}
                 onShareRoom={onShareRoom}
                 onUnshareRoom={onUnshareRoom}
                 onDeleteRoom={onDeleteRoom}

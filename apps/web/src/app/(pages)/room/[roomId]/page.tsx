@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
@@ -61,7 +61,7 @@ export default function RoomPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const roughCanvasRef = useRef<RoughCanvas | null>(null);
   const previousConnectionStatus = useRef<boolean | null>(null);
-  const [currentShape, setCurrentShape] = useState<ShapeType>("HAND");
+  const [currentShape, setCurrentShape] = useState<ShapeType | 'HAND'>("HAND");
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState<[number, number][]>([]);
   const [startPoint, setStartPoint] = useState<[number, number] | null>(null);
@@ -104,7 +104,6 @@ export default function RoomPage() {
     shapes,
     isConnected,
     onlineMembers,
-    openOverview,
     closeOverview,
     addShape,
     clearShapes,
@@ -117,6 +116,15 @@ export default function RoomPage() {
   } = useRoomStore();
 
   const { getOverviewRoom, canManageRoom } = useRoom();
+  const { joinRoomInSocket } = useRoom();
+
+  const memoizedFetchCurrentRoomData = useCallback(() => {
+    fetchCurrentRoomData(roomId);
+  }, [fetchCurrentRoomData, roomId]);
+
+  const memoizedFetchRoomData = useCallback(() => {
+    fetchRoomData(roomId);
+  }, [fetchRoomData, roomId]);
 
   const handleClearShapes = () => {
     setModalState({
@@ -154,14 +162,14 @@ export default function RoomPage() {
 
   useEffect(() => {
     if (session && session.user && !loading && roomId) {
-      openOverview(roomId);
+      joinRoomInSocket(roomId);
       initializeSocket();
-      fetchCurrentRoomData(roomId);
-      fetchRoomData(roomId);
+      memoizedFetchCurrentRoomData();
+      memoizedFetchRoomData();
 
       const interval = setInterval(() => {
-        fetchCurrentRoomData(roomId);
-        fetchRoomData(roomId);
+        memoizedFetchCurrentRoomData();
+        memoizedFetchRoomData();
       }, 30000);
 
       return () => {
@@ -170,18 +178,7 @@ export default function RoomPage() {
         disconnectSocket();
       };
     }
-  }, [
-    session,
-    roomId,
-    sessionLoading,
-    loading,
-    openOverview,
-    closeOverview,
-    initializeSocket,
-    disconnectSocket,
-    fetchCurrentRoomData,
-    fetchRoomData,
-  ]);
+  }, [session, roomId, loading, joinRoomInSocket, closeOverview, initializeSocket, disconnectSocket, memoizedFetchCurrentRoomData, memoizedFetchRoomData]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -196,7 +193,7 @@ export default function RoomPage() {
       const x = e.offsetX;
       const y = e.offsetY;
 
-      if (currentShape === "HAND") {
+      if (currentShape === 'HAND') {
         return;
       } else if (currentShape === "FREEDRAW") {
         setIsDrawing(true);
@@ -210,7 +207,7 @@ export default function RoomPage() {
       const x = e.offsetX;
       const y = e.offsetY;
 
-      if (currentShape === "HAND") {
+      if (currentShape === 'HAND') {
         return;
       }
       if (currentShape === "FREEDRAW" && isDrawing) {
@@ -320,7 +317,7 @@ export default function RoomPage() {
       const x = e.offsetX;
       const y = e.offsetY;
 
-      if (currentShape === "HAND") {
+      if (currentShape === 'HAND') {
         return;
       }
       if (currentShape === "FREEDRAW" && isDrawing) {
@@ -522,11 +519,6 @@ export default function RoomPage() {
     previousConnectionStatus.current = isConnected;
   }, [isConnected]);
 
-  const canManage = useMemo(() => canManageCurrentRoom(session?.user ?? null), [canManageCurrentRoom, session?.user]);
-  const canClearShapes = useMemo(() => {
-    const room = getOverviewRoom();
-    return room && session?.user ? canManageRoom(room, session.user) : false;
-  }, [getOverviewRoom, canManageRoom, session?.user]);
   const isAdmin = useMemo(() => {
     const room = useRoomStore.getState().getOverviewRoom();
     return room?.userRole === "ADMIN";
@@ -578,7 +570,7 @@ export default function RoomPage() {
             Online: {onlineMembers.length} members
           </div>
           <div className="text-xs text-muted-foreground mb-2">
-            Role: {canManage ? "Admin/Owner" : "Member"}
+            Role: {canManageCurrentRoom(session?.user ?? null) ? "Admin/Owner" : "Member"}
           </div>
         </div>
       </div>
@@ -586,6 +578,8 @@ export default function RoomPage() {
         currentShape={currentShape}
         onShapeChange={setCurrentShape}
         onClearShapes={handleClearShapes}
+        isHandMode={currentShape === 'HAND'}
+        onHandModeToggle={() => setCurrentShape('HAND')}
       />
       <div className="fixed bottom-6 left-6 z-40">
         <Button
@@ -622,7 +616,7 @@ export default function RoomPage() {
         ref={canvasRef}
         width={window.innerWidth}
         height={window.innerHeight}
-        className={currentShape === "HAND" ? "cursor-pointer" : "cursor-crosshair"}
+        className={currentShape === 'HAND' ? "cursor-pointer" : "cursor-crosshair"}
       />
 
       <Modal

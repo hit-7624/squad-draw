@@ -22,7 +22,7 @@ export const useRoom = () => {
   const unshareRoom = useRoomStore((state) => state.unshareRoom);
   const copyShareLink = useRoomStore((state) => state.copyShareLink);
   const copyRoomId = useRoomStore((state) => state.copyRoomId);
-  const openOverview = useRoomStore((state) => state.openOverview);
+  const joinRoomInSocket = useRoomStore((state) => state.joinRoomInSocket);
   const openOverviewWithoutSocket = useRoomStore((state) => state.openOverviewWithoutSocket);
   const closeOverview = useRoomStore((state) => state.closeOverview);
   const initializeSocket = useRoomStore((state) => state.initializeSocket);
@@ -60,7 +60,7 @@ export const useRoom = () => {
     unshareRoom,
     copyShareLink,
     copyRoomId,
-    openOverview,
+    joinRoomInSocket,
     openOverviewWithoutSocket,
     closeOverview,
     initializeSocket,

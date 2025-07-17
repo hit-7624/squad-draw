@@ -52,7 +52,7 @@ interface RoomActions {
   copyShareLink: (roomId: string) => void;
   copyRoomId: (roomId: string) => void;
   sendMessage: (message: string, user?: User) => Promise<void>;
-  openOverview: (roomId: string | null) => void;
+  joinRoomInSocket: (roomId: string | null) => void;
   openOverviewWithoutSocket: (roomId: string | null) => void;
   closeOverview: () => void;
   initializeSocket: () => void;
@@ -393,7 +393,7 @@ export const useRoomStore = create<RoomStore>()(
         }
       },
 
-      openOverview: (roomId: string | null) => {
+      joinRoomInSocket: (roomId: string | null) => {
         // ws-server task
         const currentRoomId = get().overviewRoomId;
         if (currentRoomId && get().socket) {

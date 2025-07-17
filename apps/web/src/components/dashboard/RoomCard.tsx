@@ -16,7 +16,7 @@ interface RoomCardProps {
   shareDialogOpen: string | null;
   onlineMembers: string[];
   onToggleExpansion: (roomId: string) => void;
-  onOpenOverview: (roomId: string | null) => void;
+  onJoinRoomInSocket: (roomId: string | null) => void;
   onShareRoom: (roomId: string) => void;
   onUnshareRoom: (roomId: string) => void;
   onDeleteRoom: (roomId: string) => void;
@@ -36,7 +36,7 @@ export const RoomCard = ({
   shareDialogOpen,
   onlineMembers,
   onToggleExpansion,
-  onOpenOverview,
+  onJoinRoomInSocket,
   onShareRoom,
   onUnshareRoom,
   onDeleteRoom,
@@ -155,7 +155,7 @@ export const RoomCard = ({
           onToggleExpansion(room.id);
         }
         if (!isSelected) {
-          onOpenOverview(room.id);
+          onJoinRoomInSocket(room.id);
         }
       }}
     >

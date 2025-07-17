@@ -197,7 +197,7 @@ export const clearShapesHandler = async (
   }
 
   try {
-    // Verify room exists and user is a member with admin privileges
+    // Verify room exists and user is a member
     const roomMembership = await prisma.roomMember.findFirst({
       where: {
         roomId: data.roomId,
@@ -217,27 +217,7 @@ export const clearShapesHandler = async (
       return;
     }
 
-    // Check if user is owner or admin
-    const isOwner = roomMembership.room.ownerId === socket.data.user.id;
-    const isAdmin = roomMembership.role === "ADMIN";
-
-    console.log("Permission check:", {
-      isOwner,
-      isAdmin,
-      userId: socket.data.user.id,
-      ownerId: roomMembership.room.ownerId,
-      role: roomMembership.role,
-    });
-
-    if (!isOwner && !isAdmin) {
-      console.log("User not authorized to clear shapes");
-      socket.emit("custom-error", {
-        code: 403,
-        type: "FORBIDDEN",
-        message: "Only room owners and admins can clear all shapes",
-      });
-      return;
-    }
+    // All members can clear shapes (no owner/admin check)
 
     console.log("Clearing shapes for room:", data.roomId);
 

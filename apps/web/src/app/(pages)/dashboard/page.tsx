@@ -34,7 +34,7 @@ export default function Dashboard() {
     unshareRoom,
     copyShareLink,
     copyRoomId,
-    openOverviewWithoutSocket,
+    joinRoomInSocket,
     closeOverview,
     toggleRoomExpansion,
     canManageRoom,
@@ -238,7 +238,7 @@ export default function Dashboard() {
               actionLoading={actionLoading}
               shareDialogOpen={shareDialogOpen}
               onlineMembers={[]}
-              onOpenOverview={openOverviewWithoutSocket}
+              onJoinRoomInSocket={joinRoomInSocket}
               onToggleExpansion={toggleRoomExpansion}
               onShareRoom={handleShareRoom}
               onUnshareRoom={handleUnshareRoom}
