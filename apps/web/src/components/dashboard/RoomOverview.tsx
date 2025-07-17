@@ -44,6 +44,15 @@ export const RoomOverview = ({
             <div className="flex items-center gap-3">
               
                 
+              <Button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/join/room/${overviewRoom.id}`);
+                }}
+                size="sm"
+                variant="outline"
+              >
+                Copy Link
+              </Button>
               <Button onClick={onCloseOverview} size="sm" variant="secondary">
                 Close
               </Button>

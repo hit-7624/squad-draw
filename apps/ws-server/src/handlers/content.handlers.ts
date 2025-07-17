@@ -41,7 +41,6 @@ export const newMessageHandler = async (
   socket: Socket,
   data: { message: string; roomId: string },
 ) => {
-  // Validate user authentication
   if (!socket.data.user) {
     socket.emit("custom-error", {
       code: 401,
@@ -50,8 +49,6 @@ export const newMessageHandler = async (
     });
     return;
   }
-
-  // Validate input data
   if (!data || typeof data !== "object") {
     socket.emit("custom-error", {
       code: 400,
@@ -60,13 +57,7 @@ export const newMessageHandler = async (
     });
     return;
   }
-
-  // Validate message content
-  if (
-    !data.message ||
-    typeof data.message !== "string" ||
-    !data.message.trim()
-  ) {
+  if (!data.message || typeof data.message !== "string" || !data.message.trim()) {
     socket.emit("custom-error", {
       code: 400,
       type: "INVALID_MESSAGE",
@@ -74,8 +65,6 @@ export const newMessageHandler = async (
     });
     return;
   }
-
-  // Validate message length (max 1000 characters)
   if (data.message.trim().length > 1000) {
     socket.emit("custom-error", {
       code: 400,
@@ -84,8 +73,6 @@ export const newMessageHandler = async (
     });
     return;
   }
-
-  // Validate roomId
   if (!data.roomId || typeof data.roomId !== "string" || !data.roomId.trim()) {
     socket.emit("custom-error", {
       code: 400,
@@ -94,8 +81,6 @@ export const newMessageHandler = async (
     });
     return;
   }
-
-  // Check if user is in the room
   if (socket.data.currentRoom !== data.roomId) {
     socket.emit("custom-error", {
       code: 400,
@@ -104,19 +89,14 @@ export const newMessageHandler = async (
     });
     return;
   }
-
   try {
-    // Verify room exists and user is a member
     const roomMembership = await prisma.roomMember.findFirst({
       where: {
         roomId: data.roomId,
         userId: socket.data.user.id,
       },
-      include: {
-        room: true,
-      },
+      include: { room: true },
     });
-
     if (!roomMembership) {
       socket.emit("custom-error", {
         code: 403,
@@ -125,8 +105,23 @@ export const newMessageHandler = async (
       });
       return;
     }
-    console.log(socket.data.user);
-    // Create message with authenticated user ID
+    // 1. Broadcast the message immediately to all clients (optimistic, temp id)
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
+      message: data.message.trim(),
+      createdAt: new Date().toISOString(),
+      user: {
+        id: socket.data.user.id,
+        name: socket.data.user.name,
+        email: socket.data.user.email,
+      },
+      roomId: data.roomId,
+      userId: socket.data.user.id,
+      temp: true,
+    };
+    socket.to(data.roomId).emit("new-message-added", tempMessage);
+    socket.emit("new-message-added", tempMessage);
+    // 2. Save the message to the database
     const createdMessage = await prisma.message.create({
       data: {
         message: data.message.trim(),
@@ -143,8 +138,7 @@ export const newMessageHandler = async (
         },
       },
     });
-
-    // Broadcast to ALL room members (including sender)
+    // 3. Broadcast the saved message (with real DB id) to all clients
     socket.to(data.roomId).emit("new-message-added", createdMessage);
     socket.emit("new-message-added", createdMessage);
   } catch (error) {

@@ -24,6 +24,7 @@ interface RoomState {
   socket: Socket | null;
   joinedRooms: Room[];
   overviewRoomId: string | null;
+  socketRoomId: string | null;
   messages: Message[];
   members: Member[];
   loading: boolean;
@@ -82,6 +83,7 @@ export const useRoomStore = create<RoomStore>()(
       socket: null,
       joinedRooms: [],
       overviewRoomId: null,
+      socketRoomId: null,
       messages: [],
       members: [],
       loading: false,
@@ -289,7 +291,7 @@ export const useRoomStore = create<RoomStore>()(
       },
 
       copyShareLink: (roomId: string) => {
-        const shareLink = `${window.location.origin}/room/${roomId}`;
+        const shareLink = `${window.location.origin}/join/room/${roomId}`;
         navigator.clipboard
           .writeText(shareLink)
           .then(() => {
@@ -394,13 +396,11 @@ export const useRoomStore = create<RoomStore>()(
       },
 
       joinRoomInSocket: (roomId: string | null) => {
-        // ws-server task
-        const currentRoomId = get().overviewRoomId;
-        if (currentRoomId && get().socket) {
-          get().socket?.emit("leave-room", { roomId: currentRoomId });
+        const currentSocketRoomId = get().socketRoomId;
+        if (currentSocketRoomId && get().socket) {
+          get().socket?.emit("leave-room", { roomId: currentSocketRoomId });
         }
-
-        set({ overviewRoomId: roomId });
+        set({ socketRoomId: roomId });
 
         if (roomId) {
           get().disconnectSocket();
@@ -814,7 +814,7 @@ export const useRoomStore = create<RoomStore>()(
       addShape: (shape: DrawnShape, userId?: string) => {
         console.log("addShape called with:", shape);
         const socket = get().socket;
-        const currentRoomId = get().overviewRoomId;
+        const currentSocketRoomId = get().socketRoomId;
 
         console.log(
           "addShape - socket:",
@@ -825,7 +825,7 @@ export const useRoomStore = create<RoomStore>()(
           get().isConnected,
         );
 
-        if (!socket || !userId || !currentRoomId) {
+        if (!socket || !userId || !currentSocketRoomId) {
           console.error("Socket, user, or room not available for addShape");
           return;
         }
@@ -838,20 +838,20 @@ export const useRoomStore = create<RoomStore>()(
         console.log("Emitting new-shape event:", shape);
         socket.emit("new-shape", {
           ...shape,
-          roomId: currentRoomId,
+          roomId: currentSocketRoomId,
           creatorId: userId,
         });
       },
 
       saveAndBroadcastShape: async (shape: DrawnShape, userId: string) => {
         try {
-          const currentRoomId = get().overviewRoomId;
-          if (!currentRoomId) {
+          const currentSocketRoomId = get().socketRoomId;
+          if (!currentSocketRoomId) {
             console.error("No room ID available");
             return;
           }
-          get().addShape({ ...shape, roomId: currentRoomId, creatorId: userId }, userId);
-          const response = await fetch(`/api/rooms/${currentRoomId}/shapes`, {
+          get().addShape({ ...shape, roomId: currentSocketRoomId, creatorId: userId }, userId);
+          const response = await fetch(`/api/rooms/${currentSocketRoomId}/shapes`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -875,11 +875,11 @@ export const useRoomStore = create<RoomStore>()(
 
       clearShapes: async () => {
         const socket = get().socket;
-        const currentRoomId = get().overviewRoomId;
+        const currentSocketRoomId = get().socketRoomId;
 
         console.log("clearShapes called:", {
           socket: !!socket,
-          currentRoomId,
+          currentSocketRoomId,
           isConnected: get().isConnected,
           socketConnected: socket?.connected,
           socketId: socket?.id,
@@ -888,9 +888,9 @@ export const useRoomStore = create<RoomStore>()(
         // Clear local state immediately for better UX
         set({ shapes: [] });
 
-        if (socket && currentRoomId && get().isConnected) {
-          console.log("Emitting clear-shapes event to room:", currentRoomId);
-          socket.emit("clear-shapes", { roomId: currentRoomId });
+        if (socket && currentSocketRoomId && get().isConnected) {
+          console.log("Emitting clear-shapes event to room:", currentSocketRoomId);
+          socket.emit("clear-shapes", { roomId: currentSocketRoomId });
 
           // Add a callback to check if the event was received
           socket.on("shapes-cleared", (data) => {
@@ -905,7 +905,7 @@ export const useRoomStore = create<RoomStore>()(
           console.log("Socket not available, using API fallback");
           // Fallback to API call if websocket is not available
           try {
-            const response = await fetch(`/api/rooms/${currentRoomId}/shapes`, {
+            const response = await fetch(`/api/rooms/${currentSocketRoomId}/shapes`, {
               method: "DELETE",
               credentials: "include",
             });
@@ -914,7 +914,7 @@ export const useRoomStore = create<RoomStore>()(
               console.error("Failed to clear shapes via API");
               // Revert local state if API call fails
               const shapesResponse = await fetch(
-                `/api/rooms/${currentRoomId}/shapes`,
+                `/api/rooms/${currentSocketRoomId}/shapes`,
                 {
                   credentials: "include",
                 },

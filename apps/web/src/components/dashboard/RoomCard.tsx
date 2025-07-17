@@ -378,7 +378,7 @@ export const RoomCard = ({
                   <div className="flex gap-2">
                     <Input
                       type="text"
-                      value={`${window.location.origin}/room/${room.id}`}
+                      value={`${window.location.origin}/join/room/${room.id}`}
                       readOnly
                       className="flex-1 text-xs font-mono"
                       onClick={(e) => e.stopPropagation()}
