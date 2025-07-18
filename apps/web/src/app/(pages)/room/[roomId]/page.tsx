@@ -121,6 +121,8 @@ export default function RoomPage() {
     disconnectSocket,
     saveAndBroadcastShape,
     joinRoomInSocket,
+    sendCursorPosition,
+    cursors,
   } = useRoomStore();
 
   const { getOverviewRoom, canManageRoom } = useDashboardStore();
@@ -331,7 +333,10 @@ export default function RoomPage() {
     
     // Mouse Event Handlers
     const handleMouseDown = (e: MouseEvent) => startDrawing(e.offsetX, e.offsetY);
-    const handleMouseMove = (e: MouseEvent) => drawing(e.offsetX, e.offsetY);
+    const handleMouseMove = (e: MouseEvent) => {
+      drawing(e.offsetX, e.offsetY);
+      sendCursorPosition(e.offsetX, e.offsetY);
+    };
     const handleMouseUp = (e: MouseEvent) => endDrawing(e.offsetX, e.offsetY);
 
     // #### MOBILE/TOUCH SUPPORT: Touch Event Handlers ####
@@ -374,7 +379,7 @@ export default function RoomPage() {
     };
   }, [
     shapes, roomId, currentShape, isDrawing, currentPath, startPoint, session?.user?.id,
-    drawingOptions, saveAndBroadcastShape
+    drawingOptions, saveAndBroadcastShape, sendCursorPosition
   ]);
   
   const [previousShapesLength, setPreviousShapesLength] = useState<
@@ -540,8 +545,29 @@ export default function RoomPage() {
         className={currentShape === 'HAND' ? "cursor-grab" : "cursor-crosshair"}
         style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}
       />
-
-
+      {Object.entries(cursors).map(([userId, cursor]) => {
+        if (userId === session?.user?.id) return null;
+        return (
+          <div
+            key={userId}
+            className="absolute pointer-events-none"
+            style={{
+              left: `${cursor.x}px`,
+              top: `${cursor.y}px`,
+              transform: "translate(-50%, -50%)",
+              transition: "left 0.1s linear, top 0.1s linear",
+            }}
+          >
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: cursor.color }}
+            ></div>
+            <div className="text-xs bg-black text-white px-1 rounded-md mt-1">
+              {cursor.userName}
+            </div>
+          </div>
+        );
+      })}
       <Modal
         isOpen={modalState.isOpen}
         onClose={closeModal}

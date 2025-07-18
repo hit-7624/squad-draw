@@ -133,6 +133,23 @@ export const newMessageHandler = async (
   }
 };
 
+export const cursorMoveHandler = async (
+  socket: Socket,
+  data: { roomId: string; x: number; y: number },
+) => {
+  if (socket.data.currentRoom !== data.roomId) {
+    return;
+  }
+
+  socket.to(data.roomId).emit("user-cursor-moved", {
+    userId: socket.data.user.id,
+    userName: socket.data.user.name,
+    x: data.x,
+    y: data.y,
+    color: socket.data.color,
+  });
+};
+
 export const clearShapesHandler = async (
   socket: Socket,
   data: { roomId: string },

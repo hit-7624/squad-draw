@@ -1,6 +1,15 @@
 import { prisma } from "@repo/db/ws-server";
 import { Socket } from "socket.io";
 
+const colors = [
+  "#FF0000", "#FF7F00", "#FFFF00", "#00FF00",
+  "#0000FF", "#4B0082", "#9400D3"
+];
+
+const getRandomColor = () => {
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+
 export const joinRoomHandler = async (
   socket: Socket,
   data: { roomId: string },
@@ -70,6 +79,7 @@ export const joinRoomHandler = async (
 
     socket.join(data.roomId);
     socket.data.currentRoom = data.roomId;
+    socket.data.color = getRandomColor();
 
     // Get all online users in this room
     const socketsInRoom = await socket.in(data.roomId).fetchSockets();
@@ -95,6 +105,7 @@ export const joinRoomHandler = async (
       roomId: data.roomId,
       userId: socket.data.user.id,
       userName: socket.data.user.name,
+      color: socket.data.color,
     });
 
     // Send updated online members list to all room members

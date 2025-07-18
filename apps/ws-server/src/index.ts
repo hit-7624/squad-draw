@@ -12,6 +12,7 @@ import {
   newMessageHandler,
   newShapeHandler,
   clearShapesHandler,
+  cursorMoveHandler,
 } from "./handlers/content.handlers";
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 console.log(process.env.ORIGIN_URL);
@@ -83,6 +84,10 @@ io.on("connection", (socket: Socket) => {
       data,
     );
     await handleSocketEvent(socket, "clear-shapes", clearShapesHandler, data);
+  });
+
+  socket.on("cursor-move", async (data) => {
+    await handleSocketEvent(socket, "cursor-move", cursorMoveHandler, data);
   });
 
   socket.on("error", (error) => {

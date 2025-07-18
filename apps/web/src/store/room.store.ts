@@ -24,6 +24,7 @@ interface RoomState {
   onlineMembers: string[];
   shapes: DrawnShape[];
   loading: boolean;
+  cursors: Record<string, { x: number; y: number; userName: string; color: string }>;
 }
 
 interface RoomActions {
@@ -36,6 +37,7 @@ interface RoomActions {
   fetchShapes: (roomId: string) => Promise<void>;
   saveAndBroadcastShape: (shape: DrawnShape, userId: string) => Promise<void>;
   fetchMessages: (roomId: string) => Promise<void>;
+  sendCursorPosition: (x: number, y: number) => void;
 }
 
 interface RoomStore extends RoomState, RoomActions {}
@@ -50,6 +52,7 @@ export const useRoomStore = create<RoomStore>()(
       isConnected: false,
       onlineMembers: [],
       shapes: [],
+      cursors: {},
 
       fetchMessages: async (roomId: string) => {
         try {
@@ -121,6 +124,13 @@ export const useRoomStore = create<RoomStore>()(
         }
       },
 
+      sendCursorPosition: (x: number, y: number) => {
+        const { socket, socketRoomId } = get();
+        if (socket && socketRoomId) {
+          socket.emit("cursor-move", { roomId: socketRoomId, x, y });
+        }
+      },
+
       joinRoomInSocket: (roomId: string | null) => {
         const currentSocketRoomId = get().socketRoomId;
         if (currentSocketRoomId && get().socket) {
@@ -171,6 +181,11 @@ export const useRoomStore = create<RoomStore>()(
                       onlineMembers: currentOnline.filter(
                         (id) => id !== data.userId,
                       ),
+                      cursors: Object.fromEntries(
+                        Object.entries(get().cursors).filter(
+                          ([userId]) => userId !== data.userId,
+                        ),
+                      ),
                     });
                   }
                 },
@@ -204,6 +219,18 @@ export const useRoomStore = create<RoomStore>()(
                   set({ shapes: [] });
                 }
               });
+
+              socket.on(
+                "user-cursor-moved",
+                (data: { userId: string; userName: string; x: number; y: number; color: string }) => {
+                  set((state) => ({
+                    cursors: {
+                      ...state.cursors,
+                      [data.userId]: { x: data.x, y: data.y, userName: data.userName, color: data.color },
+                    },
+                  }));
+                },
+              );
 
               socket.on(
                 "room-joined",
