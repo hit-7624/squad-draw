@@ -1,3 +1,10 @@
+# Example Environment Variables
+
+```env
+ORIGIN_URL=http://localhost:3000
+DATABASE_URL=postgresql://postgres@localhost:5432/db1
+```
+
 # WebSocket Server - Real-time Communication
 
 ## Overview
