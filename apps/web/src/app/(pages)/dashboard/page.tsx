@@ -10,7 +10,9 @@ import {
   RoomOverviewEmpty,
 } from "@/components/dashboard";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { useRoom, useNotification, useForm } from "@/hooks";
+import { useDashboardStore } from "@/store/dashboard.store";
+import { useNotificationStore } from "@/store/notification.store";
+import { useFormStore } from "@/store/form.store";
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -34,14 +36,14 @@ export default function Dashboard() {
     unshareRoom,
     copyShareLink,
     copyRoomId,
-    joinRoomInSocket,
+    openOverview,
     closeOverview,
     toggleRoomExpansion,
     canManageRoom,
     isOwner,
     getOverviewRoom,
-  } = useRoom();
-  const { showError, showSuccess } = useNotification();
+  } = useDashboardStore();
+  const { showError, showSuccess } = useNotificationStore();
   const {
     newRoomName,
     joinRoomId,
@@ -49,7 +51,7 @@ export default function Dashboard() {
     setJoinRoomId,
     resetNewRoomName,
     resetJoinRoomId,
-  } = useForm();
+  } = useFormStore();
 
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -238,7 +240,7 @@ export default function Dashboard() {
               actionLoading={actionLoading}
               shareDialogOpen={shareDialogOpen}
               onlineMembers={[]}
-              onJoinRoomInSocket={joinRoomInSocket}
+              onJoinRoomInSocket={(roomId) => openOverview(roomId)}
               onToggleExpansion={toggleRoomExpansion}
               onShareRoom={handleShareRoom}
               onUnshareRoom={handleUnshareRoom}

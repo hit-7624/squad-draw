@@ -105,23 +105,6 @@ export const newMessageHandler = async (
       });
       return;
     }
-    // 1. Broadcast the message immediately to all clients (optimistic, temp id)
-    const tempMessage = {
-      id: `temp-${Date.now()}`,
-      message: data.message.trim(),
-      createdAt: new Date().toISOString(),
-      user: {
-        id: socket.data.user.id,
-        name: socket.data.user.name,
-        email: socket.data.user.email,
-      },
-      roomId: data.roomId,
-      userId: socket.data.user.id,
-      temp: true,
-    };
-    socket.to(data.roomId).emit("new-message-added", tempMessage);
-    socket.emit("new-message-added", tempMessage);
-    // 2. Save the message to the database
     const createdMessage = await prisma.message.create({
       data: {
         message: data.message.trim(),
@@ -138,7 +121,6 @@ export const newMessageHandler = async (
         },
       },
     });
-    // 3. Broadcast the saved message (with real DB id) to all clients
     socket.to(data.roomId).emit("new-message-added", createdMessage);
     socket.emit("new-message-added", createdMessage);
   } catch (error) {

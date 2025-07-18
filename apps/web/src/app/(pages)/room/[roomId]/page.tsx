@@ -5,8 +5,9 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import rough from "roughjs";
 import { RoughCanvas } from "roughjs/bin/canvas";
-import { ShapeType, SimpleShape } from "@/schemas/index";
+import { ShapeType } from "@/schemas/index";
 import { useRoomStore } from "@/store/room.store";
+import { useDashboardStore } from "@/store/dashboard.store";
 import ShapeSelector from "@/components/ShapeSelector";
 import TypeControlPanel, { DrawingOptions } from "@/components/ControlPanel";
 import { GroupChatbot } from "@/components/GroupChatbot";
@@ -15,7 +16,6 @@ import { Modal } from "@/components/ui/modal";
 import { MessageCircle, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
-import { useRoom } from "@/hooks/useRoom";
 
 function drawShapesFromArray(
   shapes: any[],
@@ -104,27 +104,14 @@ export default function RoomPage() {
     shapes,
     isConnected,
     onlineMembers,
-    closeOverview,
-    addShape,
     clearShapes,
-    canManageCurrentRoom,
     initializeSocket,
     disconnectSocket,
-    fetchCurrentRoomData,
-    fetchRoomData,
     saveAndBroadcastShape,
+    joinRoomInSocket,
   } = useRoomStore();
 
-  const { getOverviewRoom, canManageRoom } = useRoom();
-  const { joinRoomInSocket } = useRoom();
-
-  const memoizedFetchCurrentRoomData = useCallback(() => {
-    fetchCurrentRoomData(roomId);
-  }, [fetchCurrentRoomData, roomId]);
-
-  const memoizedFetchRoomData = useCallback(() => {
-    fetchRoomData(roomId);
-  }, [fetchRoomData, roomId]);
+  const { getOverviewRoom, canManageRoom } = useDashboardStore();
 
   const handleClearShapes = () => {
     setModalState({
@@ -164,21 +151,12 @@ export default function RoomPage() {
     if (session && session.user && !loading && roomId) {
       joinRoomInSocket(roomId);
       initializeSocket();
-      memoizedFetchCurrentRoomData();
-      memoizedFetchRoomData();
-
-      const interval = setInterval(() => {
-        memoizedFetchCurrentRoomData();
-        memoizedFetchRoomData();
-      }, 30000);
 
       return () => {
-        clearInterval(interval);
-        closeOverview();
         disconnectSocket();
       };
     }
-  }, [session, roomId, loading, joinRoomInSocket, closeOverview, initializeSocket, disconnectSocket, memoizedFetchCurrentRoomData, memoizedFetchRoomData]);
+  }, [session, roomId, loading, joinRoomInSocket, initializeSocket, disconnectSocket]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -519,10 +497,13 @@ export default function RoomPage() {
     previousConnectionStatus.current = isConnected;
   }, [isConnected]);
 
-  const isAdmin = useMemo(() => {
-    const room = useRoomStore.getState().getOverviewRoom();
-    return room?.userRole === "ADMIN";
-  }, [useRoomStore, roomId]);
+  const canManageCurrentRoom = useMemo(() => {
+    const room = getOverviewRoom();
+    if (!room || !session?.user) {
+      return false;
+    }
+    return canManageRoom(room, session.user);
+  }, [getOverviewRoom, canManageRoom, session?.user]);
 
   if (loading || sessionLoading) {
     return (
@@ -570,7 +551,7 @@ export default function RoomPage() {
             Online: {onlineMembers.length} members
           </div>
           <div className="text-xs text-muted-foreground mb-2">
-            Role: {canManageCurrentRoom(session?.user ?? null) ? "Admin/Owner" : "Member"}
+            Role: {canManageCurrentRoom ? "Admin/Owner" : "Member"}
           </div>
         </div>
       </div>
