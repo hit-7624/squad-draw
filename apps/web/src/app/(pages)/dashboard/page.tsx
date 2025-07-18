@@ -1,7 +1,6 @@
 // apps/web/src/app/(pages)/dashboard/page.tsx
 "use client";
 import { useEffect, useState } from "react";
-
 import { UserInfoCard } from "@/components/dashboard/UserInfoCard";
 import { CreateRoomForm } from "@/components/dashboard/CreateRoomForm";
 import { JoinRoomForm } from "@/components/dashboard/JoinRoomForm";
@@ -14,7 +13,6 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useDashboardStore } from "@/store/dashboard.store";
 import { useNotificationStore } from "@/store/notification.store";
 import { useFormStore } from "@/store/form.store";
-
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -61,15 +59,6 @@ export default function Dashboard() {
 
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
-  useEffect(() => {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (isMobile) {
-      toast.info("For a better experience, we recommend using a desktop.", {
-        duration: 5000,
-      });
-    }
-  }, []);
 
   useEffect(() => {
     if (!sessionLoading) {
