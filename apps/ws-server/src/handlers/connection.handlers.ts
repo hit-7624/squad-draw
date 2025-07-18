@@ -1,4 +1,4 @@
-import { prisma } from "@repo/db/ws-server";
+import { prisma } from "@repo/db";
 import { Socket } from "socket.io";
 
 const colors = [

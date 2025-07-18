@@ -20,7 +20,6 @@
     "@prisma/client": "6.11.1"
   },
   "exports": {
-    "./nextjs": "./src/index-nextjs.ts",
-    "./ws-server": "./src/index-ws-server.ts"
+    ".": "./src/index.ts"
   }
 }

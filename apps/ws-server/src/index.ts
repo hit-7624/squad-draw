@@ -14,7 +14,7 @@ import {
   clearShapesHandler,
   cursorMoveHandler,
 } from "./handlers/content.handlers";
-import { prisma } from "@repo/db/ws-server";
+import { prisma } from "@repo/db";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 console.log(process.env.ORIGIN_URL);

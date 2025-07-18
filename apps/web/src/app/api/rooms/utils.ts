@@ -1,4 +1,4 @@
-import { prisma } from "@repo/db/nextjs";
+import { prisma } from "@repo/db";
 import { NextRequest } from "next/server";
 import { getAuthenticatedUser, AuthenticatedUser } from "@/lib/auth-middleware";
 

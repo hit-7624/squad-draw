@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@repo/db/nextjs";
+import { prisma } from "@repo/db";
 import { withAuth } from "@/lib/auth-middleware";
 import { validateMembership } from "../../../utils";
 

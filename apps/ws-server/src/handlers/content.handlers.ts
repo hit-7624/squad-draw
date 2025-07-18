@@ -1,6 +1,6 @@
 import { Socket } from "socket.io";
-import { prisma, Message } from "@repo/db/ws-server";
-import { ShapeType } from "@repo/db/ws-server";
+import { prisma, Message } from "@repo/db";
+import { ShapeType } from "@repo/db";
 
 interface NewShapeData {
   type: ShapeType;

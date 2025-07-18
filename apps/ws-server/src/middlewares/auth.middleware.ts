@@ -1,6 +1,6 @@
 import { Socket } from "socket.io";
 import { parse } from "cookie";
-import { prisma } from "@repo/db/ws-server";
+import { prisma } from "@repo/db";
 
 export const authMiddleware = async (
   socket: Socket,

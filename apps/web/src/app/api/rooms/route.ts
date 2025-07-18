@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@repo/db/nextjs";
+import { prisma } from "@repo/db";
 import { RoomNameSchema } from "@/schemas/index";
 import { ZodError } from "zod";
 import { withAuth } from "@/lib/auth-middleware";
