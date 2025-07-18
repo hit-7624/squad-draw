@@ -13,12 +13,14 @@ import {
   Image,
   Eraser,
   Hand,
+  Download, // Import the Download icon
 } from "lucide-react";
 
 interface ShapeSelectorProps {
   currentShape: ShapeType | 'HAND';
   onShapeChange: (shape: ShapeType | 'HAND') => void;
   onClearShapes?: () => void;
+  onSaveCanvas?: () => void; // Add this new prop
   isHandMode: boolean;
   onHandModeToggle: (active: boolean) => void;
 }
@@ -43,6 +45,7 @@ export default function ShapeSelector({
   currentShape,
   onShapeChange,
   onClearShapes,
+  onSaveCanvas, // Destructure the new prop
   isHandMode,
   onHandModeToggle,
 }: ShapeSelectorProps) {
@@ -88,6 +91,18 @@ export default function ShapeSelector({
         ))}
         {/* Separator */}
         <div className="w-full h-px bg-border my-1"></div>
+        {/* Save button */}
+        {onSaveCanvas && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSaveCanvas}
+            className="w-10 h-10 p-0 flex items-center justify-center transition-transform hover:scale-105"
+            title="Save Canvas"
+          >
+            <Download size={16} />
+          </Button>
+        )}
         {/* Eraser button */}
         {onClearShapes && (
           <Button

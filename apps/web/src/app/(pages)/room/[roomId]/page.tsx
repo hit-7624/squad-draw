@@ -125,6 +125,22 @@ export default function RoomPage() {
     });
   };
 
+  const handleSaveCanvas = () => {
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      const dataURL = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataURL;
+      link.download = `squad-draw-${roomId}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Canvas saved as PNG!");
+    } else {
+      toast.error("Could not save canvas.");
+    }
+  };
+
   const handleConfirm = async () => {
     if (modalState.type === "clearShapes") {
       try {
@@ -559,6 +575,7 @@ export default function RoomPage() {
         currentShape={currentShape}
         onShapeChange={setCurrentShape}
         onClearShapes={handleClearShapes}
+        onSaveCanvas={handleSaveCanvas}
         isHandMode={currentShape === 'HAND'}
         onHandModeToggle={() => setCurrentShape('HAND')}
       />
