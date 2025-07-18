@@ -105,6 +105,23 @@ export const newMessageHandler = async (
       });
       return;
     }
+
+    const tempMessage = {
+        id: new Date().toISOString(),
+        message: data.message.trim(),
+        createdAt: new Date().toISOString(),
+        user: {
+            id: socket.data.user.id,
+            name: socket.data.user.name,
+            email: socket.data.user.email,
+        },
+        roomId: data.roomId,
+        userId: socket.data.user.id,
+    };
+    
+    socket.to(data.roomId).emit("new-message-added", tempMessage);
+    socket.emit("new-message-added", tempMessage);
+
     const createdMessage = await prisma.message.create({
       data: {
         message: data.message.trim(),
@@ -121,8 +138,6 @@ export const newMessageHandler = async (
         },
       },
     });
-    socket.to(data.roomId).emit("new-message-added", createdMessage);
-    socket.emit("new-message-added", createdMessage);
   } catch (error) {
     console.error("Error creating message:", error);
     socket.emit("custom-error", {

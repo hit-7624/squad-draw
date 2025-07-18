@@ -14,6 +14,8 @@ import {
   clearShapesHandler,
   cursorMoveHandler,
 } from "./handlers/content.handlers";
+import { prisma } from "@repo/db/ws-server";
+
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 console.log(process.env.ORIGIN_URL);
 
@@ -28,6 +30,44 @@ const io = new Server(httpServer, {
 });
 
 io.use(authMiddleware);
+
+// Function to delete old messages
+const deleteOldMessages = async () => {
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    try {
+        const result = await prisma.message.deleteMany({
+            where: {
+                createdAt: {
+                    lt: threeDaysAgo,
+                },
+            },
+        });
+        console.log(`Deleted ${result.count} old messages.`);
+    } catch (error) {
+        console.error("Error deleting old messages:", error);
+    }
+};
+
+const deleteOldShapes = async () => {
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 30);
+  
+  try {
+    const result = await prisma.shape.deleteMany({
+      where: {
+        createdAt: {
+          lt: threeDaysAgo,
+        },
+      },
+    });
+    console.log(`Deleted ${result.count} old shapes.`);
+  } catch (error) {
+    console.error("Error deleting old shapes:", error);
+  }
+};
+
 
 // generl error handling
 const handleSocketEvent = async (
@@ -113,4 +153,8 @@ httpServer.listen(8080, () => {
   console.log(
     `WebSocket server is running on port 8080`,
   );
+  deleteOldMessages();
+  setInterval(deleteOldMessages, 1000 * 60 * 60 * 24);
+  deleteOldShapes();
+  setInterval(deleteOldShapes, 1000 * 60 * 60 * 24 );
 });

@@ -15,13 +15,18 @@ interface DrawnShape {
   roomId?: string;
 }
 
+interface OnlineMember {
+    id: string;
+    name: string;
+}
+
 interface RoomState {
   socket: Socket | null;
   socketRoomId: string | null;
   messages: Message[];
   error: string | null;
   isConnected: boolean;
-  onlineMembers: string[];
+  onlineMembers: OnlineMember[];
   shapes: DrawnShape[];
   loading: boolean;
   cursors: Record<string, { x: number; y: number; userName: string; color: string }>;
@@ -160,8 +165,8 @@ export const useRoomStore = create<RoomStore>()(
                   if (data.roomId === roomId) {
                     console.log(`${data.userName} joined the room`);
                     const currentOnline = get().onlineMembers;
-                    if (!currentOnline.includes(data.userId)) {
-                      set({ onlineMembers: [...currentOnline, data.userId] });
+                    if (!currentOnline.find(member => member.id === data.userId)) {
+                      set({ onlineMembers: [...currentOnline, {id: data.userId, name: data.userName}] });
                     }
                   }
                 },
@@ -179,7 +184,7 @@ export const useRoomStore = create<RoomStore>()(
                     const currentOnline = get().onlineMembers;
                     set({
                       onlineMembers: currentOnline.filter(
-                        (id) => id !== data.userId,
+                        (member) => member.id !== data.userId,
                       ),
                       cursors: Object.fromEntries(
                         Object.entries(get().cursors).filter(
@@ -193,7 +198,7 @@ export const useRoomStore = create<RoomStore>()(
 
               socket.on(
                 "online-members-updated",
-                (data: { roomId: string; onlineMembers: string[] }) => {
+                (data: { roomId: string; onlineMembers: OnlineMember[] }) => {
                   if (data.roomId === roomId) {
                     set({ onlineMembers: data.onlineMembers });
                   }
@@ -202,7 +207,7 @@ export const useRoomStore = create<RoomStore>()(
 
               socket.on(
                 "online-members-list",
-                (data: { roomId: string; onlineMembers: string[] }) => {
+                (data: { roomId: string; onlineMembers: OnlineMember[] }) => {
                   if (data.roomId === roomId) {
                     set({ onlineMembers: data.onlineMembers });
                   }
@@ -234,7 +239,7 @@ export const useRoomStore = create<RoomStore>()(
 
               socket.on(
                 "room-joined",
-                (data: { roomId: string; onlineMembers: string[] }) => {
+                (data: { roomId: string; onlineMembers: OnlineMember[] }) => {
                   console.log("Successfully joined room:", data.roomId);
                   if (data.onlineMembers) {
                     set({ onlineMembers: data.onlineMembers });
@@ -329,7 +334,7 @@ export const useRoomStore = create<RoomStore>()(
 
           socket.on(
             "room-joined",
-            async (data: { roomId: string; onlineMembers: string[] }) => {
+            async (data: { roomId: string; onlineMembers: OnlineMember[] }) => {
               console.log("Successfully joined room:", data.roomId);
               set({ onlineMembers: data.onlineMembers || [] });
               socket.emit("get-online-members", { roomId: data.roomId });

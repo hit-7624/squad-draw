@@ -37,15 +37,7 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
     await sendMessage(input, session.user);
     setInput("");
   };
-
-  const onlineUsers = onlineMembers.map((userId) => {
-    const displayName = `User ${userId.slice(0, 4)}`;
-    return {
-      id: userId,
-      name: displayName,
-    };
-  });
-
+  
   return (
     <div
       className={cn(
@@ -64,7 +56,7 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground font-medium">
-                {onlineUsers.length} online
+                {onlineMembers.length} online
               </span>
               <Button
                 variant="ghost"
@@ -84,7 +76,7 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
               Online Users
             </h3>
             <div className="flex flex-wrap gap-1.5">
-              {onlineUsers.map((user) => (
+              {onlineMembers.map((user) => (
                 <div
                   key={user.id}
                   className="flex items-center gap-1.5 bg-background/60 border rounded-full px-2 py-1 text-xs"
@@ -107,6 +99,12 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
               <div className="p-4 space-y-4">
                 {messages.map((msg, index) => {
                   const isYou = msg.user?.id === session?.user?.id;
+                  const messageDate = new Date(msg.createdAt);
+                  const today = new Date();
+                  const isToday = messageDate.getDate() === today.getDate() &&
+                                  messageDate.getMonth() === today.getMonth() &&
+                                  messageDate.getFullYear() === today.getFullYear();
+                  
                   return (
                     <div
                       key={index}
@@ -141,10 +139,15 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
                             {isYou ? "You" : msg.user?.name || "Anonymous"}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {new Date(msg.createdAt).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            {isToday 
+                              ? messageDate.toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                              : messageDate.toLocaleDateString([], {
+                                  year: 'numeric', month: 'long', day: 'numeric' 
+                              })
+                            }
                           </span>
                         </div>
                         <div

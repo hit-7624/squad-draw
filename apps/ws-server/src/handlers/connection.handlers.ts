@@ -83,19 +83,23 @@ export const joinRoomHandler = async (
 
     // Get all online users in this room
     const socketsInRoom = await socket.in(data.roomId).fetchSockets();
-    const onlineUserIds = socketsInRoom
-      .map((s) => s.data.user?.id)
-      .filter((id) => id)
-      .concat(socket.data.user.id); // Include current user
-
+    const onlineUsers = socketsInRoom.map((s) => ({id: s.data.user?.id, name: s.data.user?.name}))
+    .filter((user) => user.id)
+    .concat({id: socket.data.user.id, name: socket.data.user.name})
+    
     // Remove duplicates
-    const uniqueOnlineUserIds = [...new Set(onlineUserIds)];
+    const uniqueOnlineUsers = onlineUsers.filter((user, index, self) =>
+        index === self.findIndex((u) => (
+            u.id === user.id
+        ))
+    )
+
 
     socket.emit("room-joined", {
       code: 200,
       type: "SUCCESS",
       roomId: data.roomId,
-      onlineMembers: uniqueOnlineUserIds,
+      onlineMembers: uniqueOnlineUsers,
     });
 
     // Notify other room members that this user joined
@@ -111,7 +115,7 @@ export const joinRoomHandler = async (
     // Send updated online members list to all room members
     socket.to(data.roomId).emit("online-members-updated", {
       roomId: data.roomId,
-      onlineMembers: uniqueOnlineUserIds,
+      onlineMembers: uniqueOnlineUsers,
     });
   } catch (error) {
     console.error("Error in joinRoomHandler:", error);
@@ -182,9 +186,9 @@ export const leaveRoomHandler = async (
 
     // Get remaining online users in this room before leaving
     const socketsInRoom = await socket.in(data.roomId).fetchSockets();
-    const remainingUserIds = socketsInRoom
-      .map((s) => s.data.user?.id)
-      .filter((id) => id && id !== socket.data.user.id); // Exclude the leaving user
+    const remainingUsers = socketsInRoom
+      .map((s) => ({id: s.data.user?.id, name: s.data.user?.name}))
+      .filter((user) => user.id && user.id !== socket.data.user.id); // Exclude the leaving user
 
     socket.leave(data.roomId);
     socket.data.currentRoom = null;
@@ -208,7 +212,7 @@ export const leaveRoomHandler = async (
     // Send updated online members list to remaining room members
     socket.to(data.roomId).emit("online-members-updated", {
       roomId: data.roomId,
-      onlineMembers: remainingUserIds,
+      onlineMembers: remainingUsers,
     });
   } catch (error) {
     console.error("Error in leaveRoomHandler:", error);
@@ -274,23 +278,27 @@ export const getOnlineMembersHandler = async (
 
     // Get all online users in this room
     const socketsInRoom = await socket.in(data.roomId).fetchSockets();
-    const onlineUserIds = socketsInRoom
-      .map((s) => s.data.user?.id)
-      .filter((id) => id);
+    const onlineUsers = socketsInRoom
+      .map((s) => ({id: s.data.user?.id, name: s.data.user?.name}))
+      .filter((user) => user.id);
 
     // Include current user if they're in the room
     if (socket.rooms.has(data.roomId)) {
-      onlineUserIds.push(socket.data.user.id);
+      onlineUsers.push({id: socket.data.user.id, name: socket.data.user.name});
     }
 
     // Remove duplicates
-    const uniqueOnlineUserIds = [...new Set(onlineUserIds)];
+    const uniqueOnlineUsers = onlineUsers.filter((user, index, self) =>
+        index === self.findIndex((u) => (
+            u.id === user.id
+        ))
+    )
 
     socket.emit("online-members-list", {
       code: 200,
       type: "SUCCESS",
       roomId: data.roomId,
-      onlineMembers: uniqueOnlineUserIds,
+      onlineMembers: uniqueOnlineUsers,
     });
   } catch (error) {
     console.error("Error in getOnlineMembersHandler:", error);

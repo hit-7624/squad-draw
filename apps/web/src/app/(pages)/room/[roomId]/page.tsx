@@ -13,7 +13,7 @@ import TypeControlPanel, { DrawingOptions } from "@/components/ControlPanel";
 import { GroupChatbot } from "@/components/GroupChatbot";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Modal } from "@/components/ui/modal";
-import { MessageCircle, Palette } from "lucide-react";
+import { MessageCircle, Palette, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 
@@ -484,6 +484,14 @@ export default function RoomPage() {
     <div className="relative">
       <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
         <ThemeToggle />
+        <Button
+            variant="outline"
+            size="icon"
+            className="h-10 w-10"
+            onClick={() => router.push('/dashboard')}
+        >
+            <Home className="h-5 w-5" />
+        </Button>
         <div className="bg-background/80 backdrop-blur-sm rounded-lg p-3 border">
           <div className="flex items-center gap-2 mb-2">
             <div
