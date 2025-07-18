@@ -1,3 +1,4 @@
+// apps/web/src/app/(pages)/dashboard/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 
@@ -41,6 +42,10 @@ export default function Dashboard() {
     toggleRoomExpansion,
     canManageRoom,
     isOwner,
+    canManageMembers,
+    promoteToAdmin,
+    demoteFromAdmin,
+    kickMember,
     getOverviewRoom,
   } = useDashboardStore();
   const { showError, showSuccess } = useNotificationStore();
@@ -150,6 +155,33 @@ export default function Dashboard() {
     showSuccess("Room ID copied to clipboard!");
   };
 
+  const handlePromoteToAdmin = async (roomId: string, userId: string) => {
+    try {
+      await promoteToAdmin(roomId, userId);
+      showSuccess("Member promoted to admin successfully!");
+    } catch (err: any) {
+      showError(roomError || "Failed to promote member");
+    }
+  };
+
+  const handleDemoteFromAdmin = async (roomId: string, userId: string) => {
+    try {
+      await demoteFromAdmin(roomId, userId);
+      showSuccess("Member demoted to member successfully!");
+    } catch (err: any) {
+      showError(roomError || "Failed to demote member");
+    }
+  };
+
+  const handleKickMember = async (roomId: string, userId: string) => {
+    try {
+      await kickMember(roomId, userId);
+      showSuccess("Member kicked successfully!");
+    } catch (err: any) {
+      showError(roomError || "Failed to kick member");
+    }
+  };
+
   const handleCloseOverview = () => {
     closeOverview();
   };
@@ -209,29 +241,28 @@ export default function Dashboard() {
           <UserInfoCard user={session.user} joinedRooms={joinedRooms} />
         )}
 
-        {/* Always show two columns - Room Management (Left) and Overview (Right) */}
-        <div className="grid gap-8 lg:grid-cols-2">
+        {/* Room Creation and Join Room - Full width at the top */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <CreateRoomForm
+            newRoomName={newRoomName}
+            setNewRoomName={setNewRoomName}
+            onCreateRoom={handleCreateRoom}
+            actionLoading={actionLoading}
+            createdRoomsCount={createdRoomsCount}
+          />
+          <JoinRoomForm
+            joinRoomId={joinRoomId}
+            setJoinRoomId={setJoinRoomId}
+            onJoinRoom={handleJoinRoom}
+            actionLoading={actionLoading}
+            joinedRoomsCount={joinedRoomsCount}
+          />
+        </div>
+
+        {/* Main grid: Room Management (Left) and Overview (Right) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Left Column - Room Management */}
           <div className="space-y-6">
-            {/* Room Creation */}
-            <CreateRoomForm
-              newRoomName={newRoomName}
-              setNewRoomName={setNewRoomName}
-              onCreateRoom={handleCreateRoom}
-              actionLoading={actionLoading}
-              createdRoomsCount={createdRoomsCount}
-            />
-
-            {/* Join Room */}
-            <JoinRoomForm
-              joinRoomId={joinRoomId}
-              setJoinRoomId={setJoinRoomId}
-              onJoinRoom={handleJoinRoom}
-              actionLoading={actionLoading}
-              joinedRoomsCount={joinedRoomsCount}
-            />
-
-            {/* Joined Rooms */}
             <RoomsList
               rooms={joinedRooms}
               user={session?.user}
@@ -262,6 +293,10 @@ export default function Dashboard() {
                 currentUser={session?.user}
                 onCloseOverview={handleCloseOverview}
                 actionLoading={actionLoading}
+                canManageMembers={canManageMembers(overviewRoom, session?.user)}
+                onPromoteToAdmin={handlePromoteToAdmin}
+                onDemoteFromAdmin={handleDemoteFromAdmin}
+                onKickMember={handleKickMember}
               />
             ) : (
               <RoomOverviewEmpty

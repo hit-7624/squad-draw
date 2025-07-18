@@ -1,3 +1,4 @@
+// apps/web/src/components/dashboard/RoomOverview.tsx
 import {
   Card,
   CardContent,
@@ -17,6 +18,10 @@ interface RoomOverviewProps {
   actionLoading: string | null;
   isConnected?: boolean;
   onlineMembers?: string[];
+  canManageMembers: boolean;
+  onPromoteToAdmin: (roomId: string, userId: string) => Promise<void>;
+  onDemoteFromAdmin: (roomId: string, userId: string) => Promise<void>;
+  onKickMember: (roomId: string, userId: string) => Promise<void>;
 }
 
 export const RoomOverview = ({
@@ -27,6 +32,10 @@ export const RoomOverview = ({
   actionLoading,
   isConnected,
   onlineMembers,
+  canManageMembers,
+  onPromoteToAdmin,
+  onDemoteFromAdmin,
+  onKickMember,
 }: RoomOverviewProps) => {
   return (
     <div className="space-y-6">
@@ -78,48 +87,21 @@ export const RoomOverview = ({
           <div className="space-y-2">
             {members.map((member) => {
               const isOnline = onlineMembers ? onlineMembers.includes(member.id) : false;
-              const isCurrentUser = currentUser?.id === member.id;
-              const isMemberOwner = member.id === overviewRoom.owner.id;
-              const isAdmin = member.role === "ADMIN";
-              const isMember = member.role === "MEMBER";
 
               return (
-                <div key={member.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-400' : 'bg-gray-400'}`}></div>
-                          <p className="font-medium text-sm">{member.name}</p>
-                        </div>
-
-                        <div className="flex gap-1.5">
-                          {isCurrentUser && (
-                            <span className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">
-                              You
-                            </span>
-                          )}
-                          {isMemberOwner && (
-                            <span className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-medium">
-                              Owner
-                            </span>
-                          )}
-                          {isAdmin && !isMemberOwner && (
-                            <span className="text-xs px-2 py-0.5 bg-primary/70 text-primary-foreground rounded-full font-medium">
-                              Admin
-                            </span>
-                          )}
-                          {isMember && (
-                            <span className="text-xs px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full font-medium">
-                              Member
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-muted-foreground text-xs">{member.email}</p>
-                    </div>
-                  </div>
-                </div>
+                <MemberCard
+                  key={member.id}
+                  member={member}
+                  currentUser={currentUser}
+                  room={overviewRoom}
+                  actionLoading={actionLoading}
+                  isOnline={isOnline}
+                  canManageMembers={canManageMembers}
+                  isOwner={overviewRoom.owner.id === currentUser?.id} // Pass isOwner prop
+                  onPromoteToAdmin={onPromoteToAdmin}
+                  onDemoteFromAdmin={onDemoteFromAdmin}
+                  onKickMember={onKickMember}
+                />
               );
             })}
           </div>

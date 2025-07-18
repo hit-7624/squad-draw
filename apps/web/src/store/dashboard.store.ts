@@ -302,11 +302,9 @@ export const useDashboardStore = create<DashboardStore>()(
         try {
           set({ actionLoading: `promote-${userId}`, error: null });
           const response = await fetch(
-            `/api/rooms/${roomId}/members/${userId}`,
+            `/api/rooms/${roomId}/members/${userId}/promote`,
             {
               method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "promote" }),
               credentials: "include",
             },
           );
@@ -329,11 +327,9 @@ export const useDashboardStore = create<DashboardStore>()(
         try {
           set({ actionLoading: `demote-${userId}`, error: null });
           const response = await fetch(
-            `/api/rooms/${roomId}/members/${userId}`,
+            `/api/rooms/${roomId}/members/${userId}/demote`,
             {
               method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "demote" }),
               credentials: "include",
             },
           );

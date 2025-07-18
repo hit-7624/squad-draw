@@ -1,3 +1,4 @@
+// apps/web/src/components/dashboard/MemberCard.tsx
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -36,14 +37,16 @@ export const MemberCard = ({
     message: string;
     confirmText: string;
     variant: "default" | "danger";
-  }>({
-    isOpen: false,
-    type: null,
-    title: "",
-    message: "",
-    confirmText: "",
-    variant: "default",
-  });
+  }>(
+    {
+      isOpen: false,
+      type: null,
+      title: "",
+      message: "",
+      confirmText: "",
+      variant: "default",
+    },
+  );
 
   const isCurrentUser = currentUser?.id === member.id;
   const isMemberOwner = member.id === room.owner.id;
