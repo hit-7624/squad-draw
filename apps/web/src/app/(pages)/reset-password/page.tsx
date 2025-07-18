@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { resetPassword } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { useNotification } from "@/hooks/useNotification";
+import { useNotificationStore } from "@/store/notification.store";
 import Link from "next/link";
 import { PasswordSchema, resetPasswordSchema } from "@/schemas/index";
 
@@ -25,7 +25,7 @@ export default function ResetPasswordPage() {
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { showError, showSuccess } = useNotification();
+  const { showError, showSuccess } = useNotificationStore();
 
   useEffect(() => {
     if (typeof window !== "undefined") {

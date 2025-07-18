@@ -13,14 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { requestPasswordReset } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { useNotification } from "@/hooks/useNotification";
+import { useNotificationStore } from "@/store/notification.store";
 import Link from "next/link";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const { showError, showSuccess } = useNotification();
+  const { showError, showSuccess } = useNotificationStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

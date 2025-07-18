@@ -19,7 +19,7 @@ interface GroupChatbotProps {
 
 export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
   const { data: session } = authClient.useSession();
-  const { messages, onlineMembers, members, sendMessage } = useRoomStore();
+  const { messages, onlineMembers, sendMessage } = useRoomStore();
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -39,12 +39,7 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
   };
 
   const onlineUsers = onlineMembers.map((userId) => {
-    const memberName = (members ?? []).find((m) => m.id === userId)?.name ?? "";
-    const displayName = memberName
-      ? memberName.length > 5
-        ? memberName.slice(0, 5) + ".."
-        : memberName
-      : `User ${userId.slice(0, 4)}`;
+    const displayName = `User ${userId.slice(0, 4)}`;
     return {
       id: userId,
       name: displayName,

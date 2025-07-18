@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { useNotification } from "@/hooks/useNotification";
+import { useNotificationStore } from "@/store/notification.store";
 import {
   UserSignupSchema,
   UserLoginSchema,
@@ -37,7 +37,7 @@ export function LoginForm({
   const [isLoading, setIsLoading] = useState(false);
   const [showResendVerification, setShowResendVerification] = useState(false);
   const router = useRouter();
-  const { showError, showSuccess } = useNotification();
+  const { showError, showSuccess } = useNotificationStore();
 
   const isSignUp = mode === "signup";
 
