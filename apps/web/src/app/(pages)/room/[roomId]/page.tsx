@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
@@ -17,6 +17,10 @@ import { MessageCircle, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 
+
+
+
+// This function now draws all committed shapes onto the static canvas.
 function drawShapesFromArray(
   shapes: any[],
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
@@ -49,6 +53,11 @@ function drawShapesFromArray(
       case "FREEDRAW":
         rc.linearPath(d.path, d.options);
         break;
+      case "TEXT":
+        ctx.font = "16px sans-serif";
+        ctx.fillStyle = d.options.stroke;
+        ctx.fillText(d.text, d.x, d.y);
+        break;
     }
   });
 }
@@ -58,7 +67,10 @@ export default function RoomPage() {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  const staticCanvasRef = useRef<HTMLCanvasElement>(null);
+  const dynamicCanvasRef = useRef<HTMLCanvasElement>(null);
+  
   const roughCanvasRef = useRef<RoughCanvas | null>(null);
   const previousConnectionStatus = useRef<boolean | null>(null);
   const [currentShape, setCurrentShape] = useState<ShapeType | 'HAND'>("HAND");
@@ -126,8 +138,8 @@ export default function RoomPage() {
   };
 
   const handleSaveCanvas = () => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
+    if (staticCanvasRef.current) {
+      const canvas = staticCanvasRef.current;
       const dataURL = canvas.toDataURL("image/png");
       const link = document.createElement("a");
       link.href = dataURL;
@@ -175,318 +187,203 @@ export default function RoomPage() {
   }, [session, roomId, loading, joinRoomInSocket, initializeSocket, disconnectSocket]);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    roughCanvasRef.current = rough.canvas(canvas);
-
-    const handleMouseDown = (e: MouseEvent) => {
-      const x = e.offsetX;
-      const y = e.offsetY;
-
-      if (currentShape === 'HAND') {
-        return;
-      } else if (currentShape === "FREEDRAW") {
-        setIsDrawing(true);
-        setCurrentPath([[x, y]]);
-      } else {
-        setStartPoint([x, y]);
-      }
+    const staticCanvas = staticCanvasRef.current;
+    const dynamicCanvas = dynamicCanvasRef.current;
+    if (!staticCanvas || !dynamicCanvas) return;
+  
+    const staticCtx = staticCanvas.getContext("2d");
+    const dynamicCtx = dynamicCanvas.getContext("2d");
+    if (!staticCtx || !dynamicCtx) return;
+  
+    const rc = rough.canvas(dynamicCanvas);
+    
+    // #### MOBILE/TOUCH SUPPORT: Shared drawing logic ####
+    const startDrawing = (x: number, y: number) => {
+        if (currentShape === 'HAND') {
+            return;
+        } else if (currentShape === "FREEDRAW") {
+            setIsDrawing(true);
+            setCurrentPath([[x, y]]);
+        } else {
+            setStartPoint([x, y]);
+        }
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const x = e.offsetX;
-      const y = e.offsetY;
-
-      if (currentShape === 'HAND') {
-        return;
-      }
-      if (currentShape === "FREEDRAW" && isDrawing) {
-        // Handle free draw
-        const lastPoint = currentPath[currentPath.length - 1];
-        const minDistance = 3;
-
-        if (
-          !lastPoint ||
-          Math.sqrt(
-            Math.pow(x - lastPoint[0], 2) + Math.pow(y - lastPoint[1], 2),
-          ) > minDistance
-        ) {
-          const newPath = [...currentPath, [x, y] as [number, number]];
-          setCurrentPath(newPath);
-
-          // Redraw canvas with existing shapes
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          drawShapesFromArray(shapes, canvasRef);
-
-          // Draw current free draw path
-          if (newPath.length > 1) {
-            roughCanvasRef.current?.linearPath(newPath, {
-              ...drawingOptions,
-              strokeWidth: 3,
-              roughness: 0,
-              disableMultiStroke: true,
-              seed: 1,
-            });
-          }
+    const drawing = (x: number, y: number) => {
+        if (currentShape === 'HAND') {
+            return;
         }
-      } else if (startPoint) {
-        // Handle other shapes
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawShapesFromArray(shapes, canvasRef);
-
-        const centerX = (startPoint[0] + x) / 2;
-        const centerY = (startPoint[1] + y) / 2;
-        const width = Math.abs(x - startPoint[0]);
-        const height = Math.abs(y - startPoint[1]);
-
-        switch (currentShape) {
-          case "ELLIPSE": {
-            roughCanvasRef.current?.ellipse(centerX, centerY, width, height, {
-              ...drawingOptions,
-              seed: 1,
-            });
-            break;
-          }
-          case "RECTANGLE": {
-            roughCanvasRef.current?.rectangle(
-              startPoint[0],
-              startPoint[1],
-              x - startPoint[0],
-              y - startPoint[1],
-              { ...drawingOptions, seed: 1 },
-            );
-            break;
-          }
-          case "LINE": {
-            roughCanvasRef.current?.line(startPoint[0], startPoint[1], x, y, {
-              ...drawingOptions,
-              seed: 1,
-            });
-            break;
-          }
-          case "DIAMOND": {
-            const points = [
-              [centerX, startPoint[1]] as [number, number],
-              [x, centerY] as [number, number],
-              [centerX, y] as [number, number],
-              [startPoint[0], centerY] as [number, number],
-            ];
-            roughCanvasRef.current?.polygon(points, {
-              ...drawingOptions,
-              seed: 1,
-            });
-            break;
-          }
-          case "ARROW": {
-            roughCanvasRef.current?.line(startPoint[0], startPoint[1], x, y, {
-              ...drawingOptions,
-              seed: 1,
-            });
-            const angle = Math.atan2(y - startPoint[1], x - startPoint[0]);
-            const arrowLength = 15;
-            const arrowAngle = Math.PI / 6;
-            const arrowX1 = x - arrowLength * Math.cos(angle - arrowAngle);
-            const arrowY1 = y - arrowLength * Math.sin(angle - arrowAngle);
-            const arrowX2 = x - arrowLength * Math.cos(angle + arrowAngle);
-            const arrowY2 = y - arrowLength * Math.sin(angle + arrowAngle);
-            roughCanvasRef.current?.line(x, y, arrowX1, arrowY1, {
-              ...drawingOptions,
-              seed: 1,
-            });
-            roughCanvasRef.current?.line(x, y, arrowX2, arrowY2, {
-              ...drawingOptions,
-              seed: 1,
-            });
-            break;
-          }
+        if (currentShape === "FREEDRAW" && isDrawing) {
+            const lastPoint = currentPath[currentPath.length - 1];
+            const minDistance = 3;
+    
+            if (
+              !lastPoint ||
+              Math.sqrt(
+                Math.pow(x - lastPoint[0], 2) + Math.pow(y - lastPoint[1], 2),
+              ) > minDistance
+            ) {
+              const newPath = [...currentPath, [x, y] as [number, number]];
+              setCurrentPath(newPath);
+    
+              dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
+              if (newPath.length > 1) {
+                rc.linearPath(newPath, {
+                  ...drawingOptions,
+                  strokeWidth: 3,
+                  roughness: 0,
+                  disableMultiStroke: true,
+                  seed: 1,
+                });
+              }
+            }
+        } else if (startPoint) {
+            dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
+    
+            const centerX = (startPoint[0] + x) / 2;
+            const centerY = (startPoint[1] + y) / 2;
+            const width = Math.abs(x - startPoint[0]);
+            const height = Math.abs(y - startPoint[1]);
+    
+            switch (currentShape) {
+                case "ELLIPSE": rc.ellipse(centerX, centerY, width, height, { ...drawingOptions, seed: 1 }); break;
+                case "RECTANGLE": rc.rectangle(startPoint[0], startPoint[1], x - startPoint[0], y - startPoint[1], { ...drawingOptions, seed: 1 }); break;
+                case "LINE": rc.line(startPoint[0], startPoint[1], x, y, { ...drawingOptions, seed: 1 }); break;
+                case "DIAMOND": {
+                    const points: [number, number][] = [ [centerX, startPoint[1]], [x, centerY], [centerX, y], [startPoint[0], centerY] ];
+                    rc.polygon(points, { ...drawingOptions, seed: 1 });
+                    break;
+                }
+                case "ARROW": {
+                    rc.line(startPoint[0], startPoint[1], x, y, { ...drawingOptions, seed: 1 });
+                    const angle = Math.atan2(y - startPoint[1], x - startPoint[0]);
+                    const arrowLength = 15;
+                    const arrowAngle = Math.PI / 6;
+                    const arrowX1 = x - arrowLength * Math.cos(angle - arrowAngle);
+                    const arrowY1 = y - arrowLength * Math.sin(angle - arrowAngle);
+                    const arrowX2 = x - arrowLength * Math.cos(angle + arrowAngle);
+                    const arrowY2 = y - arrowLength * Math.sin(angle + arrowAngle);
+                    rc.line(x, y, arrowX1, arrowY1, { ...drawingOptions, seed: 1 });
+                    rc.line(x, y, arrowX2, arrowY2, { ...drawingOptions, seed: 1 });
+                    break;
+                }
+            }
         }
-      }
+    };
+    
+    const endDrawing = (x: number, y: number) => {
+        if (currentShape === 'HAND') {
+            return;
+        }
+        if (currentShape === "FREEDRAW" && isDrawing) {
+            if (currentPath.length > 1 && session?.user?.id) {
+                const newShape = {
+                    type: "FREEDRAW" as ShapeType,
+                    dataFromRoughJs: {
+                        type: "FREEDRAW",
+                        path: currentPath,
+                        options: { ...drawingOptions, strokeWidth: 3, roughness: 0, disableMultiStroke: true, seed: 1 },
+                    },
+                    roomId: roomId,
+                    creatorId: session.user.id,
+                };
+                saveAndBroadcastShape(newShape, session.user.id);
+            }
+            setIsDrawing(false);
+            setCurrentPath([]);
+            dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
+        } else if (startPoint) {
+            const centerX = (startPoint[0] + x) / 2;
+            const centerY = (startPoint[1] + y) / 2;
+            const width = Math.abs(x - startPoint[0]);
+            const height = Math.abs(y - startPoint[1]);
+            if (session?.user?.id) {
+                let newShape: any;
+                switch (currentShape) {
+                    case "ELLIPSE": newShape = { type: "ELLIPSE" as ShapeType, dataFromRoughJs: { type: "ELLIPSE", cx: centerX, cy: centerY, rx: width, ry: height, options: { ...drawingOptions, seed: 1 } }, roomId, creatorId: session.user.id }; break;
+                    case "RECTANGLE": newShape = { type: "RECTANGLE" as ShapeType, dataFromRoughJs: { type: "RECTANGLE", x: startPoint[0], y: startPoint[1], width: x - startPoint[0], height: y - startPoint[1], options: { ...drawingOptions, seed: 1 } }, roomId, creatorId: session.user.id }; break;
+                    case "LINE": newShape = { type: "LINE" as ShapeType, dataFromRoughJs: { type: "LINE", x1: startPoint[0], y1: startPoint[1], x2: x, y2: y, options: { ...drawingOptions, seed: 1 } }, roomId, creatorId: session.user.id }; break;
+                    case "DIAMOND": {
+                        const points = [ [centerX, startPoint[1]], [x, centerY], [centerX, y], [startPoint[0], centerY] ];
+                        newShape = { type: "DIAMOND" as ShapeType, dataFromRoughJs: { type: "DIAMOND", points, options: { ...drawingOptions, seed: 1 } }, roomId, creatorId: session.user.id };
+                        break;
+                    }
+                    case "ARROW": {
+                        const angle = Math.atan2(y - startPoint[1], x - startPoint[0]);
+                        const arrowLength = 15;
+                        const arrowAngle = Math.PI / 6;
+                        const arrowX1 = x - arrowLength * Math.cos(angle - arrowAngle);
+                        const arrowY1 = y - arrowLength * Math.sin(angle - arrowAngle);
+                        const arrowX2 = x - arrowLength * Math.cos(angle + arrowAngle);
+                        const arrowY2 = y - arrowLength * Math.sin(angle + arrowAngle);
+                        newShape = { type: "ARROW" as ShapeType, dataFromRoughJs: { type: "ARROW", x1: startPoint[0], y1: startPoint[1], x2: x, y2: y, arrowHead1: [arrowX1, arrowY1], arrowHead2: [arrowX2, arrowY2], options: { ...drawingOptions, seed: 1 } }, roomId, creatorId: session.user.id };
+                        break;
+                    }
+                }
+                if (newShape) {
+                    saveAndBroadcastShape(newShape, session.user.id);
+                }
+            }
+            setStartPoint(null);
+            dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
+        }
+    };
+    
+    // Mouse Event Handlers
+    const handleMouseDown = (e: MouseEvent) => startDrawing(e.offsetX, e.offsetY);
+    const handleMouseMove = (e: MouseEvent) => drawing(e.offsetX, e.offsetY);
+    const handleMouseUp = (e: MouseEvent) => endDrawing(e.offsetX, e.offsetY);
+
+    // #### MOBILE/TOUCH SUPPORT: Touch Event Handlers ####
+    const handleTouchStart = (e: TouchEvent) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = dynamicCanvas.getBoundingClientRect();
+        startDrawing(touch?.clientX || 0 - rect.left, touch?.clientY || 0 - rect.top);
     };
 
-    const handleMouseUp = (e: MouseEvent) => {
-      const x = e.offsetX;
-      const y = e.offsetY;
-
-      if (currentShape === 'HAND') {
-        return;
-      }
-      if (currentShape === "FREEDRAW" && isDrawing) {
-        if (currentPath.length > 1 && session?.user?.id) {
-          const newShape = {
-            type: "FREEDRAW" as ShapeType,
-            dataFromRoughJs: {
-              type: "FREEDRAW",
-              path: currentPath,
-              options: {
-                ...drawingOptions,
-                strokeWidth: 3,
-                roughness: 0,
-                disableMultiStroke: true,
-                seed: 1,
-              },
-            },
-            roomId: roomId,
-            creatorId: session.user.id,
-          };
-          saveAndBroadcastShape(newShape, session.user.id);
-        }
-        setIsDrawing(false);
-        setCurrentPath([]);
-      } else if (startPoint) {
-        const centerX = (startPoint[0] + x) / 2;
-        const centerY = (startPoint[1] + y) / 2;
-        const width = Math.abs(x - startPoint[0]);
-        const height = Math.abs(y - startPoint[1]);
-        if (session?.user?.id) {
-          switch (currentShape) {
-            case "ELLIPSE": {
-              const newShape = {
-                type: "ELLIPSE" as ShapeType,
-                dataFromRoughJs: {
-                  type: "ELLIPSE",
-                  cx: centerX,
-                  cy: centerY,
-                  rx: width,
-                  ry: height,
-                  options: { ...drawingOptions, seed: 1 },
-                },
-                roomId: roomId,
-                creatorId: session.user.id,
-              };
-              saveAndBroadcastShape(newShape, session.user.id);
-              break;
-            }
-            case "RECTANGLE": {
-              const newShape = {
-                type: "RECTANGLE" as ShapeType,
-                dataFromRoughJs: {
-                  type: "RECTANGLE",
-                  x: startPoint[0],
-                  y: startPoint[1],
-                  width: x - startPoint[0],
-                  height: y - startPoint[1],
-                  options: { ...drawingOptions, seed: 1 },
-                },
-                roomId: roomId,
-                creatorId: session.user.id,
-              };
-              saveAndBroadcastShape(newShape, session.user.id);
-              break;
-            }
-            case "LINE": {
-              const newShape = {
-                type: "LINE" as ShapeType,
-                dataFromRoughJs: {
-                  type: "LINE",
-                  x1: startPoint[0],
-                  y1: startPoint[1],
-                  x2: x,
-                  y2: y,
-                  options: { ...drawingOptions, seed: 1 },
-                },
-                roomId: roomId,
-                creatorId: session.user.id,
-              };
-              saveAndBroadcastShape(newShape, session.user.id);
-              break;
-            }
-            case "DIAMOND": {
-              const points = [
-                [centerX, startPoint[1]],
-                [x, centerY],
-                [centerX, y],
-                [startPoint[0], centerY],
-              ];
-              const newShape = {
-                type: "DIAMOND" as ShapeType,
-                dataFromRoughJs: {
-                  type: "DIAMOND",
-                  points,
-                  options: { ...drawingOptions, seed: 1 },
-                },
-                roomId: roomId,
-                creatorId: session.user.id,
-              };
-              saveAndBroadcastShape(newShape, session.user.id);
-              break;
-            }
-            case "ARROW": {
-              const angle = Math.atan2(y - startPoint[1], x - startPoint[0]);
-              const arrowLength = 15;
-              const arrowAngle = Math.PI / 6;
-              const arrowX1 = x - arrowLength * Math.cos(angle - arrowAngle);
-              const arrowY1 = y - arrowLength * Math.sin(angle - arrowAngle);
-              const arrowX2 = x - arrowLength * Math.cos(angle + arrowAngle);
-              const arrowY2 = y - arrowLength * Math.sin(angle + arrowAngle);
-              const newShape = {
-                type: "ARROW" as ShapeType,
-                dataFromRoughJs: {
-                  type: "ARROW",
-                  x1: startPoint[0],
-                  y1: startPoint[1],
-                  x2: x,
-                  y2: y,
-                  arrowHead1: [arrowX1, arrowY1],
-                  arrowHead2: [arrowX2, arrowY2],
-                  options: { ...drawingOptions, seed: 1 },
-                },
-                roomId: roomId,
-                creatorId: session.user.id,
-              };
-              saveAndBroadcastShape(newShape, session.user.id);
-              break;
-            }
-          }
-        }
-        setStartPoint(null);
-      }
+    const handleTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = dynamicCanvas.getBoundingClientRect();
+        drawing(touch?.clientX || 0 - rect.left, touch?.clientY || 0 - rect.top);
     };
 
-    canvas.addEventListener("mousedown", handleMouseDown);
-    canvas.addEventListener("mousemove", handleMouseMove);
-    canvas.addEventListener("mouseup", handleMouseUp);
+    const handleTouchEnd = (e: TouchEvent) => {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        const rect = dynamicCanvas.getBoundingClientRect();
+        endDrawing(touch?.clientX || 0 - rect.left, touch?.clientY ||  0- rect.top);
+    };
 
+    // Add all event listeners
+    dynamicCanvas.addEventListener("mousedown", handleMouseDown);
+    dynamicCanvas.addEventListener("mousemove", handleMouseMove);
+    dynamicCanvas.addEventListener("mouseup", handleMouseUp);
+    dynamicCanvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    dynamicCanvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    dynamicCanvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+  
     return () => {
-      canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mousemove", handleMouseMove);
-      canvas.removeEventListener("mouseup", handleMouseUp);
+      dynamicCanvas.removeEventListener("mousedown", handleMouseDown);
+      dynamicCanvas.removeEventListener("mousemove", handleMouseMove);
+      dynamicCanvas.removeEventListener("mouseup", handleMouseUp);
+      dynamicCanvas.removeEventListener("touchstart", handleTouchStart);
+      dynamicCanvas.removeEventListener("touchmove", handleTouchMove);
+      dynamicCanvas.removeEventListener("touchend", handleTouchEnd);
     };
   }, [
-    shapes,
-    roomId,
-    currentShape,
-    isDrawing,
-    currentPath,
-    startPoint,
-    session?.user?.id,
-    drawingOptions,
-    saveAndBroadcastShape,
+    shapes, roomId, currentShape, isDrawing, currentPath, startPoint, session?.user?.id,
+    drawingOptions, saveAndBroadcastShape
   ]);
-
+  
   const [previousShapesLength, setPreviousShapesLength] = useState<
     number | null
   >(null);
 
   useEffect(() => {
-    if (shapes.length > 0) {
-      drawShapesFromArray(shapes, canvasRef);
-    } else {
-      // Clear canvas when shapes array is empty
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-      }
-    }
+    drawShapesFromArray(shapes, staticCanvasRef);
 
-    // Show notification when shapes are cleared by other users
-    // Only show if we had shapes before and now we don't (actual clearing)
     if (
       previousShapesLength !== null &&
       previousShapesLength > 0 &&
@@ -497,6 +394,25 @@ export default function RoomPage() {
 
     setPreviousShapesLength(shapes.length);
   }, [shapes, previousShapesLength]);
+  
+  // #### MOBILE/TOUCH SUPPORT: Handle Resizing ####
+  useEffect(() => {
+    const handleResize = () => {
+      const staticCanvas = staticCanvasRef.current;
+      const dynamicCanvas = dynamicCanvasRef.current;
+      if (staticCanvas && dynamicCanvas) {
+        staticCanvas.width = window.innerWidth;
+        staticCanvas.height = window.innerHeight;
+        dynamicCanvas.width = window.innerWidth;
+        dynamicCanvas.height = window.innerHeight;
+        drawShapesFromArray(shapes, staticCanvasRef);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [shapes]);
 
   // Monitor connection status and show toast notifications
   useEffect(() => {
@@ -610,12 +526,21 @@ export default function RoomPage() {
       <GroupChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
       <canvas
-        id="canvas"
-        ref={canvasRef}
+        id="static-canvas"
+        ref={staticCanvasRef}
         width={window.innerWidth}
         height={window.innerHeight}
-        className={currentShape === 'HAND' ? "cursor-pointer" : "cursor-crosshair"}
+        style={{ position: 'absolute', top: 0, left: 0, zIndex: 0 }}
       />
+      <canvas
+        id="dynamic-canvas"
+        ref={dynamicCanvasRef}
+        width={window.innerWidth}
+        height={window.innerHeight}
+        className={currentShape === 'HAND' ? "cursor-grab" : "cursor-crosshair"}
+        style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}
+      />
+
 
       <Modal
         isOpen={modalState.isOpen}

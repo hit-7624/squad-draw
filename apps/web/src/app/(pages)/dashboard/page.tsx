@@ -17,6 +17,7 @@ import { useFormStore } from "@/store/form.store";
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
@@ -60,6 +61,15 @@ export default function Dashboard() {
 
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      toast.info("For a better experience, we recommend using a desktop.", {
+        duration: 5000,
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!sessionLoading) {
@@ -188,7 +198,6 @@ export default function Dashboard() {
 
   const overviewRoom = getOverviewRoom();
 
-  // Calculate room counts for limits
   const createdRoomsCount = session?.user
     ? joinedRooms.filter((room) => room.owner.id === session.user.id).length
     : 0;
@@ -225,23 +234,19 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         <div className="absolute top-4 right-4 z-10">
           <ThemeToggle />
         </div>
-        <div className="flex items-center justify-center gap-4 mb-8">
-          <img src="/logo.svg" alt="Squad Draw" className="w-60 h-auto" />
-          <h1 className="text-5xl font-sans text-foreground">Dashboard</h1>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-8">
+          <img src="/logo.svg" alt="Squad Draw" className="w-48 sm:w-60 h-auto" />
+          <h1 className="text-4xl sm:text-5xl font-sans text-foreground text-center">Dashboard</h1>
         </div>
 
-
-
-        {/* User Info - Always show if user exists */}
         {session?.user && (
           <UserInfoCard user={session.user} joinedRooms={joinedRooms} />
         )}
 
-        {/* Room Creation and Join Room - Full width at the top */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <CreateRoomForm
             newRoomName={newRoomName}
@@ -259,9 +264,7 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Main grid: Room Management (Left) and Overview (Right) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Left Column - Room Management */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">
             <RoomsList
               rooms={joinedRooms}
@@ -284,7 +287,6 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Right Column - Room Overview (Always Present) */}
           <div className="space-y-6">
             {overviewRoom ? (
               <RoomOverview
@@ -302,7 +304,6 @@ export default function Dashboard() {
               <RoomOverviewEmpty
                 hasRooms={joinedRooms.length > 0}
                 onCreateRoom={() => {
-                  // Focus on the create room input
                   const createInput = document.querySelector(
                     'input[placeholder="Enter room name"]',
                   ) as HTMLInputElement;

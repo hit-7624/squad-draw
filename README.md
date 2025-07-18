@@ -7,7 +7,7 @@ Squad Draw is a full-stack real-time collaborative drawing application built as 
 ### Architecture
 
 - **apps/web**: Next.js 15 full-stack application with integrated API routes
-- **apps/api-server**: ⚠️ **DEPRECATED** - Express REST API server (not maintained, moved to Next.js API routes)
+
 - **apps/ws-server**: WebSocket server for real-time collaboration (Socket.IO)
 - **packages/**: Shared code (database, schemas, UI components, configuration)
 
@@ -20,8 +20,8 @@ Squad Draw is a full-stack real-time collaborative drawing application built as 
 - **Real-time Drawing**: Multiple users can draw simultaneously
 - **Shape Tools**: Ellipse, Rectangle, Line, Diamond, Arrow, Free Draw
 - **Drawing Options**: Customizable stroke, fill, opacity, roughness, and line styles
-- **Canvas**: Infinite canvas with zoom and pan capabilities
-- **Live Updates**: Real-time synchronization of all drawing actions
+  - **Live Updates**: Real-time synchronization of all drawing actions
+- **Save Canvas as Image**: Download the current canvas as a PNG image with a single click
 
 ### Room Management
 
@@ -75,7 +75,7 @@ Squad Draw is a full-stack real-time collaborative drawing application built as 
 
 ### apps/web (Main Application)
 
-- **Status**: ✅ **ACTIVE** - Full-stack Next.js application
+- **Status**: - Full-stack Next.js application
 - **Features**:
   - Complete room management system
   - Real-time collaborative drawing
@@ -86,7 +86,7 @@ Squad Draw is a full-stack real-time collaborative drawing application built as 
 
 ### apps/ws-server (WebSocket Server)
 
-- **Status**: ✅ **ACTIVE** - Real-time communication server
+- **Status**:  - Real-time communication server
 - **Features**:
   - Socket.IO server for real-time events
   - Room-based communication
@@ -94,11 +94,6 @@ Squad Draw is a full-stack real-time collaborative drawing application built as 
   - User presence tracking
   - Authentication middleware
 
-### apps/api-server (Deprecated)
-
-- **Status**: ⚠️ **DEPRECATED** - Not maintained
-- **Migration**: All functionality moved to Next.js API routes
-- **Note**: Originally created for learning, now obsolete
 
 ### packages/db
 
@@ -213,8 +208,9 @@ ALLOWED_ORIGINS="http://localhost:3000"
 2. **Create Room**: Create a new drawing room
 3. **Invite Others**: Share the room link or ID with collaborators
 4. **Start Drawing**: Use the shape tools to draw on the canvas
-5. **Collaborate**: See real-time updates from other users
-6. **Manage Room**: Use admin features to manage members and settings
+5. **Save Canvas**: Click the save button to download your drawing as a PNG image
+6. **Collaborate**: See real-time updates from other users
+7. **Manage Room**: Use admin features to manage members and settings
 
 ---
 

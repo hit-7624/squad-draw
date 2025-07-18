@@ -15,8 +15,7 @@ The main Squad Draw application built with Next.js 15 and React 19. This is a fu
   - Fill color and opacity
   - Roughness levels (0-4)
   - Line styles (solid, dashed, dotted, dash-dot, long dash)
-- **Canvas Controls**: Infinite canvas with zoom and pan capabilities
-- **Live Preview**: Real-time preview while drawing shapes
+- **Save Canvas as Image**: Download the current canvas as a PNG image
 
 ### Room Management
 
@@ -225,5 +224,6 @@ pnpm check-types  # TypeScript type checking
 2. **Dashboard**: View and manage your rooms from the dashboard
 3. **Room Creation**: Create new rooms with custom settings
 4. **Drawing**: Use various tools to draw on the collaborative canvas
-5. **Collaboration**: Invite others and draw together in real-time
-6. **Room Management**: Manage members, permissions, and room settings
+5. **Save Canvas**: Download your current drawing as a PNG image
+6. **Collaboration**: Invite others and draw together in real-time
+7. **Room Management**: Manage members, permissions, and room settings

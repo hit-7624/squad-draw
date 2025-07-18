@@ -30,10 +30,9 @@ export const UserInfoCard = ({ user, joinedRooms = [] }: UserInfoCardProps) => {
   return (
     <Card className="mb-8">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {/* Profile Picture or Initial */}
-            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xl">
+        <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xl flex-shrink-0">
               {user.image ? (
                 <img
                   src={user.image}
@@ -45,13 +44,11 @@ export const UserInfoCard = ({ user, joinedRooms = [] }: UserInfoCardProps) => {
               )}
             </div>
 
-            {/* User Info */}
             <div>
               <CardTitle>Welcome, {user.name}</CardTitle>
               <CardDescription>{user.email}</CardDescription>
 
-              {/* Additional Info */}
-              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+              <div className="flex items-center justify-center sm:justify-start gap-4 mt-2 text-sm text-muted-foreground">
                 <span>
                   Member since{" "}
                   {new Date(user.createdAt || Date.now()).toLocaleDateString()}
@@ -60,7 +57,6 @@ export const UserInfoCard = ({ user, joinedRooms = [] }: UserInfoCardProps) => {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex items-center gap-3">
             <Button onClick={handleSignOut} variant="destructive">
               Sign Out
@@ -69,7 +65,6 @@ export const UserInfoCard = ({ user, joinedRooms = [] }: UserInfoCardProps) => {
         </div>
       </CardHeader>
 
-      {/* Room Stats */}
       <CardContent className="pt-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-muted p-4 rounded-lg border text-center">
