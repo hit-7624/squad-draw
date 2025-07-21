@@ -41,27 +41,27 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
   return (
     <div
       className={cn(
-        "fixed bottom-4 right-4 h-[500px] w-[calc(100%-2rem)] md:h-[600px] md:w-96 md:bottom-24 md:right-6 transition-all duration-300 ease-in-out z-30",
+        "fixed bottom-[4.5rem] right-4 h-[calc(100vh-6rem)] w-[calc(100vw-2rem)] sm:bottom-4 sm:h-[500px] sm:w-[calc(100%-2rem)] md:h-[600px] md:w-96 md:bottom-24 md:right-6 transition-all duration-300 ease-in-out z-30",
         isOpen
           ? "translate-y-0 opacity-100"
           : "translate-y-[110%] opacity-0 pointer-events-none",
       )}
     >
       <Card className="h-full shadow-2xl border bg-card text-card-foreground flex flex-col rounded-xl overflow-hidden gap-0 py-0">
-        <div className="px-3 py-2 bg-muted/30 border-b">
+        <div className="px-3 py-2 bg-muted/30 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-lg font-semibold">
               <Users className="h-5 w-5 text-primary" />
               <span>Room Chat</span>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground font-medium">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <span className="text-xs sm:text-sm text-muted-foreground font-medium">
                 {onlineMembers.length} online
               </span>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full hover:bg-muted"
+                className="h-8 w-8 rounded-full hover:bg-muted flex-shrink-0"
                 onClick={onClose}
               >
                 <X className="h-4 w-4" />
@@ -70,19 +70,19 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
           </div>
         </div>
 
-        <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
+        <CardContent className="p-0 flex-1 flex flex-col overflow-hidden min-h-0">
           <div className="px-3 py-1.5 border-b bg-muted/20 flex-shrink-0">
             <h3 className="text-xs font-semibold text-foreground mb-1.5">
               Online Users
             </h3>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto">
               {onlineMembers.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center gap-1.5 bg-background/60 border rounded-full px-2 py-1 text-xs"
+                  className="flex items-center gap-1.5 bg-background/60 border rounded-full px-2 py-1 text-xs flex-shrink-0"
                 >
-                  <Avatar className="h-5 w-5 border border-primary/30">
-                    <AvatarFallback className="bg-primary/20 text-primary font-semibold text-xs">
+                  <Avatar className="h-4 w-4 border border-primary/30">
+                    <AvatarFallback className="bg-primary/20 text-primary font-semibold text-[10px]">
                       {user.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
@@ -94,9 +94,9 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden min-h-0">
             <ScrollArea className="h-full">
-              <div className="p-4 space-y-4">
+              <div className="p-2 sm:p-4 space-y-3 sm:space-y-4">
                 {messages.map((msg, index) => {
                   const isYou = msg.user?.id === session?.user?.id;
                   const messageDate = new Date(msg.createdAt);
@@ -109,11 +109,11 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
                     <div
                       key={index}
                       className={cn(
-                        "flex gap-3",
+                        "flex gap-2 sm:gap-3",
                         isYou ? "flex-row-reverse" : "flex-row",
                       )}
                     >
-                      <Avatar className="h-8 w-8 flex-shrink-0">
+                      <Avatar className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0 mt-1">
                         <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                           {isYou
                             ? session?.user?.name?.charAt(0)?.toUpperCase() ||
@@ -125,13 +125,13 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
                       </Avatar>
                       <div
                         className={cn(
-                          "flex flex-col max-w-[250px] min-w-0",
+                          "flex flex-col min-w-0 w-full",
                           isYou ? "items-end" : "items-start",
                         )}
                       >
                         <div
                           className={cn(
-                            "flex items-baseline gap-2 mb-1",
+                            "flex items-baseline gap-2 mb-1 px-1",
                             isYou ? "flex-row-reverse" : "flex-row",
                           )}
                         >
@@ -152,11 +152,17 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
                         </div>
                         <div
                           className={cn(
-                            "rounded-lg px-3 py-2 text-sm break-words word-wrap",
+                            "rounded-lg px-3 py-2 text-sm break-words w-fit min-w-[60px] max-w-[85%] sm:max-w-[280px] md:max-w-[250px]",
+                            "word-break overflow-wrap-anywhere hyphens-auto",
                             isYou
-                              ? "bg-primary text-primary-foreground rounded-br-sm"
-                              : "bg-muted text-foreground rounded-bl-sm",
+                              ? "bg-primary text-primary-foreground rounded-br-sm ml-auto"
+                              : "bg-muted text-foreground rounded-bl-sm mr-auto",
                           )}
+                          style={{
+                            wordBreak: "break-word",
+                            overflowWrap: "anywhere",
+                            hyphens: "auto"
+                          }}
                         >
                           {msg.message}
                         </div>
@@ -170,22 +176,22 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
           </div>
         </CardContent>
 
-        <CardFooter className="p-4 border-t bg-muted/20">
-          <form onSubmit={onSubmit} className="flex w-full items-center gap-3">
+        <CardFooter className="p-2 sm:p-4 border-t bg-muted/20 flex-shrink-0">
+          <form onSubmit={onSubmit} className="flex w-full items-center gap-2 sm:gap-3">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 bg-background border focus:ring-2 focus:ring-primary/20 rounded-lg"
+              className="flex-1 bg-background border focus:ring-2 focus:ring-primary/20 rounded-lg min-w-0 text-sm"
               autoComplete="off"
             />
             <Button
               type="submit"
               size="icon"
-              className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+              className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10"
               disabled={!input.trim()}
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </form>
         </CardFooter>

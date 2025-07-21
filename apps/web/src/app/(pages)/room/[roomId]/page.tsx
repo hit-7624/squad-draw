@@ -16,7 +16,7 @@ import { Modal } from "@/components/ui/modal";
 import { MessageCircle, Palette, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
-
+import { Toggle } from "@/components/Toggle";
 
 
 // This function now draws all committed shapes onto the static canvas.
@@ -527,16 +527,7 @@ export default function RoomPage() {
           <Palette className="h-5 w-5" />
         </Button>
       </div>
-      <div className="fixed bottom-6 right-6 z-40">
-        <Button
-          onClick={() => setIsChatOpen(!isChatOpen)}
-          size="icon"
-          className="rounded-lg h-9 w-9 sm:h-10 sm:w-10 shadow-lg"
-          variant="outline"
-        >
-          <MessageCircle className="h-5 w-5" />
-        </Button>
-      </div>
+      <Toggle isOpen={isChatOpen} setIsOpen={setIsChatOpen} />    
 
       <TypeControlPanel
         options={drawingOptions}
