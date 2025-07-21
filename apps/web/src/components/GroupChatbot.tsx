@@ -41,10 +41,10 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
   return (
     <div
       className={cn(
-        "fixed bottom-24 right-6 w-96 h-[600px] transition-all duration-300 ease-in-out z-30",
+        "fixed bottom-4 right-4 h-[500px] w-[calc(100%-2rem)] md:h-[600px] md:w-96 md:bottom-24 md:right-6 transition-all duration-300 ease-in-out z-30",
         isOpen
           ? "translate-y-0 opacity-100"
-          : "translate-y-full opacity-0 pointer-events-none",
+          : "translate-y-[110%] opacity-0 pointer-events-none",
       )}
     >
       <Card className="h-full shadow-2xl border bg-card text-card-foreground flex flex-col rounded-xl overflow-hidden gap-0 py-0">

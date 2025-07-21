@@ -482,12 +482,12 @@ export default function RoomPage() {
 
   return (
     <div className="relative">
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
+      <div className="absolute top-4 right-4 z-10 flex flex-col sm:flex-row items-end sm:items-center gap-2">
         <ThemeToggle />
         <Button
             variant="outline"
             size="icon"
-            className="h-10 w-10"
+            className="h-9 w-9 sm:h-10 sm:w-10"
             onClick={() => router.push('/dashboard')}
         >
             <Home className="h-5 w-5" />
@@ -521,7 +521,7 @@ export default function RoomPage() {
         <Button
           onClick={() => setIsControlPanelOpen(!isControlPanelOpen)}
           size="icon"
-          className="rounded-lg h-10 w-10 shadow-lg"
+          className="rounded-lg h-9 w-9 sm:h-10 sm:w-10 shadow-lg"
           variant="outline"
         >
           <Palette className="h-5 w-5" />
@@ -531,7 +531,7 @@ export default function RoomPage() {
         <Button
           onClick={() => setIsChatOpen(!isChatOpen)}
           size="icon"
-          className="rounded-lg h-10 w-10 shadow-lg"
+          className="rounded-lg h-9 w-9 sm:h-10 sm:w-10 shadow-lg"
           variant="outline"
         >
           <MessageCircle className="h-5 w-5" />
