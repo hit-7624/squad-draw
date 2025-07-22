@@ -41,7 +41,9 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
   return (
     <div
       className={cn(
-        "fixed bottom-[4.5rem] right-4 h-[calc(100vh-6rem)] w-[calc(100vw-2rem)] sm:bottom-4 sm:h-[500px] sm:w-[calc(100%-2rem)] md:h-[600px] md:w-96 md:bottom-24 md:right-6 transition-all duration-300 ease-in-out z-30",
+        "fixed bottom-[4.5rem] right-4 w-[calc(100vw-2rem)] sm:bottom-4 sm:w-[calc(100%-2rem)] md:bottom-24 md:right-6 md:w-96 transition-all duration-300 ease-in-out z-30",
+        // Changed height calculation to be more stable
+        "h-[70vh] max-h-[600px] sm:h-[500px] md:h-[600px]",
         isOpen
           ? "translate-y-0 opacity-100"
           : "translate-y-[110%] opacity-0 pointer-events-none",

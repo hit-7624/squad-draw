@@ -67,6 +67,7 @@ export default function RoomPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const staticCanvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -195,6 +196,38 @@ export default function RoomPage() {
       };
     }
   }, [session, roomId, loading, joinRoomInSocket, initializeSocket, disconnectSocket]);
+
+  // Handle canvas and container resizing
+  useEffect(() => {
+    const container = containerRef.current;
+    const staticCanvas = staticCanvasRef.current;
+    const dynamicCanvas = dynamicCanvasRef.current;
+
+    if (!container || !staticCanvas || !dynamicCanvas) return;
+
+    const handleResize = () => {
+      // Set a stable height for the container
+      container.style.height = `${window.innerHeight}px`;
+      container.style.width = `${window.innerWidth}px`;
+
+      // Update canvas dimensions to match the container
+      staticCanvas.width = container.offsetWidth;
+      staticCanvas.height = container.offsetHeight;
+      dynamicCanvas.width = container.offsetWidth;
+      dynamicCanvas.height = container.offsetHeight;
+      
+      // Redraw shapes on the static canvas after resizing
+      drawShapesFromArray(shapes, staticCanvasRef);
+    };
+
+    handleResize(); // Set initial size
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [shapes]); // Rerun when shapes change to redraw correctly
+
 
   useEffect(() => {
     const staticCanvas = staticCanvasRef.current;
@@ -409,24 +442,6 @@ export default function RoomPage() {
     setPreviousShapesLength(shapes.length);
   }, [shapes, previousShapesLength]);
 
-  // #### MOBILE/TOUCH SUPPORT: Handle Resizing ####
-  useEffect(() => {
-    const handleResize = () => {
-      const staticCanvas = staticCanvasRef.current;
-      const dynamicCanvas = dynamicCanvasRef.current;
-      if (staticCanvas && dynamicCanvas) {
-        staticCanvas.width = window.innerWidth;
-        staticCanvas.height = window.innerHeight;
-        dynamicCanvas.width = window.innerWidth;
-        dynamicCanvas.height = window.innerHeight;
-        drawShapesFromArray(shapes, staticCanvasRef);
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [shapes]);
 
   // Monitor connection status and show toast notifications
   useEffect(() => {
@@ -481,8 +496,8 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="relative">
-      <div className="absolute top-4 right-4 z-10 flex flex-col sm:flex-row items-end sm:items-center gap-2">
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden">
+      <div className="absolute top-4 right-4 z-10 flex flex-row items-center gap-2">
         <ThemeToggle />
         <Button
             variant="outline"
@@ -541,15 +556,11 @@ export default function RoomPage() {
       <canvas
         id="static-canvas"
         ref={staticCanvasRef}
-        width={window.innerWidth}
-        height={window.innerHeight}
         style={{ position: 'absolute', top: 0, left: 0, zIndex: 0 }}
       />
       <canvas
         id="dynamic-canvas"
         ref={dynamicCanvasRef}
-        width={window.innerWidth}
-        height={window.innerHeight}
         className={currentShape === 'HAND' ? "cursor-grab" : "cursor-crosshair"}
         style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}
       />
