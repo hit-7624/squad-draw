@@ -137,6 +137,7 @@ export const useRoomStore = create<RoomStore>()(
       },
 
       joinRoomInSocket: (roomId: string | null) => {
+        set({ loading: true });
         const currentSocketRoomId = get().socketRoomId;
         if (currentSocketRoomId && get().socket) {
           get().socket?.emit("leave-room", { roomId: currentSocketRoomId });
@@ -513,6 +514,7 @@ export const useRoomStore = create<RoomStore>()(
       },
 
       fetchShapes: async (roomId: string) => {
+        set({ loading: true });
         try {
           const response = await fetch(`/api/rooms/${roomId}/shapes`, {
             credentials: "include",

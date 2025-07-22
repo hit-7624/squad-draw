@@ -189,6 +189,7 @@ export default function RoomPage() {
   useEffect(() => {
     if (session && session.user && !loading && roomId) {
       joinRoomInSocket(roomId);
+      // toast.success("CONNECTING TO SERVER AND LOADING SHAPES")
       initializeSocket();
 
       return () => {
@@ -466,7 +467,7 @@ export default function RoomPage() {
     return canManageRoom(room, session.user);
   }, [getOverviewRoom, canManageRoom, session?.user]);
 
-  if (loading || sessionLoading) {
+  if (loading || sessionLoading || !isConnected) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center text-foreground">
