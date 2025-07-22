@@ -11,6 +11,7 @@ import { Send, Users, X } from "lucide-react";
 import { useRoomStore } from "@/store/room.store";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface GroupChatbotProps {
   isOpen: boolean;
@@ -22,14 +23,22 @@ export function GroupChatbot({ isOpen, onClose }: GroupChatbotProps) {
   const { messages, onlineMembers, sendMessage } = useRoomStore();
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevMessagesLength = useRef(messages.length);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
+    if (messages.length > prevMessagesLength.current) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg && lastMsg.user?.id !== session?.user?.id) {
+        toast(`${lastMsg.user?.name || "Anonymous"}: ${lastMsg.message}`);
+      }
+    }
+    prevMessagesLength.current = messages.length;
     scrollToBottom();
-  }, [messages]);
+  }, [messages, session?.user?.id]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

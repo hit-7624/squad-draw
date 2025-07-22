@@ -502,7 +502,7 @@ export default function RoomPage() {
         <Button
             variant="outline"
             size="icon"
-            className="h-9 w-9 sm:h-10 sm:w-10"
+            className="h-9 w-9 sm:h-10 sm:w-10 border-none"
             onClick={() => router.push('/dashboard')}
         >
             <Home className="h-5 w-5" />
