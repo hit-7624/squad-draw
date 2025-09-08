@@ -14,14 +14,14 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/cookie": "^1.0.0",
-    "@types/socket.io": "^3.0.2",
-    "socket.io": "^4.8.1"
+    "@types/socket.io": "^3.0.2"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
     "@types/jsonwebtoken": "^9.0.10",
     "cookie": "^1.0.2",
     "dotenv": "^17.0.1",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "socket.io": "^4.8.1"
   }
 }
