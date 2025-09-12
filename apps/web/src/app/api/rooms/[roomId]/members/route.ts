@@ -45,7 +45,7 @@ export const GET = withAuth(
       });
 
       return Response.json({
-        members: members.map((member) => ({
+        members: members.map((member: any) => ({
           id: member.user.id,
           name: member.user.name,
           email: member.user.email,
