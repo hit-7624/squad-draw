@@ -1,4 +1,4 @@
-name: Deploy to Azure VM
+name: Deploy to GCP VM
 
 on:
   push:
@@ -13,12 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: SSH into VM and deploy
+      - name: SSH into GCP VM and deploy
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.AZURE_VM_HOST }}
-          username: ${{ secrets.AZURE_VM_USER }}
-          key: ${{ secrets.AZURE_VM_SSH_KEY }}
+          host: ${{ secrets.GCP_VM_HOST }}
+          username: ${{ secrets.GCP_VM_USER }}
+          key: ${{ secrets.GCP_VM_SSH_KEY }}
           port: 22
           script: |
             export NVM_DIR="$HOME/.nvm"
@@ -30,7 +30,7 @@ jobs:
 
             echo "📥 Pulling latest code..."
             git pull origin main
-
+            
             echo "📦 Installing dependencies..."
             pnpm install 
 
@@ -40,7 +40,7 @@ jobs:
             echo "🏗️ Building the project..."
             pnpm build
             
-            pm2 delete all
+            pm2 delete all || true
             
             cd apps/web
             pm2 start "pnpm start" --name web
@@ -48,4 +48,4 @@ jobs:
             cd ../ws-server
             pm2 start "pnpm start" --name ws-server
 
-            echo "both apps are running"
+            echo "✅ Both apps are running on GCP VM"
